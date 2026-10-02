@@ -45,10 +45,14 @@ def senha_certa(tentativa, senha):
 
 
 def _acesso():
+    """Secção [acesso] dos segredos (aceita "Acesso": o Safari pode pôr maiúscula ao colar)."""
     try:
-        return dict(st.secrets["acesso"])
-    except Exception:                            # sem secrets.toml ou sem a secção [acesso]
-        return {}
+        for chave in st.secrets:
+            if chave.lower() == "acesso":
+                return {k.lower(): v for k, v in dict(st.secrets[chave]).items()}
+    except Exception:                            # sem secrets.toml
+        pass
+    return {}
 
 
 def _senha_configurada():

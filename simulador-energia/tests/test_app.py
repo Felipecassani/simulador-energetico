@@ -259,3 +259,17 @@ def test_acesso_pode_ser_desligado_de_proposito(monkeypatch):
     app.secrets["acesso"] = {"exigir": False}
     app.run()
     assert "Ferramentas" in _texto_visivel(app) and not app.exception
+
+
+def test_segredos_com_maiuscula_e_numa_linha(monkeypatch):
+    """No Cloud, colar no Safari pode dar "Acesso" e tudo numa linha: acesso = { senha = "…" }."""
+    from interface import acesso
+    monkeypatch.setattr(acesso, "vem_de_fora", lambda headers: True)
+    monkeypatch.chdir(PASTA)
+    app = AppTest.from_file(str(PASTA / "app.py"), default_timeout=30)
+    app.secrets["Acesso"] = {"senha": "certa"}
+    app.run()
+    assert "Acesso de teste" in _texto_visivel(app)
+    app.text_input[0].input("certa").run()
+    app.button[0].click().run()
+    assert "Ferramentas" in _texto_visivel(app)
