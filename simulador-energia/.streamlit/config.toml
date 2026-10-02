@@ -1,0 +1,71 @@
+# Tema do Simulador — paleta pessoal (carmim · dourado · bronze · vinho-noir)
+# O Streamlit escolhe claro/escuro pela preferência do sistema; o botão
+# Claro/Escuro no canto do site troca à mão (o menu ⋮ fica escondido).
+# As mesmas cores estão em interface/estilo.py (PALETAS) para o CSS próprio.
+
+[server]
+# Só acessível neste Mac (não expor na rede local)
+address = "localhost"
+# Porta fixa: se já houver um simulador a correr, o Streamlit avisa em vez de abrir na 8502
+port = 8501
+runOnSave = true
+# O SSD é exFAT: os eventos de ficheiros não são fiáveis, por isso vigia por sondagem
+fileWatcherType = "poll"
+# Faturas em PDF/foto e ficheiros da E-REDES têm poucas centenas de KB: 15 MB chega e evita abusos
+maxUploadSize = 15
+
+[browser]
+gatherUsageStats = false
+
+[client]
+# Esconde o botão "Deploy" e o menu ⋮ (o tema troca-se com o botão do site)
+toolbarMode = "minimal"
+# Num erro, o visitante vê só o tipo do erro: sem caminhos do disco nem código (ver no console)
+showErrorDetails = "type"
+
+[logger]
+# Só avisos e erros no console: as mensagens normais de arranque saíam a vermelho no PyCharm
+level = "warning"
+
+[theme]
+font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap, sans-serif"
+headingFont = "Sora:https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&display=swap, sans-serif"
+codeFont = "JetBrains Mono:https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap, monospace"
+headingFontWeights = [800, 700, 700, 600, 600, 600]
+baseRadius = "0.9rem"
+buttonRadius = "full"
+showWidgetBorder = true
+
+[theme.dark]
+primaryColor = "#C8283C"
+backgroundColor = "#120A0D"
+secondaryBackgroundColor = "#1E1115"
+textColor = "#F4ECE6"
+borderColor = "#3A2228"
+linkColor = "#D9B45B"
+redColor = "#E0485A"
+orangeColor = "#E0894A"
+blueColor = "#C98A63"
+yellowColor = "#D9B45B"
+greenColor = "#5BBF8E"
+chartCategoricalColors = ["#C8283C", "#D9B45B", "#B9805E", "#E77A8A", "#8C98A8"]
+
+[theme.dark.sidebar]
+backgroundColor = "#0C0709"
+
+[theme.light]
+primaryColor = "#A8192E"
+backgroundColor = "#FBF6F2"
+secondaryBackgroundColor = "#F3E8E1"
+textColor = "#1E1216"
+borderColor = "#E4D2C7"
+linkColor = "#8C6A1F"
+redColor = "#A8192E"
+orangeColor = "#B8612A"
+blueColor = "#8F5B3E"
+yellowColor = "#A8842E"
+greenColor = "#2F8A5E"
+chartCategoricalColors = ["#A8192E", "#C2982F", "#8F5B3E", "#D35D70", "#5E6B7C"]
+
+[theme.light.sidebar]
+backgroundColor = "#F6EDE7"

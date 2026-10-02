@@ -1,0 +1,29 @@
+# macOS / exFAT
+._*
+.DS_Store
+.Spotlight-V100
+.Trashes
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Streamlit
+# palavras-passe e chaves: nunca no repositório (em qualquer pasta)
+**/.streamlit/secrets.toml
+**/secrets.toml
+
+# PyCharm (partilha-se só a configuração do projeto e os botões ▶)
+.idea/workspace.xml
+.idea/shelf/
+.idea/usage.statistics.xml
+.idea/dataSources*
+.idea/httpRequests/
+
+# Só no Mac do autor (o repositório é público): guia privado, regras do assistente, PyCharm
+simulador-energia/docs/
+CLAUDE.md
+.idea/

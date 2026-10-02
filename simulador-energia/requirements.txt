@@ -1,0 +1,11 @@
+# Dependências do site (o Streamlit Cloud usa este ficheiro, ao lado do app.py).
+# As ferramentas de desenvolvimento (pytest, dash, watchdog) estão no requirements.txt da raiz.
+streamlit>=1.64
+pandas>=3.0
+plotly>=7.1
+pypdf>=6.0
+reportlab>=5.0
+openpyxl>=3.1          # consumos da E-REDES em Excel
+tzdata                 # fusos horários (hora de Lisboa) em servidores Linux
+# OCR de fotos de faturas: só macOS (Apple Vision); no servidor a Fatura aceita só PDF
+ocrmac>=1.0; sys_platform == "darwin"

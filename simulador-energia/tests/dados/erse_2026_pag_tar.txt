@@ -1,0 +1,63 @@
+TARIFAS E PREÇOS PARA A ENERGIA ELÉTRICA E OUTROS SERVIÇOS EM 2026 
+E PARÂMETROS PARA O PERÍODO DE REGULAÇÃO 2026-2029 
+Tarifas para a energia elétrica em 2026 
+ 
+137 
+ 
+ 
+ 
+ 
+ 
+ 
+PREÇOS
+EUR/dia
+1,15 0,0573
+2,3 0,1145
+3,45 0,1718
+4,6 0,2291
+5,75 0,2864
+6,9 0,3436
+10,35 0,5154
+13,8 0,6872
+17,25 0,8591
+20,7 1,0309
+EUR/kWh
+Tarifa simples 0,0607
+Horas de fora de vazio 0,0835
+Horas de vazio 0,0158
+Horas de ponta 0,2452
+Horas cheias 0,0412
+Horas de vazio 0,0158
+Tarifa bi-horária
+Tarifa tri-horária
+TARIFA DE ACESSO ÀS REDES EM BTN (≤20,7 kVA)
+Potência contratada
+Energia ativa
+Tarifa simples, bi-
+horária e tri-horária
+PREÇOS
+EUR/(kW.dia)
+Contratada 0,0480
+EUR/kWh
+Horas de ponta 0,2457
+Horas cheias 0,0524
+Horas de vazio 0,0150
+TARIFA DE ACESSO ÀS REDES EM BTN (IP ≤ 41,4 kVA e > 20,7 kVA)
+Potência
+Energia ativa
+Tarifa tri-horária
+PREÇOS
+EUR/(kW.dia)
+Contratada 0,0498
+EUR/kWh
+Tarifa simples 0,0607
+Horas de fora de vazio 0,0835
+Horas de vazio 0,0158
+Horas de ponta 0,2452
+Horas cheias 0,0412
+Horas de vazio 0,0158
+Tarifa bi-horária
+Tarifa tri-horária
+TARIFA DE ACESSO ÀS REDES EM BTN (IP ≤ 20,7 kVA)
+Potência
+Energia ativa
