@@ -5,7 +5,7 @@ Consumo constante de 0,1 kWh por quarto de hora (= 0,4 kW), exceto das 19h00 às
 Vazio (22h–8h) = 10 h por dia = 40 quartos × 0,1 × 2 dias = 8 kWh → 39,8 %.
 """
 import io
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 
 import pytest
 from openpyxl import Workbook
@@ -77,7 +77,7 @@ def test_varios_ficheiros_juntam_sem_repetidos():
     # a começa às 00:00 (hora = início); b às 00:15 é lido como fim → 00:00 e 00:15: junta sem repetir
     b = F("b.csv", b"Data;Hora;Consumo (kWh)\n01/10/2026;00:15;2\n01/10/2026;00:30;3\n")
     mau = F("x.csv", b"isto;nao\n1;2\n")
-    registos, falhados = carregar_eredes._juntar([a, b, mau])
+    registos, falhados, _ = carregar_eredes._juntar([a, b, mau])
     assert [k for _, k in registos] == [2, 3] and falhados == ["x.csv"]
 
 
@@ -101,11 +101,37 @@ def _como_a_eredes():
 
 
 def test_formato_real_da_eredes():
-    registos = eredes.ler("Consumos_x.xlsx", _como_a_eredes())
+    registos, estimados = eredes.ler_com_estimados("Consumos_x.xlsx", _como_a_eredes())
     assert len(registos) == 192
     assert (registos[0][0].day, registos[0][0].hour, registos[0][0].minute) == (1, 0, 0)
     assert (registos[-1][0].day, registos[-1][0].hour, registos[-1][0].minute) == (2, 23, 45)
-    assert eredes.ler.estimados == 1
+    assert estimados == 1
     a = eredes.analisar(registos)
     assert a["total_kwh"] == aprox(192 * 0.1) and a["dias"] == 2
     assert a["pct_vazio"] == aprox(100 * 80 / 192)          # 22h–8h = 40 quartos por dia
+
+
+
+def test_zip_bomba_e_ficheiros_enormes_sao_recusados(monkeypatch):
+    """Auditoria de segurança: um .xlsx que se expande muito não chega a ser aberto."""
+    monkeypatch.setattr(eredes, "MAX_DESCOMPRIMIDO", 2000)
+    with pytest.raises(ValueError, match="descomprimido"):
+        eredes.ler("Consumos_x.xlsx", _como_a_eredes())
+    monkeypatch.setattr(eredes, "MAX_DESCOMPRIMIDO", 60 * 1024 * 1024)
+    monkeypatch.setattr(eredes, "MAX_LINHAS", 50)
+    with pytest.raises(ValueError, match="linhas"):
+        eredes.ler("Consumos_x.xlsx", _como_a_eredes())
+
+
+def test_eredes_a_comecar_a_meio_do_dia():
+    """Coluna "Consumo registado" = E-REDES: a hora é o fim do quarto, mesmo a começar às 12:15."""
+    csv = "Data;Hora;Consumo registado (kW);Estado\n2026/09/15;12:15;0,4;Real\n2026/09/15;12:30;0,4;Real\n"
+    registos = eredes.ler("c.csv", csv.encode())
+    assert (registos[0][0].hour, registos[0][0].minute) == (12, 0)
+
+
+def test_mapa_bate_com_o_kwh_por_dia_do_mes():
+    inicio = datetime(2026, 9, 1, 12, tzinfo=timezone.utc)
+    regs = [(inicio + timedelta(minutes=15 * q), 0.1) for q in range(240)]          # 2,5 dias
+    p = eredes.padroes(regs)
+    assert sum(p["mapa"][date(2026, 9, 1)]) == aprox(p["meses"][0]["kwh_dia"])

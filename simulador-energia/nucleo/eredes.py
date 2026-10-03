@@ -14,18 +14,27 @@ A leitura continua tolerante a variações:
 import csv
 import io
 import re
+import zipfile
+from itertools import islice
 from collections import defaultdict
 from datetime import date, datetime, time, timedelta
 
 from nucleo import periodos
 
 QUARTO = timedelta(minutes=15)
+# Proteção do servidor: um .xlsx é um ZIP e pode expandir-se muito ("zip bomb"). Um ano da E-REDES
+# tem ~35 000 linhas e poucos MB descomprimido.
+MAX_DESCOMPRIMIDO = 60 * 1024 * 1024        # bytes, somando todos os ficheiros dentro do .xlsx
+MAX_LINHAS = 60_000                         # mais de um ano e meio de quartos de hora
 
 
 def _celulas_xlsx(conteudo):
     import warnings
 
     from openpyxl import load_workbook
+    with zipfile.ZipFile(io.BytesIO(conteudo)) as z:
+        if sum(i.file_size for i in z.infolist()) > MAX_DESCOMPRIMIDO:
+            raise ValueError("O ficheiro é demasiado grande depois de descomprimido.")
     with warnings.catch_warnings():             # o ficheiro da E-REDES não tem estilo por omissão
         warnings.simplefilter("ignore")
         livro = load_workbook(io.BytesIO(conteudo), read_only=True, data_only=True)
@@ -76,8 +85,15 @@ def _hora(v):
 
 def ler(nome, conteudo):
     """→ [(início do quarto de hora em Lisboa, kWh)] por ordem."""
-    linhas = list(_celulas_xlsx(conteudo) if nome.lower().endswith((".xlsx", ".xlsm"))
-                  else _celulas_csv(conteudo))
+    return ler_com_estimados(nome, conteudo)[0]
+
+
+def ler_com_estimados(nome, conteudo):
+    """→ (registos, quantos valores eram "Estimado") — sem estado partilhado entre sessões."""
+    celulas = _celulas_xlsx(conteudo) if nome.lower().endswith((".xlsx", ".xlsm")) else _celulas_csv(conteudo)
+    linhas = list(islice(celulas, MAX_LINHAS + 1))
+    if len(linhas) > MAX_LINHAS:
+        raise ValueError("O ficheiro tem mais linhas do que um ano e meio de consumos.")
     cabecalho, i_cab = None, None
     for i, linha in enumerate(linhas):
         nomes = [str(c or "").strip().lower() for c in linha]
@@ -108,14 +124,15 @@ def ler(nome, conteudo):
         brutos.append((dia.replace(hour=0, minute=0, second=0), hm, valor * 0.25 if em_kw else valor, estimado))
     if not brutos:
         raise ValueError("O ficheiro não tem consumos de 15 em 15 minutos.")
-    # a E-REDES marca o fim do intervalo: o 1.º registo é 00:15 e o último de cada dia é 00:00 do seguinte
-    marca_fim = brutos[0][1] == (0, 15) or any(hm == (24, 0) for _, hm, _, _ in brutos)
+    # a E-REDES marca o fim do intervalo: o 1.º registo é 00:15 e o último de cada dia é 00:00 do seguinte.
+    # A coluna "Consumo registado" é da E-REDES: fim do intervalo mesmo que o ficheiro comece a meio do dia.
+    marca_fim = (brutos[0][1] == (0, 15) or any(hm == (24, 0) for _, hm, _, _ in brutos)
+                 or "consumo registado" in cabecalho[c_valor])
     registos = []
     for dia, (h, m), kwh, _ in brutos:
         inicio = dia + timedelta(hours=h, minutes=m) - (QUARTO if marca_fim else timedelta(0))
         registos.append((inicio.replace(tzinfo=periodos.LISBOA), kwh))
-    ler.estimados = sum(1 for *_, e in brutos if e)      # quantos valores eram estimados
-    return sorted(registos)
+    return sorted(registos), sum(1 for *_, e in brutos if e)
 
 
 def analisar(registos):
@@ -154,3 +171,66 @@ def preco_ponderado(registos, precos_omie):
     if not kwh_total:
         return None
     return {"ponderado": soma / kwh_total, "simples": sum(valores) / len(valores)}
+
+
+DIAS_SEMANA = ("Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom")
+
+
+def padroes(registos):
+    """Padrões de um período longo (até um ano): por mês, por hora × mês, dias da semana e consumo de base.
+
+    - meses: kWh, kWh/dia, % vazio e ponta (tri-horário) e pico (kW) de cada mês;
+    - mapa: consumo médio por dia em cada hora, para cada mês (o "mapa de calor");
+    - dias úteis contra fim de semana (só dias completos, com os 96 quartos de hora);
+    - consumo de base: o que fica sempre ligado (frigorífico, standby, routers), medido como o
+      percentil 10 da potência entre as 2h e as 5h, quando quase tudo está desligado.
+    """
+    por_mes = defaultdict(lambda: {"kwh": 0.0, "vazio": 0.0, "ponta": 0.0, "pico_kw": 0.0, "quartos": 0})
+    hora_mes, dias_mes = defaultdict(float), defaultdict(set)
+    por_dia, quartos_dia, noite = defaultdict(float), defaultdict(int), []
+    for t, kwh in registos:
+        m = (t.year, t.month)
+        d = por_mes[m]
+        d["kwh"] += kwh
+        d["quartos"] += 1
+        periodo = periodos.periodo(t, "tri")
+        if periodo in ("vazio", "ponta"):
+            d[periodo] += kwh
+        d["pico_kw"] = max(d["pico_kw"], kwh * 4)
+        hora_mes[(m, t.hour)] += kwh
+        dias_mes[m].add(t.date())
+        por_dia[t.date()] += kwh
+        quartos_dia[t.date()] += 1
+        if 2 <= t.hour < 5:
+            noite.append(kwh * 4)
+
+    meses = []
+    for m in sorted(por_mes):
+        d = por_mes[m]
+        n_dias = d["quartos"] / 96
+        meses.append({"mes": date(m[0], m[1], 1), "kwh": d["kwh"], "dias": n_dias,
+                      "kwh_dia": d["kwh"] / n_dias if n_dias else 0.0,
+                      "pct_vazio": 100 * d["vazio"] / d["kwh"] if d["kwh"] else 0.0,
+                      "pct_ponta": 100 * d["ponta"] / d["kwh"] if d["kwh"] else 0.0,
+                      "pico_kw": d["pico_kw"]})
+    # dividido pelos mesmos dias do kWh/dia do mês (quartos/96): a soma das 24 horas bate com ele
+    mapa = {date(m[0], m[1], 1): [hora_mes[(m, h)] / (por_mes[m]["quartos"] / 96) for h in range(24)]
+            for m in sorted(por_mes)}
+
+    completos = {dia: v for dia, v in por_dia.items() if quartos_dia[dia] >= 92}   # 23 h no dia da mudança de hora
+    semana = defaultdict(list)
+    for dia, v in completos.items():
+        semana[dia.weekday()].append(v)
+    media = lambda vs: sum(vs) / len(vs) if vs else None
+    uteis = [v for dia, v in completos.items() if dia.weekday() < 5]
+    fds = [v for dia, v in completos.items() if dia.weekday() >= 5]
+    noite.sort()
+    base_kw = noite[len(noite) // 10] if noite else None
+    maior = max(completos.items(), key=lambda x: x[1]) if completos else None
+    return {
+        "meses": meses, "mapa": mapa,
+        "por_dia_semana": [media(semana[i]) for i in range(7)],
+        "kwh_dia_util": media(uteis), "kwh_dia_fds": media(fds),
+        "base_kw": base_kw, "base_kwh_ano": base_kw * 24 * 365 if base_kw is not None else None,
+        "dia_maior": maior, "dias_completos": len(completos),
+    }

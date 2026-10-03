@@ -273,3 +273,77 @@ def test_segredos_com_maiuscula_e_numa_linha(monkeypatch):
     app.text_input[0].input("certa").run()
     app.button[0].click().run()
     assert "Ferramentas" in _texto_visivel(app)
+
+
+def test_fatura_explorar_e_o_teu_ano(monkeypatch, omie_simulado):
+    app = _abrir("paginas/fatura.py", monkeypatch)
+    texto = _texto_visivel(app)
+    assert "O que podes mudar e quanto custaria" in texto and "E se…" in texto
+    assert "Carrega várias faturas" in texto                     # ainda sem histórico
+    assert not app.exception
+
+
+SCRIPT_ANO = """
+from datetime import date, timedelta
+from interface import fatura_extra, perfil as pf
+from interface.dados import erse
+p = pf.perfil()
+lidas = [{"inicio": date(2026, m, 1), "fim": date(2026, m, 1) + timedelta(days=29), "dias": 30,
+          "consumo_total": 200 + 60 * (m in (1, 2)), "preco_energia": 0.15 + 0.005 * m, "preco_diario": 0.30,
+          "comercializador": "Exemplo"} for m in (1, 2, 3, 6, 7, 8)]
+c = fatura_extra.Contexto(p=p, f={"energia": 45.0, "potencia": 11.0, "total": 56.0}, tarifa=erse(),
+                          medias=None, com_perfil=False, sem_tri=False, lidas=lidas)
+fatura_extra.o_teu_ano(c)
+fatura_extra.explorar(c)
+"""
+
+
+def test_o_teu_ano_com_seis_faturas(monkeypatch):
+    monkeypatch.chdir(PASTA)
+    app = AppTest.from_string(SCRIPT_ANO, default_timeout=30).run()
+    assert not app.exception
+    texto = _texto_visivel(app)
+    assert "As tuas faturas" in texto and "Para o teu ano inteiro" in texto
+    assert "No inverno gastas" in texto and "Faltam" in texto             # abril e maio em falta
+    assert "O preço da energia subiu" in texto
+    assert "média das tuas 6 faturas" in texto                            # o Explorar usa o ano
+
+
+SCRIPT_EREDES = """
+from datetime import datetime, timedelta
+import streamlit as st
+from interface import fatura_extra, perfil as pf
+from interface.dados import erse
+from nucleo import eredes, periodos
+inicio = datetime(2026, 1, 1, tzinfo=periodos.LISBOA)
+regs = [(inicio + timedelta(minutes=15 * q), 0.1) for q in range(60 * 96)]
+st.session_state["eredes_padroes"] = eredes.padroes(regs)
+c = fatura_extra.Contexto(p=pf.perfil(), f=None, tarifa=erse(), medias=None, com_perfil=False, sem_tri=False)
+fatura_extra.o_teu_ano(c)
+"""
+
+
+def test_o_teu_ano_com_eredes(monkeypatch):
+    monkeypatch.chdir(PASTA)
+    app = AppTest.from_string(SCRIPT_EREDES, default_timeout=30).run()
+    assert not app.exception
+    texto = _texto_visivel(app)
+    assert "Os teus consumos da E-REDES" in texto and "sempre ligados" in texto
+
+
+def test_tentativas_por_ip_partilhadas_entre_sessoes():
+    """Auditoria: recarregar a página já não apaga as tentativas erradas."""
+    from interface import acesso
+    t, agora = acesso.Tentativas(), 1000.0
+    for i in range(acesso.MAX_FALHAS_IP):
+        assert t.bloqueado("1.1.1.1", agora) == 0
+        t.falhou("1.1.1.1", agora)
+    assert t.bloqueado("1.1.1.1", agora) > 0 and t.bloqueado("2.2.2.2", agora) == 0
+    assert t.bloqueado("1.1.1.1", agora + acesso.JANELA + 1) == 0            # passa com o tempo
+    assert acesso.ip_de({"X-Forwarded-For": "203.0.113.5, 10.0.0.1"}) == "203.0.113.5"
+
+
+def test_nome_de_ficheiro_sem_markdown():
+    from interface import componentes as ui
+    nome = ui.nome_ficheiro("**x** [y](javascript:alert(1)).pdf")
+    assert "[" not in nome and "(" not in nome and "*" not in nome

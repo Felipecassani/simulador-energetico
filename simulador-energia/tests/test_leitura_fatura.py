@@ -1,5 +1,6 @@
 """Leitura de faturas: texto e um PDF de exemplo gerado no próprio teste."""
 import io
+from datetime import date
 
 import pytest
 
@@ -191,3 +192,47 @@ def test_comercializador_empate_e_variantes():
     assert lf.comercializador("EDP - Distribuição avarias") is None
     assert lf.comercializador("EDP Serviço Universal") is None
     assert lf.comercializador("Viva em plenitude\nGalp") == "Galp"
+
+
+
+DUAL_DATAS_DIFERENTES = """FATURA
+Gás Natural
+Termo Fixo 07/05/2026 14/06/2026 39 Dia 0,1237 4,82 23
+Contador gás 07/05/2026 3348 Inicial 14/06/2026 3368 Real 20 11,2430028 225
+Eletricidade
+Vazio 11/05/2026 4083 Inicial 14/06/2026 4159 Real 76
+Acesso às Redes Potência Contratada 4,6 kVA 11/05/2026 14/06/2026 35 Dia 0,2291 8,02 23
+Potência Contratada 4,6 kVA 11/05/2026 14/06/2026 35 Dia 0,3148 11,02 23
+Consumo Eletricidade Vazio medido 11/05/2026 14/06/2026 76 kWh 0,1397 10,62 6
+Consumo Eletricidade Ponta medido 11/05/2026 14/06/2026 53 kWh 0,1397 7,40 6
+Consumo Eletricidade Cheia medido 11/05/2026 14/06/2026 123 kWh 0,1397 17,18 6
+"""
+
+
+def test_fatura_dual_usa_o_periodo_da_eletricidade():
+    """Erro encontrado com uma fatura real: o leitor ficava com as datas do gás (39 dias em vez de 35)."""
+    r = lf.ler_fatura(DUAL_DATAS_DIFERENTES)
+    assert (r["inicio"], r["fim"], r["dias"]) == (date(2026, 5, 11), date(2026, 6, 14), 35)
+    assert r["preco_diario"] == aprox(0.2291 + 0.3148)
+    assert r["consumo_total"] == aprox(252)
+
+
+@pytest.mark.parametrize("texto,inicio,dias,diario", [
+    # dual com o título "Energia elétrica" (não "eletricidade")
+    ("Período de faturação 07/05/2026 a 14/06/2026\nGás natural\nTermo fixo 39 dias 0,1237\nEnergia elétrica\n"
+     "Potência 6,9 kVA 11/05/2026 a 14/06/2026 35 dias 0,3000\nEnergia Simples 200 kWh 0,15 €/kWh",
+     date(2026, 5, 11), 35, 0.30),
+    # acerto de um mês anterior não alarga o período
+    ("Potência 6,9 kVA 01/05/2026 a 31/05/2026 31 dias 0,3000\n"
+     "Acerto potência 6,9 kVA 01/04/2026 a 30/04/2026 30 dias 0,3000\nEnergia Simples 200 kWh 0,15 €/kWh",
+     date(2026, 5, 1), 31, None),
+    # dual sem datas na potência: os dias da potência são os da eletricidade
+    ("Período de faturação 07/05/2026 a 14/06/2026\nGás Natural\nTermo Fixo 39 Dia 0,1237\nEletricidade\n"
+     "Potência 6,9 kVA 35 dias 0,3000\nEnergia Simples 200 kWh 0,15 €/kWh",
+     date(2026, 5, 11), 35, 0.30),
+])
+def test_periodo_da_eletricidade_casos_da_auditoria(texto, inicio, dias, diario):
+    r = lf.ler_fatura(texto)
+    assert (r["inicio"], r["dias"]) == (inicio, dias)
+    if diario is not None:
+        assert r["preco_diario"] == aprox(diario)

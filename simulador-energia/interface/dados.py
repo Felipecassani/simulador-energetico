@@ -68,9 +68,11 @@ def verificar_erse():
     return online, mudancas
 
 
-@st.cache_data(show_spinner=False)
-def _ofertas_de(caminho, _mudou):
-    return of.ler_zip(open(caminho, "rb").read())
+@st.cache_resource(show_spinner=False)
+def _ofertas_de(caminho, mudou):
+    """Lista partilhada (só de leitura) entre sessões; `mudou` (data do ficheiro) renova a cache."""
+    from pathlib import Path
+    return of.ler_zip(Path(caminho).read_bytes())
 
 
 def ofertas_erse():

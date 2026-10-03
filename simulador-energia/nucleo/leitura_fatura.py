@@ -6,10 +6,10 @@ ajuda para preencher, não uma verdade: a pessoa confirma sempre os valores.
 """
 import io
 import re
-from datetime import date
+from datetime import date, timedelta
 
 # sobe quando a leitura muda: o site volta a ler a fatura já carregada
-VERSAO = 6
+VERSAO = 8
 
 PERIODOS = [("vazio", r"\bvazio\b"), ("ponta", r"\bponta\b"), ("cheias", r"\bcheias?\b"),
             ("simples", r"\bsimples\b")]
@@ -51,7 +51,8 @@ def texto_de_pdf(conteudo):
     from pypdf import PdfReader
 
     leitor = PdfReader(io.BytesIO(conteudo))
-    return "\n".join(p.extract_text() or "" for p in leitor.pages)
+    # uma fatura tem poucas páginas: ler no máximo 12 protege o servidor de PDFs enormes
+    return "\n".join(p.extract_text() or "" for p in list(leitor.pages)[:12])
 
 
 def ocr_disponivel():
@@ -147,6 +148,8 @@ def ler_fatura(texto):
     """
     r, evid = {"consumos": {}, "precos": {}}, {}
     potencias, vistos = [], set()
+    periodos_eletricidade = []        # datas das linhas da potência (numa fatura dual, o gás tem as suas)
+    houve_gas = False
     resumo, total_solto, preco_solto, opcao_escrita = {}, None, None, None
     base_dia, secao = [], None
     sinais_indexado, sinais_fixo = [], []
@@ -159,10 +162,11 @@ def ler_fatura(texto):
         if not l:
             continue
         if GAS.search(l):
+            houve_gas = True
             secao = "gas"                 # as linhas seguintes sem "gás" ainda podem ser do gás
             continue
         baixa = l.lower()
-        if re.search(r"el[eé]c?tricidade", baixa):
+        if re.search(r"el[eé]c?tric(?:idade|a)\b", baixa):      # "eletricidade", "energia elétrica"
             secao = "eletricidade"
 
         # fixo ou indexado, e os parâmetros do indexado (muitas vezes em linhas informativas)
@@ -238,6 +242,16 @@ def ler_fatura(texto):
             if preco is not None:
                 potencias.append((int(qtd_dias.group(1)), preco))
                 anotar("preco_diario", l)
+                datas_pot = re.findall(DATA, l)
+                acerto = re.search(r"acerto|anula|regulariz|refatur|retific", baixa)
+                if secao != "gas" and len(datas_pot) >= 2 and not acerto:
+                    try:
+                        (d1, m1, a1), (d2, m2, a2) = ((int(x) for x in g) for g in datas_pot[:2])
+                        ini, fim = date(a1, m1, d1), date(a2, m2, d2)
+                    except ValueError:
+                        ini = fim = None
+                    if ini and fim and fim >= ini:
+                        periodos_eletricidade.append((ini, fim))
 
         periodos_linha = _periodos_da_linha(l)
         kwh = re.search(r"(" + NUM + r")\s*kwh\b(?!\s*/)", baixa)
@@ -269,6 +283,27 @@ def ler_fatura(texto):
     if not r["consumos"] and resumo:                     # só havia linhas de resumo
         r["consumos"] = dict(resumo)
     consumos, precos = r["consumos"], r["precos"]
+    # o período da eletricidade é o das linhas da potência: numa fatura dual, a primeira data da
+    # fatura pode ser a do gás (ex.: gás 07/05–14/06, eletricidade 11/05–14/06)
+    if periodos_eletricidade:
+        # o período atual é o que acaba mais tarde, mais os pedaços contíguos (a mesma potência partida
+        # por uma mudança de preço: 15/12–31/12 + 01/01–14/01); acertos de meses antigos já ficaram de fora
+        ordenados = sorted(periodos_eletricidade, key=lambda x: x[1], reverse=True)
+        ini, fim = ordenados[0]
+        for a, b in ordenados[1:]:
+            if b >= ini - timedelta(days=1):
+                ini = min(ini, a)
+        if (ini, fim) != (r.get("inicio"), r.get("fim")):
+            r["inicio"], r["fim"], r["dias"] = ini, fim, (fim - ini).days + 1
+            evid.setdefault("dias", []).append("datas das linhas da potência da eletricidade")
+    elif houve_gas and potencias and r.get("dias"):
+        # fatura dual sem datas na potência: os dias da potência são os da eletricidade
+        dias_pot = max(d for d, _ in potencias)
+        if dias_pot < r["dias"]:
+            r["dias"] = dias_pot
+            if r.get("fim"):
+                r["inicio"] = r["fim"] - timedelta(days=dias_pot - 1)
+            evid.setdefault("dias", []).append("dias das linhas da potência (fatura dual)")
     if potencias:
         dias_ref = r.get("dias") or max(d for d, _ in potencias)
         r["preco_diario"] = sum(d * p for d, p in potencias) / dias_ref

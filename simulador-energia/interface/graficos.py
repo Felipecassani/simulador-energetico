@@ -1,5 +1,5 @@
 """Gráficos Plotly com a paleta do projeto (usados em Tarifários, Opções horárias e Gráficos)."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import plotly.graph_objects as go
 import plotly.io as pio

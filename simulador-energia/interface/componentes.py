@@ -3,6 +3,7 @@
 O site é para qualquer pessoa: aqui não entra nada técnico (fórmulas,
 estados de desenvolvimento, comandos). Isso vive no guia PDF (docs/).
 """
+import re
 from html import escape
 
 import streamlit as st
@@ -13,6 +14,12 @@ from nucleo import roteiro
 
 
 # ---------- formatos ----------
+
+def nome_ficheiro(nome):
+    """Nome de ficheiro para mostrar em texto markdown: sem formatação nem ligações (vem do browser)."""
+    limpo = re.sub(r"[`*_\[\]()#<>!|~\\]", " ", str(nome))[:80].strip()
+    return f"«{limpo}»"
+
 
 def euros(valor):
     """90.5 → '90,50' (formato português, sem o símbolo)."""

@@ -13,17 +13,20 @@ from interface.dados import omie_recente
 from nucleo import eredes
 
 
+MAX_FICHEIROS = 24          # um ano em ficheiros mensais, com folga para repetidos
+
+
 def _juntar(ficheiros):
-    """Lê todos os ficheiros e junta os quartos de hora (sem repetidos)."""
+    """Lê os ficheiros e junta os quartos de hora (sem repetidos): (registos, falhados, estimados)."""
     por_instante, falhados, estimados = {}, [], 0
-    for f in ficheiros:
+    for f in ficheiros[:MAX_FICHEIROS]:
         try:
-            por_instante.update(dict(eredes.ler(f.name, f.getvalue())))
-            estimados += eredes.ler.estimados
-        except Exception:  # formato desconhecido
+            registos, n = eredes.ler_com_estimados(f.name, f.getvalue())
+            por_instante.update(dict(registos))
+            estimados += n
+        except Exception:  # formato desconhecido, ficheiro grande demais
             falhados.append(f.name)
-    _juntar.estimados = estimados
-    return sorted(por_instante.items()), falhados
+    return sorted(por_instante.items()), falhados, estimados
 
 
 def secao(prefixo):
@@ -32,28 +35,34 @@ def secao(prefixo):
     with st.expander("Contador inteligente? Carrega os consumos da E-REDES" + (" · em uso" if analise else ""),
                      icon=":material/upload_file:", expanded=False):
         st.caption("No Balcão Digital da E-REDES (balcaodigital.e-redes.pt) descarrega os consumos de 15 em "
-                   "15 minutos, em Excel ou CSV. Podes carregar vários ficheiros (por exemplo, um por mês). "
+                   "15 minutos, em Excel ou CSV. Podes carregar até um ano (por exemplo, um ficheiro por mês): os padrões "
+                   "aparecem no separador \"O teu ano\" da Fatura. "
                    "São lidos neste computador e não ficam guardados.")
         ficheiros = st.file_uploader("Ficheiros da E-REDES", type=["xlsx", "csv"], accept_multiple_files=True,
                                      key=f"{prefixo}_eredes", label_visibility="collapsed")
-        if ficheiros:
-            assinatura = tuple(sorted(f.file_id for f in ficheiros))
+        if len(ficheiros) > MAX_FICHEIROS:
+            st.info(f"Carregaste {len(ficheiros)} ficheiros: leio os primeiros {MAX_FICHEIROS}.", icon=":material/info:")
+        assinatura = tuple(sorted(f.file_id for f in ficheiros)) if ficheiros else None
+        if ficheiros and assinatura == st.session_state.get("eredes_ignorados"):
+            st.caption("Estes ficheiros estão postos de parte. Tira-os ou carrega outros para voltar a usar a E-REDES.")
+        elif ficheiros:
             if st.session_state.get("eredes_assinatura") != assinatura:
-                registos, falhados = _juntar(ficheiros)
+                registos, falhados, estimados = _juntar(ficheiros)
                 st.session_state["eredes_assinatura"] = assinatura
                 st.session_state["eredes_falhados"] = falhados
                 if registos:
                     analise = eredes.analisar(registos)
                     st.session_state["eredes_analise"] = analise
                     st.session_state["eredes_registos"] = registos
-                    st.session_state["eredes_estimados"] = _juntar.estimados
+                    st.session_state["eredes_estimados"] = estimados
+                    st.session_state["eredes_padroes"] = eredes.padroes(registos)   # para "O teu ano"
                     # a repartição real passa já para todas as ferramentas
                     pf.aplicar(pct_vazio=round(analise["pct_vazio"], 1),
                                pct_ponta=round(analise["pct_ponta"], 1),
                                perfil_da_fatura=True, ponta_na_fatura=True)
                     st.rerun()
         for nome in st.session_state.get("eredes_falhados", []):
-            st.warning(f"Não consegui ler {nome}. Confirma que é o ficheiro dos consumos de 15 em 15 "
+            st.warning(f"Não consegui ler {ui.nome_ficheiro(nome)}. Confirma que é o ficheiro dos consumos de 15 em 15 "
                        "minutos da E-REDES.", icon=":material/error:")
         if analise:
             _resumo(analise, prefixo)
@@ -99,7 +108,13 @@ def _resumo(analise, prefixo):
     with c2:
         if st.button("Deixar de usar os dados da E-REDES", key=f"{prefixo}_eredes_limpar",
                      icon=":material/close:"):
+            # os ficheiros podem continuar na caixa: ficam postos de parte até mudarem
+            st.session_state["eredes_ignorados"] = st.session_state.get("eredes_assinatura")
             for k in ("eredes_analise", "eredes_registos", "eredes_assinatura", "eredes_falhados",
-                      "eredes_estimados"):
+                      "eredes_estimados", "eredes_padroes"):
                 st.session_state.pop(k, None)
+            # a repartição real sai do perfil; a Fatura volta a pôr a da fatura mais recente (se houver)
+            pf.aplicar(pct_vazio=pf.PADRAO["pct_vazio"], pct_ponta=pf.PADRAO["pct_ponta"],
+                       perfil_da_fatura=False, ponta_na_fatura=True)
+            st.session_state.pop("fatura_principal", None)
             st.rerun()

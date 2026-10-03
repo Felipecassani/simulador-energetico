@@ -10,6 +10,7 @@
 from nucleo import calculos, periodos
 
 OPCOES = ("simples", "bi", "tri")
+ESCALOES_KVA = [1.15, 2.3, 3.45, 4.6, 5.75, 6.9, 10.35, 13.8, 17.25, 20.7]   # potências contratáveis em BTN
 MODALIDADES = ("fixo", "indexado")
 
 

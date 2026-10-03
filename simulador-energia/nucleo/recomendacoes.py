@@ -10,7 +10,7 @@ from nucleo import calculos, periodos, tarifas
 
 SIMULADOR_ERSE = "https://simulador.precos.erse.pt/"
 LIMIAR = 0.50            # € por mês: abaixo disto não vale a pena recomendar mudar
-ESCALOES = [1.15, 2.3, 3.45, 4.6, 5.75, 6.9, 10.35, 13.8, 17.25, 20.7]
+ESCALOES = tarifas.ESCALOES_KVA
 
 
 @dataclass(frozen=True)

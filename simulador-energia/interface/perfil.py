@@ -8,6 +8,7 @@ sobe a revisão: todos os campos de todas as páginas nascem de novo com esses v
 import streamlit as st
 
 from interface.dados import erse
+from nucleo import tarifas
 
 PADRAO = {
     "consumo_kwh": 300.0,
@@ -24,7 +25,7 @@ PADRAO = {
     "da_fatura": False,            # True depois de carregar uma fatura
 }
 
-ESCALOES_KVA = [1.15, 2.3, 3.45, 4.6, 5.75, 6.9, 10.35, 13.8, 17.25, 20.7]
+ESCALOES_KVA = tarifas.ESCALOES_KVA
 
 
 def _precos_regulados(kva):
