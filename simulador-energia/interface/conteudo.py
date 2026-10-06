@@ -12,7 +12,6 @@ AUTOR = {
     "linha": "Programação, eletrónica e automação da casa.",
     "ligacoes": [
         ("GitHub", "https://github.com/Felipecassani", "codigo"),
-        ("Instagram", "https://www.instagram.com/felipecassani_/", "instagram"),
         ("LinkedIn", "https://www.linkedin.com/in/luizfelipecassani/", "linkedin"),
     ],
 }
