@@ -347,3 +347,13 @@ def test_nome_de_ficheiro_sem_markdown():
     from interface import componentes as ui
     nome = ui.nome_ficheiro("**x** [y](javascript:alert(1)).pdf")
     assert "[" not in nome and "(" not in nome and "*" not in nome
+
+
+def test_script_do_tema_passa_o_filtro_do_st_html():
+    """O DOMPurify do st.html apaga o <script> inteiro se lá dentro houver "<" seguido de letra, "/" ou "!"
+    (aconteceu com um comentário "/~/+/<página>": o seletor de tema deixou de funcionar no Cloud)."""
+    from interface import tema
+    html = tema._HTML.format(botoes="", caminhos="[]", fundos="{}", icones="{}")
+    script = html.split("<script>", 1)[1].rsplit("</script>", 1)[0]
+    assert not re.search(r"<[/\w!]", script)
+    assert "prefixo" in script                       # chaves com o prefixo do endereço (/~/+ no Cloud)

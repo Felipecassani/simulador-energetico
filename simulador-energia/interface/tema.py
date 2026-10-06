@@ -32,7 +32,7 @@ _HTML = """
 </div>
 <script>
 (function () {{
-  // no Streamlit Cloud a app corre em /~/+/<página>: o prefixo é o que sobra do endereço
+  // no Streamlit Cloud a app corre em /~/+/(página): o prefixo é o que sobra do endereço
   // depois de tirar o caminho da página (o mais comprido que encaixa; "/" encaixa sempre)
   const caminhos = {caminhos};
   const pagina = caminhos.filter(c => location.pathname.endsWith(c)).sort((a, b) => b.length - a.length)[0] || "/";
