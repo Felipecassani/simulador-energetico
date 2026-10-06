@@ -27,8 +27,13 @@ ui.cabecalho("Sobre o projeto",
              "Ferramentas gratuitas e simples para perceberes a tua fatura de eletricidade e pagares menos.",
              kicker="Sobre")
 
+def _icone(simbolo):
+    """Sem símbolo conhecido, a ligação aparece só com o nome (não rebenta a página)."""
+    return f'<img src="{_imagem(SIMBOLOS[simbolo])}" alt="">' if simbolo in SIMBOLOS else ""
+
+
 ligacoes = "".join(
-    f'<a href="{escape(url)}" target="_blank" rel="noopener"><img src="{_imagem(SIMBOLOS[simbolo])}" alt=""><span>{escape(nome)}</span></a>'
+    f'<a href="{escape(url)}" target="_blank" rel="noopener">{_icone(simbolo)}<span>{escape(nome)}</span></a>'
     for nome, url, simbolo in AUTOR["ligacoes"])
 st.html(f"""
 <div class="lc-card lc-autor">
