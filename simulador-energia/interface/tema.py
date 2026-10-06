@@ -1,7 +1,8 @@
 """Seletor de tema com 3 estados: claro, sistema e escuro (fixo no canto).
 
 O Streamlit guarda a escolha de tema no browser (localStorage), uma entrada por
-página: "stActiveTheme-<caminho>-v2", com o valor "Light", "Dark" ou "System".
+página: "stActiveTheme-<caminho>-v2", com o valor "Light", "Dark" ou "System". O caminho é
+o do browser, por isso no Streamlit Cloud leva o prefixo "/~/+" (descoberto no próprio browser).
 O seletor grava a escolha em todas as páginas, cobre o ecrã com um círculo da cor
 nova (a partir do botão) e recarrega. Recarregar abre uma sessão nova, por isso os
 campos voltam aos valores iniciais (não passamos dados pessoais pelo endereço).
@@ -31,7 +32,12 @@ _HTML = """
 </div>
 <script>
 (function () {{
-  const chaves = {chaves};
+  // no Streamlit Cloud a app corre em /~/+/<página>: o prefixo é o que sobra do endereço
+  // depois de tirar o caminho da página (o mais comprido que encaixa; "/" encaixa sempre)
+  const caminhos = {caminhos};
+  const pagina = caminhos.filter(c => location.pathname.endsWith(c)).sort((a, b) => b.length - a.length)[0] || "/";
+  const prefixo = location.pathname.slice(0, location.pathname.length - pagina.length);
+  const chaves = caminhos.map(c => "stActiveTheme-" + prefixo + c + "-v2");
   const fundos = {fundos};
   const icones = {icones};
   const grupo = document.getElementById("lc-tema");
@@ -79,7 +85,7 @@ def seletor_tema(caminhos):
         for estado, nome, _ in ESTADOS)
     html = _HTML.format(
         botoes=botoes,
-        chaves=json.dumps([f"stActiveTheme-{c}-v2" for c in caminhos]),
+        caminhos=json.dumps(list(caminhos)),
         fundos=json.dumps({t: p["bg"] for t, p in PALETAS.items()}),
         icones=json.dumps({estado: base64.b64encode(icone.encode()).decode() for estado, _, icone in ESTADOS}))
     with st.container(key="tema_mosaico"):          # fixo no canto (CSS em estilo.py)
