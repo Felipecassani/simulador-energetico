@@ -16,6 +16,7 @@ PALETAS = {
         "primary": "#C8283C", "primary-deep": "#6E0E1C",
         "gold": "#D9B45B", "bronze": "#B9805E",
         "ok": "#5BBF8E", "warn": "#D9B45B", "err": "#E0485A",
+        "gold-texto": "#D9B45B", "ok-texto": "#5BBF8E",
     },
     "light": {
         "bg": "#FBF6F2", "surface": "#FFFFFF", "surface-2": "#F3E8E1",
@@ -23,6 +24,8 @@ PALETAS = {
         "primary": "#A8192E", "primary-deep": "#5C0B18",
         "gold": "#A8842E", "bronze": "#8F5B3E",
         "ok": "#2F8A5E", "warn": "#A8842E", "err": "#A8192E",
+        # texto pequeno no tema claro: o dourado e o verde normais ficam abaixo de 4,5:1
+        "gold-texto": "#7A5C1A", "ok-texto": "#23704B",
     },
 }
 
@@ -59,16 +62,100 @@ _CSS = """
 [data-testid="stTopNavLink"] p, [data-testid="stTopNavSection"] p {{
   font-size: 1.02rem !important; font-weight: 700 !important;
 }}
-/* Início em destaque: pastilha carmim com texto claro */
-[data-testid="stTopNavLink"] {{
+/* "Início" só fica em carmim quando é a página aberta; o menu "Ferramentas" (o 1.º grupo) tem
+   sempre a borda carmim: é aí que estão as ferramentas */
+[data-testid="stTopNavLink"], [data-testid="stTopNavSection"] {{
+  border: 1px solid var(--lc-border) !important; background: var(--lc-surface) !important;
+}}
+[data-testid="stTopNavLink"][aria-current="page"] {{
   background: linear-gradient(135deg, var(--lc-primary), var(--lc-primary-deep)) !important;
-  box-shadow: 0 8px 22px -12px var(--lc-primary);
+  border-color: transparent !important; box-shadow: 0 8px 22px -12px var(--lc-primary);
 }}
-[data-testid="stTopNavLink"] p, [data-testid="stTopNavLink"] [data-testid="stIconMaterial"] {{
-  color: #FFF7F2 !important;
+[data-testid="stTopNavLink"][aria-current="page"] :is(p, [data-testid="stIconMaterial"]) {{ color: #FFF7F2 !important; }}
+.rc-overflow-item:nth-child(2) [data-testid="stTopNavSection"] {{
+  border: 2px solid var(--lc-primary) !important;
+  background: color-mix(in srgb, var(--lc-primary) 14%, var(--lc-surface)) !important;
 }}
-[data-testid="stTopNavLink"]:hover {{ filter: brightness(1.12); transform: translateY(-1px); }}
-[data-testid="stTopNavSection"] {{ border: 1px solid var(--lc-border) !important; background: var(--lc-surface) !important; }}
+@media (min-width: 768px) and (max-width: 1180px) {{
+  [data-testid="stTopNavLink"], [data-testid="stTopNavSection"] {{ padding: .4rem .75rem !important; }}
+  [data-testid="stTopNavLink"] p, [data-testid="stTopNavSection"] p {{ font-size: .95rem !important; }}
+}}
+
+/* Telemóvel: o Streamlit troca o menu do topo por um ícone ">>" sem texto; passa a ser "☰ Menu" */
+[data-testid="stExpandSidebarButton"] {{
+  display: inline-flex !important; align-items: center; gap: .45rem; min-height: 44px; width: auto !important;
+  padding: 0 1rem 0 .85rem !important; border-radius: 999px !important;
+  background: linear-gradient(135deg, var(--lc-primary), var(--lc-primary-deep)) !important;
+  color: #FFF7F2 !important; box-shadow: 0 8px 22px -12px var(--lc-primary);
+}}
+[data-testid="stExpandSidebarButton"] > span {{ display: none; }}   /* o ícone ">>" e o seu contentor */
+[data-testid="stExpandSidebarButton"]::before {{ content: "☰"; font-size: 1.15rem; line-height: 1; }}
+[data-testid="stExpandSidebarButton"]::after {{ content: "Menu"; font-weight: 700; font-size: 1rem; }}
+[data-testid="stSidebarNavLink"] {{ min-height: 44px; }}
+[data-testid="stSidebarNavLink"] span {{ font-size: 1.02rem; }}
+@media (max-width: 767.98px) {{
+  /* menu aberto: o seletor de tema não tapa o botão de fechar */
+  .stApp:has([data-testid="stSidebar"][aria-expanded="true"]) .st-key-tema_mosaico {{ visibility: hidden; }}
+  .block-container {{ padding-top: 4.6rem !important; }}
+  .lc-tema {{ grid-template-columns: repeat(3, 40px); }}
+  .lc-tema button, .lc-tema-ind {{ width: 40px; height: 40px; }}
+  .lc-tema[data-estado="System"] .lc-tema-ind {{ transform: translateX(42px); }}
+  .lc-tema[data-estado="Dark"] .lc-tema-ind {{ transform: translateX(84px); }}
+}}
+
+/* ---------- Botões-ligação (Começar, próximo passo, ajuda, em breve) ---------- */
+.st-key-cta_inicio {{ margin: .4rem 0 0; }}
+.st-key-cta_inicio [data-testid="stPageLink-NavLink"] {{
+  min-height: 52px; width: fit-content; padding: 0 1.6rem !important; border-radius: 999px;
+  background: linear-gradient(135deg, var(--lc-primary), var(--lc-primary-deep));
+  box-shadow: 0 12px 28px -14px var(--lc-primary);
+}}
+.st-key-cta_inicio [data-testid="stPageLink-NavLink"] :is(span, p, [data-testid="stIconMaterial"]) {{
+  color: #FFF7F2 !important; font-weight: 700; font-size: 1.1rem;
+}}
+:is(.st-key-aprender, .st-key-em_breve, .st-key-rodape_ajuda, .st-key-proximo_ligacoes) [data-testid="stPageLink-NavLink"] {{
+  min-height: 44px; padding: 0 1rem !important; border: 1px solid var(--lc-border); border-radius: 999px;
+  background: var(--lc-surface);
+}}
+.st-key-em_breve [data-testid="stPageLink-NavLink"] {{ border-style: dashed; }}
+.st-key-proximo_ligacoes [data-testid="stPageLink-NavLink"]:first-child {{
+  background: linear-gradient(135deg, var(--lc-primary), var(--lc-primary-deep)); border-color: transparent;
+}}
+.st-key-proximo_ligacoes [data-testid="stPageLink"]:first-child [data-testid="stPageLink-NavLink"] :is(span, p, [data-testid="stIconMaterial"]) {{
+  color: #FFF7F2 !important; font-weight: 700;
+}}
+.st-key-proximo_passo {{ border-color: color-mix(in srgb, var(--lc-gold) 45%, var(--lc-border)) !important; }}
+.st-key-proximo_passo .lc-card-flat p {{ color: var(--lc-text); font-size: 1rem; line-height: 1.55; margin-top: .3rem; }}
+.st-key-rodape_ajuda {{ margin-top: 2.2rem; }}
+
+/* ---------- Separadores (ex.: as 3 partes da Fatura): parecem botões, não texto solto ---------- */
+[data-testid="stTabs"] [role="tablist"] {{ flex-wrap: wrap; gap: .45rem; border-bottom: none; }}
+[data-testid="stTabs"] [data-baseweb="tab-highlight"], [data-testid="stTabs"] [data-baseweb="tab-border"] {{ display: none; }}
+[data-testid="stTab"] {{
+  min-height: 48px; padding: .35rem 1.1rem !important; border: 1px solid var(--lc-border) !important;
+  border-radius: 999px; background: var(--lc-surface);
+}}
+[data-testid="stTab"] p {{ font-size: 1.05rem !important; font-weight: 700; }}
+[data-testid="stTab"][aria-selected="true"] {{
+  background: linear-gradient(135deg, var(--lc-primary), var(--lc-primary-deep)); border-color: transparent !important;
+}}
+[data-testid="stTab"][aria-selected="true"] :is(p, [data-testid="stIconMaterial"]) {{ color: #FFF7F2 !important; }}
+
+/* caixa de carregar ficheiros: o Streamlit escreve-a em inglês ("Upload", "15MB per file") */
+[data-testid="stFileUploaderDropzone"] button {{ min-height: 44px; }}
+[data-testid="stFileUploaderDropzone"] button [data-testid="stMarkdownContainer"] p {{ font-size: 0 !important; }}
+[data-testid="stFileUploaderDropzone"] button [data-testid="stMarkdownContainer"] p::after {{
+  content: "Escolher ficheiro"; font-size: 1rem; font-weight: 600;
+}}
+[data-testid="stFileUploaderDropzoneInstructions"] span {{ font-size: 0 !important; }}
+[data-testid="stFileUploaderDropzoneInstructions"] span::after {{
+  content: "ou arrasta-o para aqui · até 15 MB cada"; font-size: .95rem;
+}}
+
+/* ajuda (?) dos campos maior e mais fácil de tocar; legendas legíveis */
+[data-testid="stTooltipIcon"] svg {{ width: 1.25rem; height: 1.25rem; }}
+[data-testid="stCaptionContainer"] {{ font-size: .95rem; }}
+[data-testid="stWidgetLabel"] p {{ font-size: 1rem; }}
 
 /* ---------- Botão claro/escuro: mosaico fixo no canto ---------- */
 .st-key-tema_mosaico {{
@@ -101,8 +188,19 @@ _CSS = """
 @media (prefers-reduced-motion: reduce) {{ .lc-tema *, .lc-tema-ind {{ transition: none !important; }} }}
 
 /* ---------- Cartões das ferramentas: o cartão inteiro é a ligação ---------- */
-[class*="st-key-cartao_"] {{ position: relative; transition: transform .18s ease, box-shadow .18s ease; }}
-[class*="st-key-cartao_"]:hover {{ transform: translateY(-3px); box-shadow: 0 16px 34px -24px var(--lc-primary); }}
+[class*="st-key-cartao_"] {{ position: relative; transition: transform .18s ease, box-shadow .18s ease;
+  background: var(--lc-surface); border-color: color-mix(in srgb, var(--lc-primary) 40%, var(--lc-border)) !important; }}
+@media (hover: hover) and (pointer: fine) {{
+  [class*="st-key-cartao_"]:hover {{ transform: translateY(-3px); box-shadow: 0 16px 34px -24px var(--lc-primary); }}
+}}
+/* o "Abrir" parece um botão (sem position no link: a camada ::after tem de cobrir o cartão) */
+[class*="st-key-cartao_"] [data-testid="stPageLink-NavLink"] {{
+  min-height: 44px; width: fit-content; padding: 0 1.2rem !important; border-radius: 999px;
+  background: linear-gradient(135deg, var(--lc-primary), var(--lc-primary-deep));
+}}
+[class*="st-key-cartao_"] [data-testid="stPageLink-NavLink"] :is(span, p, [data-testid="stIconMaterial"]) {{
+  color: #FFF7F2 !important; font-weight: 700;
+}}
 /* os contentores internos do Streamlit são "relative": ficam estáticos para a camada cobrir o cartão */
 [class*="st-key-cartao_"] [data-testid="stElementContainer"] {{ position: static !important; }}
 [class*="st-key-cartao_"] [data-testid="stPageLink-NavLink"]::after {{
@@ -154,13 +252,14 @@ _CSS = """
 .lc-podio-oferta {{ color: var(--lc-muted); font-size: .88rem; margin: 0 !important; }}
 .lc-podio-valor {{ font-family: Sora, sans-serif; font-weight: 800; font-size: 1.7rem; color: var(--lc-text); }}
 .lc-podio-valor small {{ font-size: .8rem; font-weight: 500; color: var(--lc-muted); margin-left: .35rem; }}
-.lc-podio .lc-pos {{ color: var(--lc-ok); font-weight: 700; }}
+.lc-podio .lc-pos {{ color: var(--lc-ok-texto); font-weight: 700; }}
+.lc-podio-lugar {{ font-size: .95rem; font-family: Inter, sans-serif; font-weight: 700; color: var(--lc-gold-texto); margin-left: .4rem; vertical-align: middle; }}
 .lc-podio .lc-neg {{ color: var(--lc-err); font-weight: 700; }}
 .lc-podio-nota {{ font-size: .8rem; color: var(--lc-muted); }}
 .lc-podio .lc-chips {{ display: flex; flex-wrap: wrap; gap: .3rem; }}
 
 /* secções em construção, página Sobre */
-.lc-construcao {{ opacity: .78; }}
+.lc-construcao {{ opacity: .9; }}
 [class*="st-key-cartao_breve_"]:hover .lc-construcao {{ opacity: 1; }}
 .lc-lista {{ display: inline-block; text-align: left; margin: .2rem auto 0; color: var(--lc-muted); }}
 .lc-autor {{ display: flex; gap: 1.2rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }}
@@ -185,18 +284,18 @@ _CSS = """
   background: color-mix(in srgb, var(--lc-gold) 10%, transparent);
   border: 1px solid color-mix(in srgb, var(--lc-gold) 35%, transparent);
 }}
-.lc-aviso b {{ color: var(--lc-gold); }}
+.lc-aviso b {{ color: var(--lc-gold-texto); }}
 
 /* ---------- Recomendações ---------- */
 .lc-rec {{ display: flex; gap: .9rem; align-items: flex-start; }}
 .lc-rec .lc-rec-valor {{
   flex: none; min-width: 6.2rem; text-align: center; padding: .55rem .6rem; border-radius: 14px;
-  background: color-mix(in srgb, var(--lc-ok) 12%, transparent); color: var(--lc-ok);
+  background: color-mix(in srgb, var(--lc-ok) 12%, transparent); color: var(--lc-ok-texto);
   font-family: Sora, sans-serif; font-weight: 800; line-height: 1.1;
 }}
-.lc-rec .lc-rec-valor small {{ display: block; font-family: Inter, sans-serif; font-weight: 600; font-size: .7rem; opacity: .85; }}
-.lc-rec .lc-rec-info {{ background: color-mix(in srgb, var(--lc-gold) 12%, transparent); color: var(--lc-gold); }}
-.lc-rec a {{ color: var(--lc-gold); font-weight: 600; }}
+.lc-rec .lc-rec-valor small {{ display: block; font-family: Inter, sans-serif; font-weight: 600; font-size: .85rem; }}
+.lc-rec .lc-rec-info {{ background: color-mix(in srgb, var(--lc-gold) 12%, transparent); color: var(--lc-gold-texto); }}
+.lc-rec a {{ color: var(--lc-gold-texto); font-weight: 600; }}
 
 /* ---------- Hero ---------- */
 .lc-hero {{
@@ -214,7 +313,7 @@ _CSS = """
 }}
 .lc-hero .lc-kicker {{
   font-size: .78rem; letter-spacing: .18em; text-transform: uppercase;
-  color: color-mix(in srgb, var(--lc-gold) 85%, white); font-weight: 600;
+  color: #FFE9B8; font-weight: 600;
 }}
 .lc-hero h1 {{
   font-family: Sora, Inter, sans-serif; font-weight: 800; color: #FFF7F2;
@@ -222,8 +321,9 @@ _CSS = """
 }}
 .lc-hero p {{ font-size: 1.05rem; max-width: 60ch; opacity: .9; margin: 0; }}
 .lc-chips {{ display: flex; flex-wrap: wrap; gap: .45rem; margin-top: 1.2rem; }}
+.lc-chips:empty {{ display: none; }}
 .lc-chip {{
-  font-size: .78rem; font-weight: 600; padding: .3rem .75rem; border-radius: 999px;
+  font-size: .85rem; font-weight: 600; padding: .3rem .75rem; border-radius: 999px;
   background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.22);
   backdrop-filter: blur(6px);
 }}
@@ -248,25 +348,27 @@ _CSS = """
   border-radius: 20px; padding: 1.15rem 1.25rem;
   transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
 }}
-.lc-card:hover {{
-  transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--lc-primary) 55%, var(--lc-border));
-  box-shadow: 0 14px 30px -22px var(--lc-primary);
+@media (hover: hover) and (pointer: fine) {{
+  .lc-card:hover {{
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--lc-primary) 55%, var(--lc-border));
+    box-shadow: 0 14px 30px -22px var(--lc-primary);
+  }}
 }}
 .lc-card h4 {{ font-family: Sora, sans-serif; margin: .2rem 0 .35rem; padding: 0; font-size: 1.05rem; }}
-.lc-card p {{ margin: 0; color: var(--lc-muted); font-size: .92rem; }}
-.lc-card .lc-n {{ font-family: Sora, sans-serif; font-weight: 800; color: var(--lc-gold); font-size: .85rem; letter-spacing: .08em; }}
+.lc-card p {{ margin: 0; color: var(--lc-muted); font-size: .97rem; }}
+.lc-card .lc-n {{ font-family: Sora, sans-serif; font-weight: 800; color: var(--lc-gold-texto); font-size: .85rem; letter-spacing: .08em; }}
 .lc-card-flat {{ padding: .2rem .1rem .4rem; }}
 .lc-card-flat h4 {{ font-family: Sora, sans-serif; margin: .35rem 0 .3rem; padding: 0; font-size: 1.05rem; }}
-.lc-card-flat p {{ margin: 0; color: var(--lc-muted); font-size: .9rem; }}
-.lc-card-flat .lc-n {{ font-family: Sora, sans-serif; font-weight: 800; color: var(--lc-gold); font-size: .8rem; letter-spacing: .1em; }}
+.lc-card-flat p {{ margin: 0; color: var(--lc-muted); font-size: .97rem; }}
+.lc-card-flat .lc-n {{ font-family: Sora, sans-serif; font-weight: 800; color: var(--lc-gold-texto); font-size: .85rem; letter-spacing: .1em; }}
 
 /* ---------- Métricas ---------- */
 .lc-metric {{
   background: var(--lc-surface); border: 1px solid var(--lc-border);
   border-radius: 20px; padding: 1rem 1.2rem;
 }}
-.lc-metric .lc-label {{ font-size: .8rem; text-transform: uppercase; letter-spacing: .1em; color: var(--lc-muted); font-weight: 600; }}
+.lc-metric .lc-label {{ font-size: .95rem; color: var(--lc-muted); font-weight: 600; }}
 .lc-metric .lc-value {{ font-family: Sora, sans-serif; font-weight: 800; font-size: 2rem; line-height: 1.15; margin-top: .25rem; }}
 .lc-metric .lc-unit {{ font-size: 1rem; font-weight: 600; color: var(--lc-muted); margin-left: .25rem; }}
 .lc-metric.lc-destaque {{
@@ -276,19 +378,19 @@ _CSS = """
     linear-gradient(135deg, var(--lc-primary), var(--lc-gold)) border-box;
 }}
 .lc-metric.lc-destaque .lc-value {{ color: var(--lc-gold); }}
-.lc-metric.lc-vazio .lc-value {{ color: var(--lc-muted); opacity: .45; }}
+.lc-metric.lc-vazio .lc-value {{ color: var(--lc-muted); }}
 
 /* ---------- Estados ---------- */
 .lc-badge {{
   white-space: nowrap; flex: none;
   display: inline-flex; align-items: center; gap: .35rem;
-  font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  font-size: .82rem; font-weight: 700; letter-spacing: .02em;
   padding: .22rem .6rem; border-radius: 999px; border: 1px solid;
 }}
 .lc-badge::before {{ content: ""; width: .45rem; height: .45rem; border-radius: 50%; background: currentColor; }}
-.lc-ok   {{ color: var(--lc-ok);    background: color-mix(in srgb, var(--lc-ok) 12%, transparent); }}
+.lc-ok   {{ color: var(--lc-ok-texto); background: color-mix(in srgb, var(--lc-ok) 12%, transparent); }}
 .lc-todo {{ color: var(--lc-muted); background: color-mix(in srgb, var(--lc-muted) 10%, transparent); }}
-.lc-rever{{ color: var(--lc-warn);  background: color-mix(in srgb, var(--lc-warn) 12%, transparent); }}
+.lc-rever{{ color: var(--lc-gold-texto); background: color-mix(in srgb, var(--lc-warn) 12%, transparent); }}
 .lc-erro {{ color: var(--lc-err);   background: color-mix(in srgb, var(--lc-err) 12%, transparent); }}
 
 /* ---------- Ferramentas ---------- */
@@ -301,7 +403,7 @@ _CSS = """
 /* ---------- Rodapé ---------- */
 .lc-footer {{ margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--lc-border);
   color: var(--lc-muted); font-size: .82rem; display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem; }}
-.lc-footer b {{ color: var(--lc-gold); font-weight: 600; }}
+.lc-footer b {{ color: var(--lc-gold-texto); font-weight: 600; }}
 
 @media (max-width: 640px) {{
   .block-container {{ padding: 5.5rem 1rem 2rem; }}

@@ -1,5 +1,9 @@
 """Ferramenta 1 — Fatura: carregar a fatura (fixa ou indexada) ou preencher à mão.
 
+A página segue três passos numerados: 1. carregar a fatura (pode saltar-se), 2. confirmar os
+números, 3. ver quanto se paga. Os passos 2 e 3 ficam na parte «A tua fatura»; as partes
+«Como pagar menos» e «O teu ano» estão em interface/fatura_extra.py.
+
 O que a página mostra depende do tipo de preço:
 - fixo: o preço por kWh do contrato, comparado com a tarifa regulada (também fixa);
 - indexado: o preço médio desta fatura, as perdas e a margem do contrato, quanto custaria
@@ -21,7 +25,27 @@ passo = roteiro.passo(1)
 disponivel = roteiro.disponivel(1)
 ui.cabecalho_ferramenta(passo, disponivel)
 
-MODALIDADES = {"fixo": "Preço fixo", "indexado": "Indexado ao mercado"}
+MODALIDADES = {"fixo": "Preço fixo", "indexado": "Indexado ao mercado"}       # legendas e PDF
+TIPO_DE_PRECO = {"fixo": "Fixo (igual todos os meses)", "indexado": "Indexado (muda com o mercado)"}
+NO_PERIODO = {"vazio": "no vazio", "fora_vazio": "fora do vazio", "ponta": "na ponta", "cheias": "nas cheias"}
+
+ONDE_ENCONTRAR = """
+- **Fixo ou indexado**: nas condições do contrato. Se aparecer «indexado», «OMIE» ou «preço dinâmico», é indexado.
+- **Dias da fatura**: no topo, no período de faturação. De 1 a 31 de agosto são 31 dias.
+- **Eletricidade gasta**: junto às leituras do contador, por exemplo «Consumo 258 kWh».
+- **Preço de cada kWh**: na linha «Energia», o número ao lado de «€/kWh», por exemplo 0,1652.
+- **Potência contratada**: nos dados do contrato, por exemplo «6,9 kVA».
+- **Preço da potência por dia**: na linha «Potência», o número ao lado de «€/dia», por exemplo 0,3659.
+"""
+
+AJUDA_IVA = ("Ligado: vês o total como vem na fatura, com IVA e as pequenas taxas de todas as faturas "
+             "(como a da RTP). Desligado: vês só o preço da eletricidade, sem impostos — é assim que se "
+             "comparam empresas, porque os impostos são iguais em todas.")
+
+
+def _kva(k):
+    """Potência como vem no papel: 6.9 → '6,9'; 3.45 → '3,45'."""
+    return f"{float(k):g}".replace(".", ",")
 
 
 def _valores_da_fatura(lido):
@@ -55,48 +79,65 @@ def _valores_da_fatura(lido):
 
 
 def _resumo(lido):
-    """Frase curta com o que foi lido, para comparar com a fatura."""
-    partes = [lido["comercializador"]] if lido.get("comercializador") else []
-    if lido.get("consumo_total"):
-        texto = f"{ui.numero(lido['consumo_total'])} kWh"
-        if len(lido.get("consumos", {})) > 1:
-            texto += " (" + " · ".join(f"{periodos.NOMES[p].lower()} {ui.numero(v)}"
-                                        for p, v in lido["consumos"].items()) + ")"
-        partes.append(texto)
+    """Lista curta (markdown) com o que foi lido, pela ordem em que se confere no papel."""
+    linhas = []
+    if lido.get("comercializador"):
+        linhas.append(f"Empresa: {lido['comercializador']}")
+    total, dias = lido.get("consumo_total"), lido.get("dias")
+    if total:
+        texto = f"Eletricidade gasta: {ui.numero(total)} kWh" + (f" em {dias} dias" if dias else "")
+        consumos = lido.get("consumos", {})
+        if len(consumos) > 1:
+            texto += " (" + ", ".join(f"{ui.numero(v)} {NO_PERIODO.get(p, periodos.NOMES[p].lower())}"
+                                       for p, v in consumos.items()) + ")"
+        linhas.append(texto)
+    elif dias:
+        linhas.append(f"Dias da fatura: {dias}")
     if lido.get("preco_energia"):
-        partes.append(f"{ui.preco(lido['preco_energia'])} €/kWh")
-    if lido.get("preco_diario"):
-        partes.append(f"potência {ui.preco(lido['preco_diario'])} €/dia")
-    if lido.get("dias"):
-        partes.append(f"{lido['dias']} dias")
-    if lido.get("potencia_kva"):
-        partes.append(f"{ui.numero(lido['potencia_kva'], 2)} kVA")
+        linhas.append(f"Preço de cada kWh: {ui.preco(lido['preco_energia'])} €")
+    kva, por_dia = lido.get("potencia_kva"), lido.get("preco_diario")
+    if kva or por_dia:
+        partes = ([f"{_kva(kva)} kVA"] if kva else []) + ([f"a {ui.preco(por_dia)} € por dia"] if por_dia else [])
+        linhas.append("Potência: " + ", ".join(partes))
+    tipo = []
+    if lido.get("modalidade") == "indexado":
+        tipo.append("indexado ao mercado")
+    elif lido.get("modalidade") == "fixo":
+        desconto = lido.get("desconto_pct")
+        tipo.append("preço fixo" + (f" com desconto de campanha de {round(desconto)} %" if desconto else ""))
     if lido.get("opcao"):
-        partes.append(periodos.NOMES[lido["opcao"]].lower())
+        tipo.append(periodos.NOMES[lido["opcao"]].lower())
+    if tipo:
+        linhas.append("Tipo: " + ", ".join(tipo))
     if lido.get("modalidade") == "indexado":
         extra = []
         if lido.get("perdas_pct") is not None:
-            extra.append(f"perdas {ui.numero(lido['perdas_pct'], 1)} %")
+            extra.append(f"perdas de {ui.numero(lido['perdas_pct'], 1)} %")
         if lido.get("margem_kwh") is not None:
-            extra.append(f"margem {ui.preco(lido['margem_kwh'])} €/kWh")
-        partes.append("indexado ao mercado" + (f" ({', '.join(extra)})" if extra else ""))
-    elif lido.get("modalidade") == "fixo":
-        desconto = lido.get("desconto_pct")
-        partes.append("preço fixo" + (f" com campanha de {round(desconto)} %" if desconto else ""))
-    return " · ".join(partes)
+            extra.append(f"margem de {ui.preco(lido['margem_kwh'])} € por kWh")
+        if extra:
+            linhas.append("No indexado: " + " e ".join(extra))
+    return "\n".join(f"- {linha}" for linha in linhas)
 
 
 # ---------- 1) carregar a fatura (uma ou até 12: a mais recente define o perfil)
 with st.container(border=True):
     com_fotos = leitura_fatura.ocr_disponivel()
-    st.markdown("**Carregar a fatura** · " + ("PDF ou foto" if com_fotos else "PDF")
-                + f" · podes escolher até {historico.MAX_FATURAS} de uma vez")
-    st.caption("As faturas são lidas em memória e não ficam guardadas. A mais recente passa para todas as "
-               "ferramentas; com várias, o separador \"O teu ano\" mostra os padrões do teu consumo. "
-               "Confirma os valores em baixo: cada comercializador escreve as faturas à sua maneira.")
-    ficheiros = st.file_uploader("Faturas (PDF, PNG ou JPG)" if com_fotos else "Faturas (PDF)",
-                                 type=["pdf", "png", "jpg", "jpeg"] if com_fotos else ["pdf"],
-                                 accept_multiple_files=True, label_visibility="collapsed", key="f_faturas")
+    st.markdown("**1. Carrega a tua fatura** (" + ("PDF ou foto" if com_fotos else "PDF") + "). "
+                "Não a tens no computador ou no telemóvel? Salta este passo e escreve os números "
+                "mais abaixo, no passo 2.")
+    ficheiros = st.file_uploader(
+        "Escolhe o ficheiro da tua fatura",
+        type=["pdf", "png", "jpg", "jpeg"] if com_fotos else ["pdf"],
+        accept_multiple_files=True, key="f_faturas",
+        help=("Carrega no botão «Escolher ficheiro» e escolhe o PDF da fatura. No telemóvel também podes "
+              "tirar uma foto à fatura em papel: em cima de uma mesa, com boa luz e com a página inteira."
+              if com_fotos else
+              "Carrega no botão «Escolher ficheiro» e escolhe o PDF da fatura, que recebes por email ou "
+              "na área de cliente da tua empresa de eletricidade."))
+    st.caption(f"A fatura é lida só neste momento e não fica guardada. Podes escolher várias de uma vez, até "
+               f"{historico.MAX_FATURAS}, para veres o teu ano na parte «O teu ano». Depois confirma os "
+               "números com a tua fatura em papel: cada empresa escreve as faturas à sua maneira.")
     cache = st.session_state.setdefault("faturas_cache", {})
     limite = 2 * historico.MAX_FATURAS                  # protege o servidor: lê no máximo 24 ficheiros
     para_ler = ficheiros[:limite]
@@ -134,87 +175,102 @@ with st.container(border=True):
             st.session_state["fatura_resumo"] = _resumo(principal) if valores else ""
     for nome in falhadas:
         st.warning(f"Não consegui ler {ui.nome_ficheiro(nome)}. Experimenta o PDF original ou uma foto nítida, "
-                   "ou preenche à mão.", icon=":material/error:")
+                   "ou escreve os números à mão no passo 2, mais abaixo.", icon=":material/error:")
     for nome in vazias:
-        st.warning(f"Não encontrei valores em {ui.nome_ficheiro(nome)}. Preenche à mão em baixo.",
-                   icon=":material/help:")
+        st.warning(f"Não encontrei números em {ui.nome_ficheiro(nome)}. Escreve-os à mão no passo 2, "
+                   "mais abaixo.", icon=":material/help:")
     unicas = len(historico.juntar(st.session_state["faturas_lidas"]))
     if len(ficheiros) > limite or len(com_valores) > unicas:
         repetidas = len(com_valores) - unicas
         st.info(f"Carregaste {len(ficheiros)} ficheiros: "
-                + (f"{repetidas} eram repetidos ou fora do último ano; " if repetidas > 0 else "")
+                + (f"{repetidas} eram repetidos ou de há mais de um ano; " if repetidas > 0 else "")
                 + f"conto {unicas} faturas diferentes.", icon=":material/info:")
     if st.session_state.get("fatura_resumo"):
-        prefixo = (f"Li {unicas} faturas. A mais recente: " if unicas > 1 else "Li da fatura: ")
-        st.success(prefixo + st.session_state["fatura_resumo"]
-                   + ". Compara com a tua fatura e corrige em baixo se for preciso.", icon=":material/task_alt:")
+        prefixo = (f"Li {unicas} faturas. Estes números são da mais recente: confirma-os" if unicas > 1
+                   else "Li estes números da tua fatura: confirma-os")
+        st.success(prefixo + " no papel e, se algum estiver errado, corrige-o no passo 2, mais abaixo.\n\n"
+                   + st.session_state["fatura_resumo"], icon=":material/task_alt:")
 
 carregar_eredes.secao("f")
 
 st.write("")
-aba_fatura, aba_explorar, aba_ano = st.tabs(["Esta fatura", "Explorar possibilidades", "O teu ano"])
+st.markdown("**Agora escolhe o que queres ver.** Há 3 separadores: toca no nome de cada um para o abrir. "
+            "Começa por «A tua fatura».")
+aba_fatura, aba_explorar, aba_ano = st.tabs([":material/receipt_long: A tua fatura",
+                                             ":material/savings: Como pagar menos",
+                                             ":material/calendar_month: O teu ano (várias faturas)"])
 
 with aba_fatura:
     st.write("")
     entradas, resultado = st.columns([1, 1.3], gap="large")
 
-    # ---------- 2) os dados (à mão ou vindos da fatura)
+    # ---------- 2) os números (à mão ou vindos da fatura), pela ordem em que aparecem no papel
     with entradas:
-        st.subheader("Os teus dados")
-        modalidade = pf.campo(st.radio, "Tipo de preço", "modalidade", "f_modalidade",
-                              options=list(MODALIDADES), format_func=MODALIDADES.get, horizontal=True,
-                              help="Fixo: o preço por kWh não muda com o mercado. Indexado: o preço "
-                                   "segue o mercado (OMIE) e muda todos os meses.")
+        st.subheader("2. Confirma os números da tua fatura")
+        with st.expander("Onde encontro estes números na fatura?", icon=":material/help:"):
+            st.markdown(ONDE_ENCONTRAR)
+        p_inicial = pf.perfil()
+        if not p_inicial.get("da_fatura"):
+            st.info(f"Os números já preenchidos são um exemplo: uma casa que gasta "
+                    f"{ui.numero(pf.PADRAO['consumo_kwh'])} kWh em {pf.PADRAO['dias']} dias, na tarifa regulada. "
+                    "Troca-os pelos da tua fatura para veres a tua conta.", icon=":material/edit:")
+        elif p_inicial.get("precos_em_falta"):
+            nomes = {"preco_energia": "o preço da energia", "preco_diario": "o preço da potência"}
+            dois = len(p_inicial["precos_em_falta"]) > 1
+            st.warning("Não consegui ler " + " nem ".join(nomes[k] for k in p_inicial["precos_em_falta"])
+                       + " nesta fatura: pus um preço de referência, o da tarifa regulada. Procura "
+                       + ("esses preços" if dois else "esse preço") + " na tua fatura em papel e corrige "
+                       + ("os campos" if dois else "o campo") + " em baixo.", icon=":material/edit:")
+        modalidade = pf.campo(st.radio, "O preço de cada kWh é fixo ou muda todos os meses?", "modalidade",
+                              "f_modalidade", options=list(MODALIDADES), format_func=TIPO_DE_PRECO.get,
+                              horizontal=True,
+                              help="Vê no contrato ou na fatura. Se aparecer «indexado», «OMIE» ou «preço "
+                                   "dinâmico», escolhe Indexado. Na dúvida, deixa Fixo: é o mais comum.")
         indexado = modalidade == "indexado"
-        pf.campo(st.number_input, "Consumo (kWh)", "consumo_kwh", "f_consumo",
+        pf.campo(st.number_input, "Dias da fatura", "dias", "f_dias", min_value=1, step=1,
+                 help="Conta os dias do período de faturação, no topo da fatura. Por exemplo, de 1 a 31 "
+                      "de agosto são 31 dias.")
+        pf.campo(st.number_input, "Eletricidade gasta (kWh)", "consumo_kwh", "f_consumo",
                  min_value=0.0, step=10.0,
-                 help="A energia gasta no período, em kWh. Costuma aparecer no resumo da fatura, "
-                      "junto às leituras do contador.")
+                 help="Está junto às leituras do contador, por exemplo «Consumo: 258 kWh». O kWh é a "
+                      "medida da eletricidade gasta: um aquecedor de 1000 W ligado 1 hora gasta 1 kWh. "
+                      "Se a fatura tem dois ou três consumos (por exemplo «vazio», as horas baratas da "
+                      "noite, e «fora de vazio»), soma-os todos.")
         pf.campo(st.number_input,
-                 "Preço médio da energia nesta fatura (€/kWh)" if indexado else "Preço da energia (€/kWh)",
+                 "Preço médio de cada kWh nesta fatura (€)" if indexado else "Preço de cada kWh (€)",
                  "preco_energia", "f_preco_energia", min_value=0.0, step=0.001, format="%.4f",
-                 help=("Num indexado o preço muda com o mercado: este é o preço médio que pagaste neste "
-                       "período (custo da energia ÷ kWh)." if indexado else
-                       "Quanto pagas por cada kWh, no detalhe da fatura ou nas condições do contrato. "
-                       "Em bi ou tri-horário, usa o preço médio (custo da energia ÷ kWh)."))
-        pf.campo(st.number_input, "Preço da potência (€/dia)", "preco_diario", "f_preco_diario",
+                 help=("Num indexado o preço muda todos os meses. Divide o total da energia desta fatura "
+                       "pelos kWh gastos: 42,60 € ÷ 258 kWh = 0,1651." if indexado else
+                       "Na linha «Energia» da fatura, é o número ao lado de «€/kWh», por exemplo 0,1652. "
+                       "Se tens dois ou três preços (bi ou tri-horário), divide o total da energia pelos "
+                       "kWh gastos: 42,60 € ÷ 258 kWh = 0,1651."))
+        pf.campo(st.selectbox, "Potência contratada (kVA)", "kva", "f_kva",
+                 options=pf.ESCALOES_KVA, format_func=lambda k: f"{_kva(k)} kVA",
+                 help="Diz quantos aparelhos podes ter ligados ao mesmo tempo sem o quadro disparar. Vem "
+                      "nos dados do contrato, no topo da fatura, por exemplo «6,9 kVA». Nas casas, o mais "
+                      "comum é 3,45, 4,6 ou 6,9.")
+        pf.campo(st.number_input, "Preço da potência, por dia (€)", "preco_diario", "f_preco_diario",
                  min_value=0.0, step=0.001, format="%.4f",
-                 help="Valor fixo por dia da potência contratada, na linha da potência da fatura "
-                      "(soma as linhas se o acesso às redes vier à parte).")
+                 help="É o valor fixo que pagas por cada dia só por teres a luz ligada, mesmo sem gastar. "
+                      "Na linha «Potência» da fatura, é o número ao lado de «€/dia», por exemplo 0,3659. "
+                      "Se houver duas linhas de potência (uma delas «acesso às redes»), soma as duas.")
         if indexado:
+            st.caption("Só para tarifários indexados. Se não encontrares estes valores, deixa 0: a conta "
+                       "fica um pouco abaixo do real.")
             i1, i2 = st.columns(2)
             with i1:
-                pf.campo(st.number_input, "Perdas (%)", "perdas_pct", "f_perdas", min_value=0.0,
+                pf.campo(st.number_input, "Perdas na rede (%)", "perdas_pct", "f_perdas", min_value=0.0,
                          max_value=50.0, step=0.5,
-                         help="O fator de perdas do teu contrato indexado (1,15 = 15 %). Está na fatura "
-                              "ou nas condições do contrato.")
+                         help="A energia que se perde no caminho até tua casa, que a empresa cobra à parte. "
+                              "Aparece como «perdas» ou «fator de perdas». Se vires 1,15, escreve 15.")
             with i2:
-                pf.campo(st.number_input, "Margem (€/kWh)", "margem_kwh", "f_margem", min_value=0.0,
-                         step=0.001, format="%.4f",
-                         help="O valor que o comercializador soma ao preço do mercado (fee, spread).")
-        pf.campo(st.number_input, "Dias do período", "dias", "f_dias", min_value=1, step=1,
-                 help="Número de dias entre o início e o fim do período faturado.")
-        pf.campo(st.selectbox, "Potência contratada", "kva", "f_kva",
-                 options=pf.ESCALOES_KVA, format_func=lambda k: f"{ui.numero(k, 2)} kVA",
-                 help="Está nos dados do contrato. Define o preço da potência na tarifa regulada.")
-        pf.campo(st.toggle, "Mostrar com IVA e taxas", "com_impostos", "f_impostos", padrao=False,
-                 help="Junta o IVA, a contribuição audiovisual, a taxa da DGEG, o imposto especial de "
-                      "consumo e o encargo da tarifa social: o total passa a bater com o da fatura.")
-        if pf.perfil().get("com_impostos"):
-            pf.campo(st.checkbox, "Família numerosa (300 kWh com IVA reduzido)", "familia_numerosa",
-                     "f_familia", padrao=False)
-        if not pf.perfil().get("da_fatura"):
-            st.caption("Sem fatura, os preços começam nos da tarifa regulada da ERSE: troca-os pelos "
-                       "do teu contrato. A comparação com a ERSE aparece sempre no resultado.")
+                pf.campo(st.number_input, "Margem da empresa (€ por kWh)", "margem_kwh", "f_margem",
+                         min_value=0.0, step=0.001, format="%.4f",
+                         help="O que a empresa soma ao preço do mercado em cada kWh. Pode chamar-se "
+                              "«margem», «fee» ou «spread», por exemplo 0,0100.")
 
-    # ---------- 3) resultado
+    # ---------- 3) quanto pagas
     p = pf.perfil()
-    if p.get("precos_em_falta") and p.get("da_fatura"):
-        nomes = {"preco_energia": "o preço da energia", "preco_diario": "o preço da potência"}
-        with entradas:
-            st.warning("Não consegui ler " + " nem ".join(nomes[k] for k in p["precos_em_falta"])
-                       + " nesta fatura: pus o da tarifa regulada. Confirma-o na tua fatura e corrige em cima.",
-                       icon=":material/edit:")
     tarifa = erse()
     medias, _ = medias_omie(7)
     com_perfil = p.get("perfil_da_fatura", False)
@@ -224,10 +280,16 @@ with aba_fatura:
     sem_tri = com_perfil and not p.get("ponta_na_fatura", True)
 
     with resultado:
-        st.subheader("Resultado")
-        vazio = [ui.metrica("Energia", "—", "€", vazio=True),
-                 ui.metrica("Potência", "—", "€", vazio=True),
-                 ui.metrica("Total", "—", "€", vazio=True)]
+        st.subheader("3. Quanto pagas")
+        pf.campo(st.toggle, "Incluir IVA e taxas", "com_impostos",
+                 "f_impostos", padrao=False, help=AJUDA_IVA)
+        if p.get("com_impostos"):
+            pf.campo(st.checkbox, "Sou família numerosa", "familia_numerosa", "f_familia", padrao=False,
+                     help="Nas famílias numerosas, os primeiros 300 kWh de cada mês pagam IVA a 6 % (nas "
+                          "outras casas são 200 kWh). Marca só se tens este benefício.")
+        vazio = [ui.metrica("Pela eletricidade gasta", "—", "€", vazio=True),
+                 ui.metrica("Pela potência (parte fixa)", "—", "€", vazio=True),
+                 ui.metrica("Total sem IVA", "—", "€", vazio=True)]
         f = None
         if not disponivel:
             ui.grelha(vazio, largura_min=140)
@@ -238,34 +300,39 @@ with aba_fatura:
                                                  p["preco_diario"], p["dias"])
             except ValueError:
                 ui.grelha(vazio, largura_min=140)
-                st.error("Os valores não podem ser negativos.", icon=":material/error:")
+                st.error("Os números não podem ser negativos. Corrige-os no passo 2.", icon=":material/error:")
         if f is not None:
-            ui.grelha([ui.metrica("Energia", ui.euros(f["energia"]), "€"),
-                       ui.metrica("Potência", ui.euros(f["potencia"]), "€"),
-                       ui.metrica("Total", ui.euros(f["total"]), "€", destaque=True)],
+            ci = impostos.com_impostos(f["energia"], f["potencia"], p["consumo_kwh"], p["dias"],
+                                       p["kva"], p.get("familia_numerosa", False))
+            ui.grelha([ui.metrica("Pela eletricidade gasta", ui.euros(f["energia"]), "€"),
+                       ui.metrica("Pela potência (parte fixa)", ui.euros(f["potencia"]), "€"),
+                       ui.metrica("Total sem IVA", ui.euros(f["total"]), "€", destaque=not p.get("com_impostos"))],
                       largura_min=140)
-            st.caption(f"{p['dias']} dias · {MODALIDADES[modalidade].lower()} · valores sem IVA nem "
-                       f"taxas · preços: {p['fonte']}.")
+            if not p.get("com_impostos"):
+                st.markdown(f"Com IVA e taxas, isto dá cerca de **{ui.euros(ci['total'])} €** — é este o valor "
+                            "a comparar com o total da tua fatura.")
+            st.caption(f"Em {p['dias']} dias: {ui.euros(f['energia'])} € pela eletricidade que gastaste e "
+                       f"{ui.euros(f['potencia'])} € pela potência (a parte fixa, que pagas mesmo sem gastar). "
+                       f"De onde vêm os preços: {p['fonte']}.")
             if p.get("com_impostos"):
-                ci = impostos.com_impostos(f["energia"], f["potencia"], p["consumo_kwh"], p["dias"],
-                                           p["kva"], p.get("familia_numerosa", False))
-                ui.grelha([ui.metrica("Taxas e encargos", ui.euros(ci["taxas"]), "€"),
+                ui.grelha([ui.metrica("Taxas", ui.euros(ci["taxas"]), "€"),
                            ui.metrica("IVA", ui.euros(ci["iva"]), "€"),
                            ui.metrica("Total com IVA", ui.euros(ci["total"]), "€", destaque=True)],
                           largura_min=140)
-                st.caption("Com IVA, contribuição audiovisual, taxa da DGEG, imposto especial de consumo "
-                           "e encargo da tarifa social (valores de 2026).")
+                st.caption("O total com IVA junta a eletricidade, o IVA e as pequenas taxas que vêm em todas as "
+                           "faturas, como a da rádio e televisão públicas (2,85 € por mês). Deve ficar perto "
+                           "do total da tua fatura.")
 
             # indexado: o mesmo consumo com o mercado de agora (perdas e margem do contrato)
             if indexado:
                 st.write("")
-                opcao = p.get("opcao", "simples") if com_perfil else "simples"
-                st.markdown(f"**Com o mercado de agora** · {periodos.NOMES[opcao].lower()}, "
-                            "com as tuas perdas e margem")
+                st.markdown("**Com o mercado de agora**: quanto pagarias pelo mesmo consumo com os preços "
+                            "desta semana e as condições do teu contrato.")
                 if medias is None:
-                    st.info("Sem ligação ao mercado (OMIE) agora: volta a tentar daqui a pouco.",
+                    st.info("Não consegui ver os preços do mercado agora. Tenta outra vez daqui a uns minutos.",
                             icon=":material/wifi_off:")
                 else:
+                    opcao = p.get("opcao", "simples") if com_perfil else "simples"
                     agora = next(l for l in tarifas.comparar_opcoes(
                         p["consumo_kwh"], pct_vazio, pct_ponta, p["dias"], p["kva"], tarifa,
                         medias_omie=medias, perdas_pct=p.get("perdas_pct") or 0.0,
@@ -274,14 +341,26 @@ with aba_fatura:
                     # com a potência do teu contrato, para comparar com esta fatura
                     agora_total = agora["energia"] + p["preco_diario"] * p["dias"]
                     variacao = agora_total - f["total"]
+                    if variacao > 0.005:
+                        rotulo, frase = "Mais do que nesta fatura", (
+                            f"Com os preços desta semana, pagarias mais {ui.euros(variacao)} € do que nesta fatura.")
+                    elif variacao < -0.005:
+                        rotulo, frase = "Menos do que nesta fatura", (
+                            f"Com os preços desta semana, pagarias menos {ui.euros(-variacao)} € do que nesta fatura.")
+                    else:
+                        rotulo, frase = "Diferença", "Com os preços desta semana, pagarias o mesmo que nesta fatura."
+                    if p.get("com_impostos"):
+                        st.caption("Atenção: estas comparações são sem IVA. Compara-as com o «Total sem IVA» "
+                                   "lá em cima, não com o total com IVA.")
                     ui.grelha([
-                        ui.metrica("Com o mercado de agora", ui.euros(agora_total), "€"),
-                        ui.metrica("Face a esta fatura", ("+" if variacao > 0 else "−")
-                                   + ui.euros(abs(variacao)), "€", destaque=variacao < 0),
+                        ui.metrica("Com o mercado de agora" + (", sem IVA" if p.get("com_impostos") else ""),
+                                   ui.euros(agora_total), "€"),
+                        ui.metrica(rotulo, ui.euros(abs(variacao)), "€", destaque=variacao < -0.005),
                     ], largura_min=140)
-                    st.caption("Mesmo consumo, com a média do mercado dos últimos 7 dias em cada período, "
-                               "as tarifas de acesso da ERSE e as tuas perdas e margem. É uma estimativa: "
-                               "o mercado muda todos os dias.")
+                    st.markdown(frase)
+                    st.caption("É uma estimativa com os preços do mercado dos últimos 7 dias e as condições do "
+                               "teu contrato, sem IVA. O mercado muda todos os dias, por isso a próxima fatura "
+                               "pode ser diferente.")
 
             # comparação automática com a tarifa regulada (preço fixo)
             reguladas = [l for l in tarifas.comparar_opcoes(
@@ -290,29 +369,40 @@ with aba_fatura:
             regulada = reguladas[0]
             diferenca = f["total"] - regulada["total"]
             st.write("")
-            st.markdown(f"**Na tarifa regulada da ERSE (preço fixo)** · "
-                        f"{periodos.NOMES[regulada['opcao']].lower()}, {ui.numero(p['kva'], 2)} kVA")
-            ui.grelha([
-                ui.metrica("Tarifa regulada", ui.euros(regulada["total"]), "€"),
-                ui.metrica("Mudar para a regulada" if abs(diferenca) >= 0.005 else "Igual",
-                           ("+" if diferenca < 0 else "−" if diferenca > 0 else "")
-                           + ui.euros(abs(diferenca)), "€", destaque=diferenca > 0.005),
-            ], largura_min=140)
+            opcao_reg = ("o mesmo preço a qualquer hora" if regulada["opcao"] == "simples"
+                         else periodos.NOMES[regulada["opcao"]].lower())
+            st.markdown(f"**Na tarifa regulada da ERSE**, o preço oficial de referência, para "
+                        f"{_kva(p['kva'])} kVA e {opcao_reg}:")
             if diferenca > 0.005:
-                st.caption(f"Na tarifa regulada pagarias menos {ui.euros(diferenca)} € neste período.")
+                rotulo = "Poupança se mudares"
+                frase = (f"Se mudasses para a tarifa regulada, pagarias menos {ui.euros(diferenca)} € "
+                         f"nestes {p['dias']} dias.")
             elif diferenca < -0.005:
-                st.caption(f"O teu preço está {ui.euros(-diferenca)} € abaixo da tarifa regulada neste período.")
-            st.caption(f"Tarifa regulada ERSE {tarifa['ano']}: preços fixos definidos pela ERSE para o ano, "
-                       "não seguem o mercado.")
+                rotulo = "A mais se mudares"
+                frase = (f"O teu preço é melhor: na tarifa regulada pagarias mais {ui.euros(-diferenca)} € "
+                         f"nestes {p['dias']} dias.")
+            else:
+                rotulo, frase = "Diferença", "Pagas praticamente o mesmo que na tarifa regulada."
+            if p.get("com_impostos"):
+                st.caption("Atenção: estas comparações são sem IVA. Compara-as com o «Total sem IVA» "
+                           "lá em cima, não com o total com IVA.")
+            ui.grelha([
+                ui.metrica("Na tarifa regulada pagarias" + (", sem IVA" if p.get("com_impostos") else ""),
+                           ui.euros(regulada["total"]), "€"),
+                ui.metrica(rotulo, ui.euros(abs(diferenca)), "€", destaque=diferenca > 0.005),
+            ], largura_min=140)
+            st.markdown(frase)
+            st.caption(f"A tarifa regulada é um preço fixo que a ERSE, a entidade que regula a eletricidade, "
+                       f"define para cada ano (aqui, {tarifa['ano']}). Serve de termo de comparação e podes "
+                       "aderir a ela. Valores sem IVA.")
 
     # ---------- 4) recomendações (fatura + ERSE + OMIE)
     if f is not None:
         st.write("")
         if p.get("da_fatura"):
-            ui.cartao_meu_tarifario(p, f["total"] * 30 / p["dias"])
+            ui.cartao_meu_tarifario(p, f["total"] * 30 / p["dias"], na_fatura=True)
         st.subheader("Recomendações para ti")
-        st.caption("Com base na tua fatura, nas tarifas da ERSE e no mercado OMIE dos últimos 7 dias. "
-                   "Valores por mês (30 dias), sem IVA nem taxas.")
+        st.caption("Ideias para pagares menos, da que poupa mais para a que poupa menos. Valores por mês, sem IVA.")
         dados_fatura = {
             "consumo_kwh": p["consumo_kwh"], "preco_energia": p["preco_energia"],
             "preco_diario": p["preco_diario"], "dias": p["dias"], "kva": p["kva"],
@@ -334,8 +424,10 @@ with aba_fatura:
             st.write("")
             st.subheader("As ofertas mais baratas para ti")
             if top:
-                vista = st.segmented_control("Ver", ["Por mês", "No 1.º ano"], default="Por mês",
-                                             key="f_vista_ofertas", label_visibility="collapsed") or "Por mês"
+                vista = st.segmented_control(
+                    "Mostrar o custo", ["Por mês", "No 1.º ano"], default="Por mês", key="f_vista_ofertas",
+                    help="«No 1.º ano» soma 12 meses e conta com o fim dos descontos de campanha da tua "
+                         "fatura.") or "Por mês"
                 com_iva = p.get("com_impostos", False)
 
                 def mensal(energia, potencia):
@@ -355,22 +447,24 @@ with aba_fatura:
                     base = p.get("precos_base") or {}
                     atual = atual_mes * 12
                     if base.get("energia") and base.get("potencia_dia"):
-                        meses = pf.campo(st.number_input, "Meses que faltam da campanha", "meses_campanha",
-                                         "f_meses_campanha", padrao=12, min_value=0, max_value=12, step=1,
-                                         help="Vê na fatura ou no contrato até quando dura o desconto. "
-                                              "Depois, conta o preço sem desconto.")
+                        meses = pf.campo(st.number_input, "Quantos meses faltam para acabar o desconto?",
+                                         "meses_campanha", "f_meses_campanha", padrao=12, min_value=0,
+                                         max_value=12, step=1,
+                                         help="Vê na fatura ou no contrato até quando dura a campanha. Depois "
+                                              "desses meses, a conta usa o preço sem desconto. Se não "
+                                              "souberes, deixa 12.")
                         sem = mensal(p["consumo_kwh"] * base["energia"], base["potencia_dia"] * p["dias"])
                         atual = atual_mes * meses + sem * (12 - meses)
                     ui.podio_ofertas([(o, v * 12) for o, v in linhas], atual, "no 1.º ano",
-                                     p.get("comercializador"))
+                                     p.get("comercializador"), com_fatura=bool(p.get("da_fatura")))
                 else:
-                    ui.podio_ofertas(linhas, atual_mes, "por mês", p.get("comercializador"))
+                    ui.podio_ofertas(linhas, atual_mes, "por mês", p.get("comercializador"),
+                                     com_fatura=bool(p.get("da_fatura")))
                 st.caption(
-                    f"A melhor oferta de cada empresa para o teu consumo e potência, com as ofertas de preço "
-                    f"fixo publicadas pela ERSE (atualizadas a {data_ofertas:%d/%m/%Y}). Só eletricidade, "
-                    "para qualquer casa: ficam de fora as ofertas duais, indexadas ou só para sócios. "
+                    f"Para cada empresa, a oferta mais barata para o teu consumo e potência. São ofertas de "
+                    f"preço fixo, só de eletricidade, publicadas pela ERSE a {data_ofertas:%d/%m/%Y}. "
                     + ("Com IVA e taxas. " if p.get("com_impostos") else "Sem IVA nem taxas. ")
-                    + "Confirma sempre as condições na ficha da oferta.")
+                    + "Antes de mudar, confirma as condições no site da empresa.")
             else:
                 st.info("Não há ofertas de preço fixo publicadas para esta potência.")
 
@@ -388,12 +482,13 @@ with aba_fatura:
             lista_recs,
             [(o.comercializador, o.nome, periodos.NOMES[o.opcao], c * 30 / p["dias"]) for o, c in top],
             data_ofertas)
-        st.download_button("Guardar o resultado em PDF", resumo_pdf, file_name="simulacao-eletricidade.pdf",
+        st.download_button("Guardar este resumo em PDF", resumo_pdf, file_name="simulacao-eletricidade.pdf",
                            mime="application/pdf", icon=":material/download:", key="f_pdf")
-        st.caption("O PDF tem só os números e as recomendações: nada de nomes, moradas ou o ficheiro da fatura.")
+        st.caption("Para imprimir ou mostrar a alguém. O PDF tem só os números e as recomendações: nada de "
+                   "nomes, moradas ou o ficheiro da fatura.")
 
 
-# ---------- separadores novos (código em interface/fatura_extra.py)
+# ---------- as outras duas partes (código em interface/fatura_extra.py)
 contexto = fatura_extra.Contexto(p=p, f=f, tarifa=tarifa, medias=medias, com_perfil=com_perfil, sem_tri=sem_tri,
                                  lidas=st.session_state.get("faturas_lidas", []))
 with aba_explorar:

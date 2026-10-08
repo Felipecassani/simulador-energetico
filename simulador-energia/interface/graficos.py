@@ -1,4 +1,5 @@
-"""Gráficos Plotly com a paleta do projeto (usados em Tarifários, Opções horárias e Gráficos)."""
+"""Gráficos Plotly com a paleta do projeto (usados em «Comparar ofertas», «Bi-horário compensa?»
+e «Preço hora a hora»). Rótulos em palavras: «cêntimos por kWh», «euros em N dias», «parte fixa»."""
 from datetime import timedelta
 
 import plotly.graph_objects as go
@@ -47,73 +48,113 @@ def _hora_local(precos):
     return [(h, sum(v) / len(v)) for h, v in sorted(agrupado.items())]
 
 
-def _faixas_vazio(fig, inicio, fim, cor):
-    """Sombreia as horas de vazio (periodos.VAZIO_INICIO → VAZIO_FIM) entre dois instantes."""
+def _faixas_vazio(fig, inicio, fim, cor, cor_texto=None):
+    """Sombreia as horas de vazio (periodos.VAZIO_INICIO → VAZIO_FIM) entre dois instantes.
+
+    Cada faixa com pelo menos 3 horas leva escrita a palavra «vazio» (não depender só da cor).
+    """
     dia = inicio.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=1)
     ini_v, fim_v = periodos.VAZIO_INICIO, periodos.VAZIO_FIM
     while dia < fim:
         a = max(dia.replace(hour=ini_v.hour, minute=ini_v.minute), inicio)
         b = min(dia.replace(hour=fim_v.hour, minute=fim_v.minute) + timedelta(days=1), fim)
         if a < b:                       # só a parte que cai dentro dos dados
-            fig.add_vrect(x0=a, x1=b, fillcolor=cor, opacity=0.12, line_width=0, layer="below")
+            nome = dict(annotation_text="vazio", annotation_position="top left",
+                        annotation_font=dict(color=cor_texto or cor, size=12)) \
+                if b - a >= timedelta(hours=3) else {}
+            fig.add_vrect(x0=a, x1=b, fillcolor=cor, opacity=0.2, line_width=0, layer="below", **nome)
         dia += timedelta(days=1)
 
 
 def grafico_omie(hoje, amanha=None, altura=320):
-    """Preço OMIE (c€/kWh) em hora de Portugal, com o vazio sombreado."""
+    """Preço OMIE (cêntimos por kWh) em hora de Portugal, com o vazio sombreado e escrito."""
     p = paleta()
     fig = go.Figure()
     hoje = _hora_local(hoje)
     amanha = _hora_local(amanha) if amanha else None
-    series = [("Hoje", hoje, p["primary"])] + ([("Amanhã", amanha, p["gold"])] if amanha else [])
-    for nome, precos, cor in series:
+    # «Amanhã» a tracejado: as duas linhas distinguem-se também sem ver as cores
+    series = ([("Hoje", hoje, p["primary"], "solid")]
+              + ([("Amanhã", amanha, p["gold"], "dot")] if amanha else []))
+    for nome, precos, cor, traco in series:
         fig.add_scatter(x=[t for t, _ in precos], y=[v / 10 for _, v in precos], name=nome,
-                        mode="lines", line=dict(color=cor, width=2.5, shape="hv"),
-                        hovertemplate="%{x|%d/%m %H:%M} · %{y:.2f} c€/kWh<extra></extra>")
+                        mode="lines", line=dict(color=cor, width=2.5, shape="hv", dash=traco),
+                        hovertemplate=f"{nome}: %{{y:.2f}} cêntimos por kWh<extra></extra>")
     todos = hoje + (amanha or [])
-    _faixas_vazio(fig, todos[0][0], todos[-1][0], p["gold"])
-    fig.update_layout(template=tema_plotly(), height=altura, yaxis_title="c€/kWh",
+    _faixas_vazio(fig, todos[0][0], todos[-1][0], p["gold"], p.get("gold-texto"))
+    fig.update_layout(template=tema_plotly(), height=altura, yaxis_title="cêntimos por kWh",
                       hovermode="x unified",
-                      xaxis=dict(tickformat="%Hh<br>%d/%m", hoverformat="%d/%m %H:%M"))
+                      xaxis=dict(tickformat="%Hh<br>%d/%m", hoverformat="%d/%m às %Hh%M"))
     return fig
 
 
-def grafico_opcoes(linhas, altura=360):
-    """Custo mensal de cada opção (energia + potência), das mais baratas às mais caras."""
+def _nome_opcao(linha):
+    """'Bi-horário<br>preço fixo': duas linhas curtas em vez de uma comprida (cabe no telemóvel)."""
+    return (f"{periodos.NOMES[linha['opcao']]}<br>"
+            f"{'preço fixo' if linha['modalidade'] == 'fixo' else 'indexado'}")
+
+
+def grafico_opcoes(linhas, altura=360, dias=None):
+    """Custo de cada opção (energia + parte fixa), das mais baratas às mais caras, com o total escrito."""
     p = paleta()
-    nomes = [f"{periodos.NOMES[l['opcao']]} · {l['modalidade']}" for l in linhas]
+    nomes = [_nome_opcao(l) for l in linhas]
+    totais = [l["total"] for l in linhas]
     fig = go.Figure()
-    fig.add_bar(y=nomes, x=[l["energia"] for l in linhas], name="Energia", orientation="h",
-                marker_color=p["primary"], hovertemplate="%{x:.2f} €<extra>Energia</extra>")
-    fig.add_bar(y=nomes, x=[l["potencia"] for l in linhas], name="Potência", orientation="h",
-                marker_color=p["gold"], hovertemplate="%{x:.2f} €<extra>Potência</extra>")
-    esquerda = 12 + 8 * max(len(n) for n in nomes)      # espaço para o nome mais longo
+    fig.add_bar(y=nomes, x=[l["energia"] for l in linhas], name="Energia gasta", orientation="h",
+                marker_color=p["primary"], hovertemplate="%{x:.2f} €<extra>Energia gasta</extra>")
+    fig.add_bar(y=nomes, x=[l["potencia"] for l in linhas], name="Parte fixa (potência)",
+                orientation="h", marker_color=p["gold"],
+                hovertemplate="%{x:.2f} €<extra>Parte fixa</extra>")
+    # o total escrito no fim de cada barra: não é preciso passar o dedo para o ver
+    fig.add_scatter(x=totais, y=nomes, mode="text", text=[f" {_euros(t)} €" for t in totais],
+                    textposition="middle right", textfont=dict(color=p["text"], size=13),
+                    showlegend=False, hoverinfo="skip", cliponaxis=False)
+    linha_maior = max(len(parte) for n in nomes for parte in n.split("<br>"))
+    esquerda = 12 + 8 * linha_maior                      # espaço para o nome mais longo
     fig.update_layout(template=tema_plotly(), barmode="stack", height=altura,
-                      xaxis_title="€ no período", margin=dict(l=esquerda),
+                      xaxis=dict(title=f"euros em {dias} dias" if dias else "euros",
+                                 range=[0, max(totais + [0.01]) * 1.3]),
+                      margin=dict(l=esquerda),
                       yaxis=dict(autorange="reversed", automargin=True, ticksuffix="  "))
     return fig
 
 
+def _rotulos_periodo():
+    """Nomes do donut com o que cada período quer dizer (sem mexer em periodos.NOMES)."""
+    ini, fim = periodos.VAZIO_INICIO.hour, periodos.VAZIO_FIM.hour
+    return {"vazio": f"Vazio: {ini}h às {fim}h, mais barato",
+            "fora_vazio": f"Fora de vazio: {fim}h às {ini}h",
+            "ponta": "Ponta: 4 horas mais caras",
+            "cheias": "Cheias: resto do dia",
+            "simples": "Simples: todo o dia"}
+
+
 def grafico_consumo(consumos, altura=300):
-    """Donut: onde vai o consumo (kWh por período)."""
+    """Donut: a que horas se gasta (kWh por período), com o total no meio."""
     p = paleta()
     cores = {"vazio": p["gold"], "fora_vazio": p["primary"], "ponta": p["err"],
              "cheias": p["bronze"], "simples": p["primary"]}
+    nomes = _rotulos_periodo()
     rotulos = list(consumos)
-    fig = go.Figure(go.Pie(labels=[periodos.NOMES[r] for r in rotulos],
+    total = sum(consumos.values())
+    fig = go.Figure(go.Pie(labels=[nomes.get(r, periodos.NOMES[r]) for r in rotulos],
                            values=[consumos[r] for r in rotulos], hole=0.62, sort=False,
                            marker=dict(colors=[cores[r] for r in rotulos]),
-                           hovertemplate="%{label}: %{value:.0f} kWh (%{percent})<extra></extra>"))
-    fig.update_layout(template=tema_plotly(), height=altura, showlegend=True)
+                           hovertemplate="%{label}<br>%{value:.0f} kWh · %{percent}<extra></extra>"))
+    fig.add_annotation(text=f"<b>{total:,.0f}</b><br>kWh no total".replace(",", " "), x=0.5, y=0.5,
+                       xref="paper", yref="paper", showarrow=False, font=dict(size=15, color=p["text"]))
+    fig.update_layout(template=tema_plotly(), height=altura, showlegend=True,
+                      legend=dict(orientation="v", yanchor="top", y=-0.02, x=0))
     return fig
 
 
-def grafico_tarifarios(tabela, altura=320):
-    """Barras dos totais de cada tarifário, com a diferença para o mais barato."""
+def grafico_tarifarios(tabela, altura=320, dias=None):
+    """Barras dos totais de cada tarifário, com a diferença para o mais barato escrita por cima."""
     p = paleta()
+    nomes = [str(n).replace(" (", "<br>(") for n in tabela["Tarifário"]]   # nomes longos em 2 linhas
     fig = go.Figure(go.Bar(
-        x=tabela["Tarifário"], y=tabela["Total (€)"], marker_color=p["primary"],
-        text=[f"+{_euros(d)} €" if d > 0.005 else "mais barato" for d in tabela["Diferença (€)"]],
-        textposition="outside", hovertemplate="%{x}: %{y:.2f} €<extra></extra>"))
-    fig.update_layout(template=tema_plotly(), height=altura, yaxis_title="€ no período")
+        x=nomes, y=tabela["Total (€)"], marker_color=p["primary"],
+        text=[f"mais {_euros(d)} €" if d > 0.005 else "mais barato" for d in tabela["Diferença (€)"]],
+        textposition="outside", cliponaxis=False, hovertemplate="%{x}<br>%{y:.2f} €<extra></extra>"))
+    fig.update_layout(template=tema_plotly(), height=altura,
+                      yaxis_title=f"euros em {dias} dias" if dias else "euros")
     return fig

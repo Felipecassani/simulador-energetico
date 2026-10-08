@@ -357,3 +357,50 @@ def test_script_do_tema_passa_o_filtro_do_st_html():
     script = html.split("<script>", 1)[1].rsplit("</script>", 1)[0]
     assert not re.search(r"<[/\w!]", script)
     assert "prefixo" in script                       # chaves com o prefixo do endereço (/~/+ no Cloud)
+
+
+# ---------- Ajuda: Guia rápido, Perguntas frequentes e Glossário ----------
+
+def _constante_da_pagina(pagina, nome):
+    """Lê uma constante literal de uma página sem a correr (as páginas desenham ao ser importadas)."""
+    import ast
+    arvore = ast.parse((PASTA / pagina).read_text(encoding="utf-8"))
+    return next(ast.literal_eval(n.value) for n in arvore.body
+                if isinstance(n, ast.Assign) and any(getattr(a, "id", None) == nome for a in n.targets))
+
+
+def test_guia_tem_todos_os_temas_nos_3_passos(monkeypatch):
+    """Nenhum tema do GUIA fica fora dos passos do Guia rápido (nem repetido, nem com o nome antigo)."""
+    from interface.conteudo import GUIA
+    grupos = _constante_da_pagina("paginas/guia.py", "GRUPOS")
+    temas = [t for _, _, ts, _ in grupos for t in ts]
+    assert sorted(temas) == sorted(t for t, _ in GUIA), "acrescenta o tema novo a um passo de GRUPOS"
+    assert all(ferramentas for *_, ferramentas in grupos), "cada passo liga a uma ferramenta"
+    app = _abrir("paginas/guia.py", monkeypatch)
+    assert not app.exception
+    texto = _texto_visivel(app)
+    assert all(f"<h4>{t}</h4>" in texto for t, _ in GUIA) and "Mais temas" not in texto
+    rotulos = [ligacao.proto.label for ligacao in app.get("page_link")]
+    assert sum(r.startswith("Experimenta: «") for r in rotulos) == sum(len(f) for *_, f in grupos)
+
+
+def test_perguntas_frequentes_todas_agrupadas_e_com_ligacao_a_fatura(monkeypatch):
+    from interface.conteudo import FAQ
+    grupos = _constante_da_pagina("paginas/faq.py", "GRUPOS")
+    assert sorted(q for _, qs in grupos for q in qs) == sorted(q for q, _ in FAQ)
+    app = _abrir("paginas/faq.py", monkeypatch)
+    assert not app.exception
+    assert "Outras perguntas" not in _texto_visivel(app)
+    assert any("«A minha fatura»" in ligacao.proto.label for ligacao in app.get("page_link"))
+
+
+def test_glossario_e_o_primeiro_separador_e_procura(monkeypatch):
+    app = _abrir("paginas/recursos.py", monkeypatch)
+    assert app.tabs[0].label == "O que quer dizer cada palavra"
+    app.text_input(key="r_procura").input("kva").run()
+    texto = _texto_visivel(app)
+    assert "<h4>kVA</h4>" in texto and "Encontrei" in texto
+    app.text_input(key="r_procura").input("potencia").run()
+    assert "<h4>potência contratada</h4>" in _texto_visivel(app).lower()
+    app.text_input(key="r_procura").input("palavra que não existe").run()
+    assert "Não encontrei essa palavra" in _texto_visivel(app) and not app.exception

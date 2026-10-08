@@ -46,62 +46,75 @@ def nivel_consumo(perfil):
 
 
 DICAS = [
-    Dica("standby", "Corta o standby",
-         "Usa extensões com interruptor na TV, box, consola e computador e desliga-as à noite. "
-         "Os aparelhos em espera gastam energia 24 horas por dia.",
+    Dica("standby", "Desliga o que fica em espera",
+         "A TV, a box, a consola e o computador gastam eletricidade mesmo desligados no comando, "
+         "com a luzinha acesa. Liga-os a uma extensão com interruptor e desliga-a à noite.",
          "medio", "Aparelhos"),
-    Dica("led", "Iluminação LED",
-         "Troca as lâmpadas que ainda não são LED, a começar pelas que ficam mais horas acesas.",
+    Dica("led", "Lâmpadas LED",
+         "Troca as lâmpadas antigas por LED, a começar pelas que ficam mais horas acesas. "
+         "Gastam muito menos e duram mais anos.",
          "baixo", "Iluminação"),
     Dica("maquinas_eco", "Máquinas em programa eco e cheias",
-         "Lava roupa e loiça com a máquina cheia, em programas eco e a temperaturas mais baixas.",
+         "Lava a roupa e a loiça só com a máquina cheia. "
+         "Escolhe o programa «eco» e temperaturas mais baixas.",
          "medio", "Aparelhos"),
     Dica("frio", "Frigorífico e arca em boa forma",
-         "Afasta-os da parede e de fontes de calor, verifica as borrachas das portas e "
-         "descongela a arca quando tiver gelo acumulado.",
+         "Afasta-os um pouco da parede e do fogão. Vê se as borrachas das portas fecham bem "
+         "e descongela a arca quando tiver gelo.",
          "medio", "Aparelhos"),
-    Dica("termo_vazio", "Água quente nas horas de vazio",
-         "Programa o termoacumulador para aquecer nas horas de vazio e evita temperaturas "
-         "mais altas do que precisas.",
+    Dica("termo_vazio", "Água quente sem desperdício",
+         "Baixa a temperatura do termoacumulador para o que precisas. Se tens bi-horário ou "
+         "tri-horário, programa-o para aquecer só à noite, nas horas de vazio, que são as mais baratas.",
          "alto", "Água quente", lambda p: p.termoacumulador),
     Dica("termo_bomba", "Pensa numa bomba de calor para a água",
-         "Se o termoacumulador for antigo, uma bomba de calor aquece a mesma água com "
-         "muito menos eletricidade.",
+         "Se o termoacumulador já é antigo, há uma alternativa: a bomba de calor. Funciona como "
+         "um ar condicionado e aquece a mesma água com muito menos eletricidade. Custa mais a "
+         "comprar: em «4. Quanto podes poupar», abre «Vais comprar alguma coisa?» e vês em "
+         "quanto tempo se paga.",
          "alto", "Água quente", lambda p: p.termoacumulador and nivel_consumo(p) != "baixo"),
-    Dica("aquecimento", "Aquecimento mais eficiente",
-         "Aquecedores de resistência são os que mais gastam. Prefere ar condicionado em modo "
-         "de aquecimento ou bomba de calor e fecha portas das divisões que não usas.",
+    Dica("aquecimento", "Aquecer gastando menos",
+         "Os aquecedores a óleo e os ventiladores são os que mais gastam. Um ar condicionado a "
+         "aquecer dá o mesmo calor e gasta cerca de 3 vezes menos. Fecha as portas das divisões "
+         "que não usas.",
          "alto", "Climatização", lambda p: p.aquecimento_eletrico),
-    Dica("isolamento", "Menos fugas de calor",
-         "Cortinas grossas à noite, vedantes nas janelas e portas e persianas fechadas "
-         "nas horas de mais frio reduzem o tempo de aquecimento.",
+    Dica("isolamento", "Fecha bem a casa",
+         "No inverno, fecha as persianas à noite e usa cortinas grossas. Tapa as frinchas das "
+         "janelas e portas, por exemplo com fita de vedação. No verão, fecha os estores nas "
+         "horas de sol. Assim os aparelhos trabalham menos tempo.",
          "medio", "Climatização", lambda p: p.aquecimento_eletrico or p.ar_condicionado),
-    Dica("ac", "Ar condicionado com conta",
-         "Escolhe temperaturas moderadas, limpa os filtros e fecha janelas e estores ao sol.",
+    Dica("ac", "Ar condicionado sem exageros",
+         "No verão, 25 graus chegam; no inverno, 20 graus. Limpa os filtros de vez em quando e "
+         "fecha janelas e portas enquanto está ligado.",
          "medio", "Climatização", lambda p: p.ar_condicionado),
-    Dica("carro", "Carrega o carro em vazio",
-         "Programa o carregamento para as horas de vazio: é o maior consumo que dá para mudar "
-         "de hora sem perder conforto.",
+    Dica("carro", "Carrega o carro nas horas baratas",
+         "O carro é dos maiores gastos da casa e podes escolher a hora de o carregar. Se tens "
+         "bi-horário ou tri-horário, programa o carregamento para a noite, nas horas de vazio, que são as mais "
+         "baratas. No preço simples, todas as horas custam o mesmo.",
          "alto", "Mobilidade", lambda p: p.carro_eletrico),
     Dica("secar", "Seca a roupa ao ar",
-         "A máquina de secar é dos aparelhos que mais gasta; usa-a só quando for mesmo preciso.",
+         "A máquina de secar é dos aparelhos que mais gasta. Estende a roupa sempre que der e "
+         "usa a máquina só quando for mesmo preciso. Centrifugar bem antes também ajuda.",
          "medio", "Aparelhos", lambda p: p.maquina_secar),
     Dica("cozinha", "Cozinhar com menos energia",
-         "Tapa os tachos, usa recipientes do tamanho da placa e aproveita o calor residual "
-         "no fim da cozedura.",
+         "Põe a tampa nos tachos e usa tachos do tamanho da placa. Desliga a placa uns minutos "
+         "antes do fim: o calor que fica acaba de cozinhar.",
          "baixo", "Cozinha", lambda p: p.placa_eletrica),
     Dica("horas_baratas", "Usa as horas mais baratas do mercado",
-         "Se o teu indexado cobra cada hora (ou cada 15 minutos) ao preço do mercado, põe máquinas e o termoacumulador nas horas mais baratas, muitas vezes a meio do dia e de madrugada. A ferramenta Gráficos mostra o mercado de hoje e, a partir do meio-dia, o de amanhã. Se o contrato usa a média do mês, mudar de hora não altera o preço.",
+         "O teu tarifário é indexado: o preço muda com o mercado. Se o contrato cobra cada hora "
+         "ao preço desse momento, põe as máquinas e o termoacumulador a trabalhar nas horas mais "
+         "baratas, muitas vezes a meio do dia e de madrugada. Vês as horas mais baratas de hoje em "
+         "«Preço hora a hora». Se o contrato usa a média do mês, mudar de hora não muda o preço.",
          "alto", "Tarifa", lambda p: p.indexado),
     Dica("opcao_horaria", "Vê se o bi-horário compensa",
-         "Com consumos grandes que podes mudar de hora (água quente, máquinas, carro), "
-         "o bi-horário pode sair mais barato. Compara na ferramenta Opções horárias.",
+         "Se gastas muito em coisas que podes pôr a trabalhar à noite, como a água quente, as "
+         "máquinas ou o carro, o bi-horário pode sair mais barato. Faz as contas em "
+         "«Bi-horário compensa?».",
          "alto", "Tarifa",
          lambda p: p.opcao == "simples" and (p.termoacumulador or p.carro_eletrico
                                               or nivel_consumo(p) == "alto")),
-    Dica("auditoria", "Descobre os grandes consumidores",
-         "O teu consumo está acima do habitual para o tamanho da casa. Um medidor de tomada "
-         "ajuda a encontrar o aparelho responsável.",
+    Dica("auditoria", "Descobre o que gasta mais",
+         "Com estes números, gasta-se mais do que é habitual para o número de pessoas da casa. Um medidor de consumo "
+         "custa poucos euros: liga-se entre a tomada e o aparelho e mostra quanto ele gasta.",
          "alto", "Diagnóstico", lambda p: nivel_consumo(p) == "alto"),
 ]
 

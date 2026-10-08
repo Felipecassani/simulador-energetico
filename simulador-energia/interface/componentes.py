@@ -72,12 +72,24 @@ def cabecalho_ferramenta(passo, disponivel=True):
     selo = "" if disponivel else badge(False)
     st.html(f"""
     <div class="lc-step-head">
-      <div class="lc-step-num">{passo.emoji}</div>
+      <div class="lc-step-num" aria-hidden="true">{passo.emoji}</div>
       <div class="lc-step-text">
         <div class="lc-step-title"><h2>{escape(passo.titulo)}</h2>{selo}</div>
-        <p>{escape(passo.descricao)}</p>
+        <p>{com_glossario(passo.descricao)}</p>
       </div>
     </div>""")
+    palavras(passo.numero)
+
+
+def palavras(numero):
+    """As palavras difíceis da ferramenta, explicadas (fechado: não empurra os campos para baixo)."""
+    termos = [t for t in conteudo.TERMOS.get(numero, []) if t in conteudo.GLOSSARIO]
+    if not termos:
+        return
+    with st.expander("Não percebes alguma palavra? Vê aqui o que quer dizer", icon=":material/menu_book:"):
+        grelha([f'<div class="lc-card"><h4>{escape(t)}</h4><p>{escape(conteudo.GLOSSARIO[t][1])}</p></div>'
+                for t in termos], largura_min=220)
+        st.page_link("paginas/recursos.py", label="Ver todas as palavras no glossário", icon=":material/menu_book:")
 
 
 def metrica(rotulo, valor, unidade="", destaque=False, vazio=False):
@@ -88,24 +100,26 @@ def metrica(rotulo, valor, unidade="", destaque=False, vazio=False):
 
 def grelha(blocos_html, largura_min=200):
     """Mostra vários blocos HTML lado a lado (quebram em linhas no telemóvel)."""
-    estilo = f"grid-template-columns:repeat(auto-fit,minmax({largura_min}px,1fr))"
+    estilo = f"grid-template-columns:repeat(auto-fit,minmax(min({largura_min}px,100%),1fr))"
     st.html(f'<div class="lc-grid" style="{estilo}">{"".join(blocos_html)}</div>')
 
 
 def cartao_ferramenta(passo, disponivel):
     """Cartão da página Início: ícone, nome e o que faz. O cartão inteiro é clicável
     (a ligação estica-se por cima dele, CSS .st-key-cartao_*)."""
+    selo = ('<span class="lc-badge lc-ok">Começa aqui</span>' if disponivel and passo.numero == 1
+            else "" if disponivel else badge(False))
     with st.container(border=True, key=f"cartao_{passo.numero}"):
         st.html(f"""
         <div class="lc-card-flat">
           <div class="lc-topo">
-            <span class="lc-emoji">{passo.emoji}</span>{badge(disponivel)}
+            <span class="lc-emoji" aria-hidden="true">{passo.emoji}</span>{selo}
           </div>
           <h4>{escape(passo.titulo)}</h4>
           <p>{escape(passo.descricao)}</p>
         </div>""")
         st.page_link(passo.pagina, label="Abrir" if disponivel else "Ver",
-                     icon=":material/arrow_forward:")
+                     icon=":material/arrow_forward:", help=f"Abrir «{passo.titulo}»")
 
 
 def pagina_em_breve(numero):
@@ -129,7 +143,7 @@ def cartao_em_construcao(secao):
         st.html(f"""
         <div class="lc-card-flat lc-construcao">
           <div class="lc-topo">
-            <span class="lc-emoji">{secao.emoji}</span><span class="lc-badge lc-todo">Em construção</span>
+            <span class="lc-emoji" aria-hidden="true">{secao.emoji}</span><span class="lc-badge lc-todo">Em construção</span>
           </div>
           <h4>{escape(secao.titulo)}</h4>
           <p>{escape(secao.descricao)}</p>
@@ -152,7 +166,7 @@ def pagina_em_construcao(chave):
     st.page_link("paginas/inicio.py", label="Voltar ao início", icon=":material/arrow_back:")
 
 
-def podio_ofertas(linhas, atual, unidade="por mês", empresa_atual=None):
+def podio_ofertas(linhas, atual, unidade="por mês", empresa_atual=None, com_fatura=True):
     """Pódio das ofertas mais baratas.
 
     linhas: [(oferta, valor)] já na unidade a mostrar (€/mês ou € no 1.º ano);
@@ -160,15 +174,18 @@ def podio_ofertas(linhas, atual, unidade="por mês", empresa_atual=None):
     """
     from nucleo import periodos
     medalhas = ["🥇", "🥈", "🥉", "4.º", "5.º"]
+    # sem fatura, a comparação é com os números de exemplo/preenchidos, não com "o que pagas hoje"
+    face = "em relação a hoje" if com_fatura else "em relação aos números preenchidos"
+    lugares = ["Mais barata", "2.ª mais barata", "3.ª mais barata", "4.ª mais barata", "5.ª mais barata"]
     blocos = []
     for i, (o, valor) in enumerate(linhas):
         dif = atual - valor
         if dif > 0.005:
-            comparacao = f'<span class="lc-pos">−{euros(dif)} € {unidade}</span> face à tua fatura'
+            comparacao = f'<span class="lc-pos">Poupas {euros(dif)} € {unidade}</span> {face}'
         elif dif < -0.005:
-            comparacao = f'<span class="lc-neg">+{euros(-dif)} € {unidade}</span> face à tua fatura'
+            comparacao = f'<span class="lc-neg">Pagas mais {euros(-dif)} € {unidade}</span> {face}'
         else:
-            comparacao = "igual à tua fatura"
+            comparacao = f"Pagas o mesmo {face}"
         etiquetas = [periodos.NOMES[o.opcao]]
         etiquetas.append("com fidelização" if o.fidelizacao else "sem fidelização")
         if empresa_atual and o.comercializador == empresa_atual:
@@ -176,11 +193,12 @@ def podio_ofertas(linhas, atual, unidade="por mês", empresa_atual=None):
         chips = "".join(f'<span class="lc-chip">{escape(e)}</span>' for e in etiquetas)
         extra = ('<p class="lc-podio-nota">Tem benefícios à parte (saldo ou devoluções) que não '
                  'entram nesta conta.</p>' if o.reembolsos else "")
-        ligacao = (f'<a href="{escape(o.ligacao)}" target="_blank" rel="noopener">Ver a oferta ↗</a>'
-                   if o.ligacao.startswith("http") else "")
+        ligacao = (f'<a href="{escape(o.ligacao)}" target="_blank" rel="noopener">Ver a oferta no site da '
+                   f'empresa <span aria-hidden="true">↗</span></a>' if o.ligacao.startswith("http") else "")
         blocos.append(f"""
         <div class="lc-card lc-podio{' lc-podio-1' if i == 0 else ''}">
-          <div class="lc-podio-medalha">{medalhas[i]}</div>
+          <div class="lc-podio-medalha"><span aria-hidden="true">{medalhas[i]}</span>
+            <span class="lc-podio-lugar">{lugares[i]}</span></div>
           <h4>{escape(o.comercializador)}</h4>
           <p class="lc-podio-oferta">{escape(o.nome)}</p>
           <div class="lc-podio-valor">{euros(valor)} €<small>{unidade}</small></div>
@@ -191,7 +209,7 @@ def podio_ofertas(linhas, atual, unidade="por mês", empresa_atual=None):
     grelha(blocos, largura_min=240)
 
 
-def cartao_meu_tarifario(p, total_mes=None):
+def cartao_meu_tarifario(p, total_mes=None, na_fatura=False):
     """O contrato da pessoa, sempre à vista: empresa, tipo de preço, opção, potência e preços."""
     from nucleo import periodos
     empresa = p.get("comercializador") or "O teu contrato"
@@ -202,22 +220,28 @@ def cartao_meu_tarifario(p, total_mes=None):
     if desconto:
         chips.append(f"campanha de {round(desconto)} %")
     chips_html = "".join(f'<span class="lc-chip">{escape(c)}</span>' for c in chips)
-    mes = (f'<div class="lc-meu-valor">{euros(total_mes)} €<small>por mês, sem IVA</small></div>'
+    fonte = ("lido da tua fatura · para corrigir, muda os números no passo 2, mais acima" if na_fatura
+             else "lido da tua fatura · para corrigir, volta a «A minha fatura»")
+    mes = (f'<div class="lc-meu-valor">{euros(total_mes)} €<small>por mês, sem IVA nem taxas</small></div>'
            if total_mes is not None else "")
     st.html(f"""
     <div class="lc-card lc-meu">
-      <div class="lc-meu-topo"><span class="lc-n">🧾 O MEU TARIFÁRIO</span>
-        <span class="lc-meu-fonte">da tua fatura · para mudar, volta à Fatura</span></div>
+      <div class="lc-meu-topo"><span class="lc-n"><span aria-hidden="true">🧾</span> O MEU TARIFÁRIO</span>
+        <span class="lc-meu-fonte">{fonte}</span></div>
       <div class="lc-meu-corpo">
         <div><h4>{escape(empresa)}</h4><div class="lc-chips">{chips_html}</div></div>
         <div class="lc-meu-precos">
-          <span>Energia <b>{preco(p['preco_energia'])} €/kWh</b></span>
-          <span>Potência <b>{preco(p['preco_diario'])} €/dia</b></span>
+          <span>Energia <b>{preco(p['preco_energia'])} € por kWh</b></span>
+          <span>Potência <b>{preco(p['preco_diario'])} € por dia</b></span>
           <span>Consumo <b>{numero(p['consumo_kwh'])} kWh em {p['dias']} dias</b></span>
         </div>
         {mes}
       </div>
     </div>""")
+
+
+DICA_PERIODO = {"vazio": "mais barato", "fora_vazio": "preço normal", "cheias": "preço intermédio",
+                "ponta": "mais caro"}
 
 
 def periodo_atual():
@@ -238,9 +262,9 @@ def periodo_atual():
             classe = "lc-agora-barato" if atual == "vazio" else "lc-agora-caro" if atual == "ponta" else ""
             blocos.append(
                 f'<div class="lc-card lc-agora {classe}"><span class="lc-n">{escape(periodos.NOMES[opcao].upper())}</span>'
-                f'<h4>{escape(periodos.NOMES[atual])}</h4>'
+                f'<h4>{escape(periodos.NOMES[atual])} · {DICA_PERIODO.get(atual, "")}</h4>'
                 f'<p>{"até às " + format(ate, "%Hh%M") if ate else ""}</p></div>')
-        grelha(blocos, largura_min=170)
+        grelha(blocos, largura_min=150)
     _mostrar()
 
 
@@ -248,16 +272,17 @@ def painel_mercado(hoje, amanha):
     """Mini-painel do OMIE: média de hoje e de amanhã, com a tendência."""
     from nucleo import mercado
     r_hoje = mercado.resumo_omie(hoje)
-    blocos = [metrica("Mercado hoje", numero(r_hoje["media"] / 10, 2), "c€/kWh")]
+    unidade = "cêntimos por kWh"
+    blocos = [metrica("Preço médio hoje", numero(r_hoje["media"] / 10, 2), unidade)]
     if amanha:
         r_am = mercado.resumo_omie(amanha)
         dif = (r_am["media"] - r_hoje["media"]) / 10
-        seta = "▲" if dif > 0.05 else "▼" if dif < -0.05 else "▬"
-        blocos.append(metrica(f"Amanhã {seta}", numero(r_am["media"] / 10, 2), "c€/kWh"))
+        tendencia = "sobe" if dif > 0.05 else "desce" if dif < -0.05 else "fica igual"
+        blocos.append(metrica(f"Amanhã {tendencia}", numero(r_am["media"] / 10, 2), unidade))
     else:
-        blocos.append(metrica("Amanhã", "—", "sai por volta do meio-dia", vazio=True))
-    blocos.append(metrica("Mais barato hoje", numero(r_hoje["min"] / 10, 2), "c€/kWh"))
-    blocos.append(metrica("Mais caro hoje", numero(r_hoje["max"] / 10, 2), "c€/kWh"))
+        blocos.append(metrica("Amanhã", "ainda não saiu", "sai por volta do meio-dia"))
+    blocos.append(metrica("Hora mais barata hoje", numero(r_hoje["min"] / 10, 2), unidade))
+    blocos.append(metrica("Hora mais cara hoje", numero(r_hoje["max"] / 10, 2), unidade))
     grelha(blocos, largura_min=150)
 
 
@@ -290,18 +315,26 @@ def cartao_recomendacao(rec):
     """Cartão de uma recomendação, com a poupança mensal à esquerda (se houver)."""
     if rec.poupanca_mensal is not None:
         valor = (f'<div class="lc-rec-valor">{euros(rec.poupanca_mensal)} €'
-                 f'<small>por mês</small></div>')
+                 f'<small>poupas por mês</small></div>')
     else:
-        valor = '<div class="lc-rec-valor lc-rec-info">i<small>informação</small></div>'
+        valor = '<div class="lc-rec-valor lc-rec-info">Dica</div>'
     ligacao = (f' <a href="{escape(rec.ligacao)}" target="_blank" rel="noopener">Abrir o simulador '
-               f'da ERSE ↗</a>' if rec.ligacao else "")
+               f'da ERSE <span aria-hidden="true">↗</span> (abre noutra janela)</a>' if rec.ligacao else "")
     return (f'<div class="lc-card lc-rec">{valor}<div><h4>{escape(rec.titulo)}</h4>'
             f'<p>{escape(rec.texto)}{ligacao}</p></div></div>')
 
 
 def aviso_fatura(p):
-    """Nas outras ferramentas: o cartão "O meu tarifário" (só depois de carregar uma fatura)."""
-    if not p.get("da_fatura"):
+    """Nas outras ferramentas: o cartão "O meu tarifário" ou, sem fatura, o aviso de que os números
+    já preenchidos são um exemplo (há quem pense que são os seus)."""
+    from interface.perfil import PADRAO
+    exemplo = all(p.get(k) == PADRAO[k] for k in ("consumo_kwh", "dias", "kva"))
+    if not p.get("da_fatura") and exemplo:
+        st.info("Os números já preenchidos são um **exemplo**: uma casa que gasta "
+                f"{numero(p['consumo_kwh'])} kWh em {p['dias']} dias, com os preços da tarifa regulada. "
+                "Troca-os pelos da tua fatura, ou carrega-a em «A minha fatura» e eles passam para aqui sozinhos.",
+                icon=":material/info:")
+        st.page_link("paginas/fatura.py", label="Carregar a minha fatura", icon=":material/receipt_long:")
         return
     try:
         total = (p["consumo_kwh"] * p["preco_energia"] + p["preco_diario"] * p["dias"]) * 30 / p["dias"]
@@ -310,9 +343,34 @@ def aviso_fatura(p):
     cartao_meu_tarifario(p, total)
 
 
+def proximo_passo(url_path):
+    """Fim de cada ferramenta: o que a pessoa ficou a saber e o caminho para a seguinte."""
+    from pathlib import Path
+    numeros = {Path(p.pagina).stem: p.numero for p in roteiro.PASSOS}
+    numero_atual = numeros.get(url_path)
+    if numero_atual is None or numero_atual not in conteudo.ORDEM_FERRAMENTAS:
+        return
+    ordem = list(conteudo.ORDEM_FERRAMENTAS)
+    i = ordem.index(numero_atual)
+    st.write("")
+    with st.container(border=True, key="proximo_passo"):
+        st.html(f'<div class="lc-card-flat"><span class="lc-n">O QUE FICASTE A SABER</span>'
+                f'<p>{com_glossario(conteudo.APRENDESTE[numero_atual])}</p></div>')
+        with st.container(horizontal=True, key="proximo_ligacoes"):
+            if i + 1 < len(ordem):
+                seguinte = roteiro.passo(ordem[i + 1])
+                st.page_link(seguinte.pagina, label=f"Próximo passo: {seguinte.titulo}",
+                             icon=":material/arrow_forward:")
+            st.page_link("paginas/inicio.py", label="Ver todas as ferramentas", icon=":material/apps:")
+
+
 def rodape():
+    with st.container(horizontal=True, key="rodape_ajuda"):
+        st.page_link("paginas/guia.py", label="Guia rápido", icon=":material/school:")
+        st.page_link("paginas/faq.py", label="Perguntas frequentes", icon=":material/help:")
+        st.page_link("paginas/recursos.py", label="O que quer dizer cada palavra", icon=":material/menu_book:")
     st.html(f"""
     <footer class="lc-footer">
       <span><b>{escape(MARCA)}</b> · feito por {escape(conteudo.AUTOR["nome"])} · resultados indicativos</span>
-      <span>Preços da tua fatura ou oficiais (ERSE, OMIE) · sem IVA nem taxas · nada é guardado</span>
+      <span>Preços da tua fatura ou oficiais (ERSE, OMIE) · nada do que escreves ou carregas é guardado</span>
     </footer>""")

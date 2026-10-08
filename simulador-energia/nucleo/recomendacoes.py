@@ -90,13 +90,15 @@ def recomendar(fatura, erse, medias_omie=None):
                       if l["modalidade"] == "indexado" and entra(l)]
         linha = next((l for l in linhas_idx if l["opcao"] == opcao_atual), linhas_idx[0])
         ref_m = _mes(linha["energia"] + fatura["preco_diario"] * dias, dias)
-        agora = (f"Nesta fatura pagaste cerca de {_euros(atual_m)} € por mês (sem IVA nem taxas); "
+        agora = (f"Com estes números pagas cerca de {_euros(atual_m)} € por mês (sem IVA nem taxas); "
                  f"com o mercado dos últimos dias e as condições do teu contrato pagarias "
                  f"{_euros(ref_m)} €. ")
         faltam = [n for n, v in (("as perdas", perdas), ("a margem", margem)) if not v]
         if faltam:
-            agora += (f"A fatura não mostra {' nem '.join(faltam)} do contrato, por isso este é o "
-                      "valor mais baixo possível; o real será um pouco maior. ")
+            agora += (f"Esta conta não mostra {' nem '.join(faltam)} do contrato, porque não "
+                      + ("as indicaste (ficaram a 0)" if len(faltam) > 1 or faltam == ["as perdas"]
+                         else "a indicaste (ficou a 0)")
+                      + ", por isso este é o valor mais baixo possível; o real será um pouco maior. ")
 
     # 1. a tarifa regulada face ao contrato atual (num indexado: face ao mercado de agora)
     diferenca = ref_m - melhor_reg_m
@@ -104,12 +106,12 @@ def recomendar(fatura, erse, medias_omie=None):
     if agora:
         if diferenca > LIMIAR:
             recs.append(Recomendacao(
-                "regulada", "O preço fixo da tarifa regulada sai mais barato",
+                "regulada", "Com os preços desta semana, o preço fixo da tarifa regulada sai mais barato",
                 f"{agora}Na tarifa regulada da ERSE (preço fixo) em {nome_reg} pagarias "
                 f"{_euros(melhor_reg_m)} €, sem depender do mercado.", diferenca))
         elif diferenca < -LIMIAR:
             recs.append(Recomendacao(
-                "regulada", "O teu indexado está abaixo do preço fixo",
+                "regulada", "Com os preços desta semana, o teu indexado fica abaixo do preço fixo",
                 f"{agora}Na tarifa regulada da ERSE (preço fixo) seriam {_euros(melhor_reg_m)} €. "
                 "Com o mercado atual, o indexado compensa; o preço fixo só protege se o mercado subir.",
                 None))
@@ -141,14 +143,14 @@ def recomendar(fatura, erse, medias_omie=None):
     if fatura["preco_diario"] > pot_reg * 1.15:
         excesso = (fatura["preco_diario"] - pot_reg) * 30
         energia_reg = tarifas.precos_fixos(erse, kva)["simples"]["simples"]
-        compensa = (f" Em compensação, a tua energia ({_preco(fatura['preco_energia'])} €/kWh) é mais "
-                    f"barata do que a regulada ({_preco(energia_reg)} €/kWh)."
+        compensa = (f" Em compensação, a tua energia ({_preco(fatura['preco_energia'])} € por kWh) é mais "
+                    f"barata do que a regulada ({_preco(energia_reg)} € por kWh)."
                     if fatura["preco_energia"] < energia_reg else "")
         # informativa: a poupança real depende do preço da energia de cada oferta
         recs.append(Recomendacao(
             "potencia_cara", "A tua potência está cara",
-            f"Pagas {_preco(fatura['preco_diario'])} €/dia pela potência de {_kva(kva)} kVA; na "
-            f"tarifa regulada são {_preco(pot_reg)} €/dia, cerca de {_euros(excesso)} € por mês a "
+            f"Pagas {_preco(fatura['preco_diario'])} € por dia pela potência de {_kva(kva)} kVA; na "
+            f"tarifa regulada são {_preco(pot_reg)} € por dia, cerca de {_euros(excesso)} € por mês a "
             f"menos.{compensa} Ao comparar ofertas, olha para os dois preços.", None))
 
     # 3. opção horária (só com o perfil real da fatura)
@@ -163,7 +165,7 @@ def recomendar(fatura, erse, medias_omie=None):
                 "opcao", f"No indexado, o teu perfil favorece o {nome_idx}",
                 f"{texto_perfil}. Com o mercado dos últimos dias e as condições do teu contrato, o {nome_idx} sairia "
                 f"{_euros(ganho)} € por mês mais barato do que o "
-                f"{periodos.NOMES[opcao_atual].lower()}. Se o teu comercializador tiver "
+                f"{periodos.NOMES[opcao_atual].lower()}. Se a tua empresa tiver "
                 f"{nome_idx} indexado, pede o preço e compara.", None))
     elif tem_perfil:
         simples_reg = next(l for l in reguladas if l["opcao"] == "simples")
@@ -174,14 +176,15 @@ def recomendar(fatura, erse, medias_omie=None):
             recs.append(Recomendacao(
                 "opcao", f"O teu perfil favorece o {nome_reg}",
                 f"{texto_perfil}. Na tarifa regulada, o {nome_reg} sai {_euros(ganho)} € por mês mais barato do que o "
-                f"simples. Se o teu comercializador tiver {nome_reg}, pede o preço e compara.",
+                f"simples. Se a tua empresa tiver {nome_reg}, pede o preço e compara.",
                 None))
     else:
         recs.append(Recomendacao(
             "perfil", "Descobre se o bi ou tri-horário compensa",
-            "Se já estás em bi ou tri-horário, a fatura mostra o consumo por período. No simples, "
-            "com contador inteligente, encontras esses dados no Balcão Digital da E-REDES. Carrega "
-            "uma fatura com eles ou indica a repartição em Opções horárias.",
+            "Se já estás em bi ou tri-horário, a fatura mostra quanto gastas em cada período. No simples, "
+            "com contador inteligente, encontras esses dados no Balcão Digital da E-REDES: carrega-os no "
+            "quadro «Consumos do contador inteligente (E-REDES)», no topo de «A minha fatura», ou "
+            "experimenta em «Bi-horário compensa?».",
             None))
 
     # 4. indexado com o mercado recente (limite mínimo: sem perdas nem margem), para contratos fixos
@@ -193,7 +196,7 @@ def recomendar(fatura, erse, medias_omie=None):
         if melhor_idx_m < atual_m - LIMIAR:
             recs.append(Recomendacao(
                 "indexado", "Um tarifário indexado pode compensar",
-                f"Com o mercado OMIE dos últimos dias, um indexado custaria a partir de "
+                f"Com os preços do mercado da eletricidade dos últimos dias, um indexado custaria a partir de "
                 f"{_euros(melhor_idx_m)} € por mês, contra {_euros(atual_m)} € agora. As ofertas "
                 "reais somam as perdas na rede e uma margem, por isso a poupança real será menor; "
                 "e o preço acompanha o mercado, que pode subir.", None))
@@ -201,14 +204,17 @@ def recomendar(fatura, erse, medias_omie=None):
             recs.append(Recomendacao(
                 "indexado", "Com o mercado atual, o indexado não compensa",
                 f"Mesmo sem perdas nem margem, um indexado custaria cerca de {_euros(melhor_idx_m)} € "
-                f"por mês com os preços OMIE dos últimos dias, contra {_euros(atual_m)} € agora.",
+                f"por mês com os preços do mercado dos últimos dias, contra {_euros(atual_m)} € agora.",
                 None))
 
     # 4b. indexado: o preço muda ao longo do dia
     if indexado:
         recs.append(Recomendacao(
             "horas_baratas", "Aproveita as horas baratas do mercado",
-            "Se o teu indexado cobra cada hora (ou cada 15 minutos) ao preço do mercado, põe máquinas e o termoacumulador nas horas mais baratas, muitas vezes a meio do dia e de madrugada. A ferramenta Gráficos mostra o mercado de hoje e, a partir do meio-dia, o de amanhã. Se o contrato usa a média do mês, mudar de hora não altera o preço.",
+            "Se o teu indexado cobra cada hora (ou cada 15 minutos) ao preço do mercado, põe as máquinas e o "
+            "cilindro da água quente a trabalhar nas horas mais baratas, muitas vezes a meio do dia e de "
+            "madrugada. A ferramenta «Preço hora a hora» mostra o mercado de hoje e, a partir do meio-dia, o de "
+            "amanhã. Se o contrato usa a média do mês, mudar de hora não altera o preço.",
             None))
 
     # 5. campanha ou desconto temporário
@@ -240,9 +246,9 @@ def recomendar(fatura, erse, medias_omie=None):
 
     # 7. comparar comercializadores (sempre)
     recs.append(Recomendacao(
-        "comercializador", "Compara as ofertas de todos os comercializadores",
+        "comercializador", "Compara as ofertas de todas as empresas",
         "O simulador da ERSE compara as ofertas de todas as empresas com os teus dados. Mudar "
-        "de comercializador é gratuito e não corta a luz; vê só se o teu contrato tem fidelização.",
+        "de empresa é gratuito e não corta a luz; vê só se o teu contrato tem um prazo mínimo (fidelização).",
         None, SIMULADOR_ERSE))
 
     return sorted(recs, key=lambda r: (r.poupanca_mensal is None, -(r.poupanca_mensal or 0)))

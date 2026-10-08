@@ -1,4 +1,4 @@
-"""Explorar possibilidades: o que custaria mudar de contrato, de potência ou de hábitos.
+"""Como pagar menos: o que custaria mudar de contrato, de potência ou de hábitos.
 
 Tudo em € por mês (30 dias), sem IVA nem taxas, para o mesmo consumo da pessoa.
 Cada cenário diz quanto custa e que esforço pede: só mudar de contrato, mudar a potência ou
@@ -79,8 +79,8 @@ def explorar(kwh_mes, kva, pct_vazio, pct_ponta, erse, lista_ofertas, medias_omi
         pot = of.potencia_indexadas(lista_ofertas, kva, [(f.comercializador, f.procurar) for f in indexados.FORMULAS])
         pot[None] = tarifas.preco_potencia(erse, kva)
         f, preco, custo = indexados.estimar(medias_omie["simples"]["simples"], hoje.month, tar, kwh_mes, 30, pot)[0]
-        cenarios.append(Cenario("Indexado ao mercado", f"{f.comercializador} · {f.oferta} (estimativa com o "
-                                "mercado recente; muda todos os dias)", custo, CONTRATO))
+        cenarios.append(Cenario("Indexado ao mercado", f"{f.comercializador} · {f.oferta} (estimativa com os "
+                                "preços do mercado desta semana; muda todos os dias)", custo, CONTRATO))
 
     menor = _abaixo(kva)
     if menor and pico_kw is not None and pico_kw > 0.9 * menor:
@@ -95,17 +95,17 @@ def explorar(kwh_mes, kva, pct_vazio, pct_ponta, erse, lista_ofertas, medias_omi
         vazio = min(100.0 - (pct_ponta or 0.0), pct_vazio + 10)
         m = melhor(lista_ofertas, kwh_mes, kva, vazio, pct_ponta, erse, hoje=hoje)
         if m:
-            cenarios.append(Cenario("Pôr mais 10 % do consumo no vazio",
+            cenarios.append(Cenario("Pôr mais 10 % do consumo nas horas baratas",
                                     f"{m[1]} · máquinas e água quente à noite", m[0], HABITOS))
 
     m = melhor(lista_ofertas, kwh_mes * 0.9, kva, pct_vazio, pct_ponta, erse, hoje=hoje)
     if m:
-        cenarios.append(Cenario("Gastar 10 % menos", f"{m[1]} · dicas da ferramenta Eficiência", m[0], HABITOS))
+        cenarios.append(Cenario("Gastar 10 % menos", f"{m[1]} · dicas de «Poupar em casa»", m[0], HABITOS))
 
     vazio = min(100.0 - (pct_ponta or 0.0), pct_vazio + 10) if pct_vazio is not None else None
     m = melhor(lista_ofertas, kwh_mes * 0.9, menor or kva, vazio, pct_ponta, erse, hoje=hoje)
     if m:
-        partes = ["10 % menos"] + (["mais vazio"] if vazio is not None else []) + \
+        partes = ["10 % menos"] + (["mais horas baratas"] if vazio is not None else []) + \
                  ([f"{menor:g} kVA".replace(".", ",")] if menor else [])
         cenarios.append(Cenario("Juntar tudo", f"{m[1]} · {', '.join(partes)}", m[0], TUDO))
 
