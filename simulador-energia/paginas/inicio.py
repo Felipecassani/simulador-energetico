@@ -4,10 +4,12 @@ Ordem pensada para quem chega pela primeira vez (e no telemóvel): o botão para
 ferramentas logo a seguir ao cabeçalho; o preço do mercado, que não é o preço que a pessoa
 paga, vem depois e explicado.
 """
+from html import escape
+
 import streamlit as st
 
 from interface import componentes as ui
-from interface.conteudo import EM_CONSTRUCAO, ORDEM_FERRAMENTAS
+from interface.conteudo import CONTA_EM_1_MINUTO, EM_CONSTRUCAO, ORDEM_FERRAMENTAS
 from interface.dados import omie_hoje_e_amanha
 from interface.estilo import MARCA
 from nucleo import mercado, roteiro
@@ -27,11 +29,19 @@ st.caption("Não tens a fatura à mão? Entra na mesma: há números de exemplo 
 st.subheader("Ferramentas")
 st.caption("Escolhe o que queres fazer. Os números que escreves numa ferramenta passam sozinhos para as outras.")
 ferramentas = [roteiro.passo(n) for n in ORDEM_FERRAMENTAS]
-# Uma linha de 3 colunas por cada 3 ferramentas: no telemóvel mantém a ordem
-for inicio in range(0, len(ferramentas), 3):
-    for coluna, passo in zip(st.columns(3), ferramentas[inicio:inicio + 3]):
-        with coluna:
-            ui.cartao_ferramenta(passo, roteiro.disponivel(passo.numero))
+# A primeira (por onde se começa) a toda a largura; as outras 4 numa grelha regular, com a mesma
+# altura: 4 lado a lado no computador, 2 × 2 no tablet, uma por linha no telemóvel (CSS .st-key-grelha_ferramentas)
+ui.cartao_ferramenta(ferramentas[0], roteiro.disponivel(ferramentas[0].numero), destaque=True)
+with st.container(key="grelha_ferramentas"):
+    for passo in ferramentas[1:]:
+        ui.cartao_ferramenta(passo, roteiro.disponivel(passo.numero))
+
+st.subheader("A conta da luz em 1 minuto")
+st.caption("Todas as faturas têm estas três partes. Percebê-las é meio caminho para pagar menos.")
+ui.grelha([f'<div class="lc-card lc-parte lc-aberto"><div class="lc-emoji" aria-hidden="true">{emoji}</div>'
+           f'<span class="lc-n">{escape(rotulo.upper())}</span><h4>{escape(titulo)}</h4>'
+           f'<p>{ui.com_glossario(texto)}</p></div>'
+           for emoji, titulo, rotulo, texto in CONTA_EM_1_MINUTO], largura_min=240)
 
 st.subheader("Aprender o básico")
 st.caption("Nunca olhaste com atenção para uma fatura da luz? Começa por aqui.")

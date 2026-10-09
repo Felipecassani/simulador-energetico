@@ -92,24 +92,55 @@ def palavras(numero):
         st.page_link("paginas/recursos.py", label="Ver todas as palavras no glossário", icon=":material/menu_book:")
 
 
+def para_onde_vai(energia, potencia, impostos_e_taxas):
+    """Barra "para onde vai o teu dinheiro": energia, potência e impostos, com € e % escritos
+    (não só pela cor), para quem vê uma fatura pela primeira vez."""
+    partes = [("Eletricidade que gastaste", energia, "lc-seg-energia"),
+              ("Potência (parte fixa)", potencia, "lc-seg-potencia"),
+              ("IVA e taxas", impostos_e_taxas, "lc-seg-impostos")]
+    total = sum(v for _, v, _ in partes)
+    if total <= 0:
+        return
+    barra = "".join(f'<span class="{c}" style="width:{100 * v / total:.1f}%"></span>' for _, v, c in partes)
+    legenda = "".join(f'<li><span class="lc-ponto {c}" aria-hidden="true"></span>{escape(n)}: '
+                      f'<b>{euros(v)} €</b> ({numero(100 * v / total)} %)</li>' for n, v, c in partes)
+    st.html(f'<div class="lc-dinheiro"><div class="lc-n">PARA ONDE VAI O TEU DINHEIRO · TOTAL COM IVA '
+            f'{euros(total)} €</div><div class="lc-barra" aria-hidden="true">{barra}</div>'
+            f'<ul>{legenda}</ul></div>')
+
+
 def metrica(rotulo, valor, unidade="", destaque=False, vazio=False):
+    """Cartão de um número. Unidades compridas ("cêntimos por kWh") vão para a linha de baixo e
+    valores em texto ("ainda não saiu") ficam mais pequenos: cartões lado a lado ficam iguais."""
     classes = "lc-metric" + (" lc-destaque" if destaque else "") + (" lc-vazio" if vazio else "")
+    texto = any(c.isalpha() for c in str(valor)) and str(valor) != "—"
+    classes += " lc-metric-texto" if texto else ""
+    unidade_cls = "lc-unit lc-unit-linha" if len(unidade) > 6 else "lc-unit"
     return (f'<div class="{classes}"><div class="lc-label">{escape(rotulo)}</div>'
-            f'<div class="lc-value">{escape(str(valor))}<span class="lc-unit">{escape(unidade)}</span></div></div>')
+            f'<div class="lc-value">{escape(str(valor))}<span class="{unidade_cls}">{escape(unidade)}</span></div></div>')
 
 
-def grelha(blocos_html, largura_min=200):
-    """Mostra vários blocos HTML lado a lado (quebram em linhas no telemóvel)."""
-    estilo = f"grid-template-columns:repeat(auto-fit,minmax(min({largura_min}px,100%),1fr))"
+def grelha(blocos_html, largura_min=200, max_colunas=4):
+    """Mostra vários blocos HTML lado a lado, em linhas equilibradas e sem buracos.
+
+    Escolhe o n.º de colunas que reparte os blocos por igual (5 → 3 + 2, 6 → 3 + 3, 7 → 4 + 3) e os da
+    última linha esticam para a encher; no telemóvel, cada bloco nunca fica mais estreito do que
+    largura_min (nem mais largo do que o ecrã). Os blocos da mesma linha ficam com a mesma altura.
+    """
+    import math
+    n = max(1, len(blocos_html))
+    colunas = math.ceil(n / math.ceil(n / max_colunas))
+    estilo = f"--lc-min:{largura_min}px;--lc-cols:{colunas}"
     st.html(f'<div class="lc-grid" style="{estilo}">{"".join(blocos_html)}</div>')
 
 
-def cartao_ferramenta(passo, disponivel):
-    """Cartão da página Início: ícone, nome e o que faz. O cartão inteiro é clicável
-    (a ligação estica-se por cima dele, CSS .st-key-cartao_*)."""
-    selo = ('<span class="lc-badge lc-ok">Começa aqui</span>' if disponivel and passo.numero == 1
+def cartao_ferramenta(passo, disponivel, destaque=False):
+    """Cartão da página Início: ícone, nome, o que faz e um botão com o que se vai fazer.
+    O cartão inteiro é clicável (a ligação estica-se por cima dele, CSS .st-key-cartao_*).
+    destaque: o cartão da ferramenta por onde se começa, a toda a largura."""
+    selo = ('<span class="lc-badge lc-ok">Começa aqui</span>' if disponivel and destaque
             else "" if disponivel else badge(False))
-    with st.container(border=True, key=f"cartao_{passo.numero}"):
+    with st.container(border=True, key=f"cartao_{passo.numero}{'_destaque' if destaque else ''}"):
         st.html(f"""
         <div class="lc-card-flat">
           <div class="lc-topo">
@@ -118,8 +149,8 @@ def cartao_ferramenta(passo, disponivel):
           <h4>{escape(passo.titulo)}</h4>
           <p>{escape(passo.descricao)}</p>
         </div>""")
-        st.page_link(passo.pagina, label="Abrir" if disponivel else "Ver",
-                     icon=":material/arrow_forward:", help=f"Abrir «{passo.titulo}»")
+        st.page_link(passo.pagina, label=conteudo.ACAO.get(passo.numero, "Abrir") if disponivel else "Ver",
+                     icon=":material/arrow_forward:")
 
 
 def pagina_em_breve(numero):

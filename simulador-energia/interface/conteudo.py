@@ -219,3 +219,25 @@ TERMOS = {
     4: ["OMIE", "indexado", "vazio", "kWh"],
     5: ["vazio", "fora de vazio", "cheias", "ponta", "bi-horário", "tri-horário", "indexado"],
 }
+
+# O que diz o botão de cada ferramenta na Início (um verbo: o que a pessoa vai fazer)
+ACAO = {
+    1: "Analisar a minha fatura",
+    2: "Ver dicas de poupança",
+    5: "Fazer a conta",
+    3: "Comparar ofertas",
+    4: "Ver o preço de hoje",
+}
+
+# A conta da luz em 1 minuto (Início): as três partes de qualquer fatura, com comparações do dia a dia
+CONTA_EM_1_MINUTO = [
+    ("💡", "Energia", "O que gastas",
+     "Mede-se em kWh, como os litros num contador de água. Quanto mais aparelhos ligas e mais tempo, "
+     "mais kWh. Uma casa gasta muitas vezes entre 150 e 300 kWh por mês."),
+    ("🔌", "Potência", "O que pagas todos os dias",
+     "Mede-se em kVA: é quantos aparelhos podes ter ligados ao mesmo tempo, como a largura do cano. "
+     "Pagas um valor fixo por dia, mesmo que não gastes nada."),
+    ("🧾", "Impostos e taxas", "O que vem por cima",
+     "IVA e pequenas taxas iguais em todas as empresas, como a da RTP. Por isso, para comparar "
+     "empresas basta olhar para a energia e a potência."),
+]

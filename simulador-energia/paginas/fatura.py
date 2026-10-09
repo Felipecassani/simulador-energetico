@@ -314,6 +314,7 @@ with aba_fatura:
             st.caption(f"Em {p['dias']} dias: {ui.euros(f['energia'])} € pela eletricidade que gastaste e "
                        f"{ui.euros(f['potencia'])} € pela potência (a parte fixa, que pagas mesmo sem gastar). "
                        f"De onde vêm os preços: {p['fonte']}.")
+            ui.para_onde_vai(f["energia"], f["potencia"], ci["taxas"] + ci["iva"])
             if p.get("com_impostos"):
                 ui.grelha([ui.metrica("Taxas", ui.euros(ci["taxas"]), "€"),
                            ui.metrica("IVA", ui.euros(ci["iva"]), "€"),

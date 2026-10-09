@@ -207,6 +207,43 @@ _CSS = """
   content: ""; position: absolute; inset: 0; z-index: 2; cursor: pointer;
 }}
 
+/* Início: a grelha das ferramentas fica regular (4 · 2×2 · 1) e os cartões com a mesma altura,
+   com o botão sempre alinhado em baixo */
+.st-key-grelha_ferramentas {{
+  display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; align-items: stretch;
+}}
+@media (max-width: 1100px) {{ .st-key-grelha_ferramentas {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }} }}
+@media (max-width: 640px) {{ .st-key-grelha_ferramentas {{ grid-template-columns: 1fr; }} }}
+.st-key-grelha_ferramentas > * {{ min-width: 0; height: 100%; }}
+[class*="st-key-cartao_"] {{ height: 100%; justify-content: space-between; }}
+[class*="st-key-cartao_"] > [data-testid="stElementContainer"]:first-child {{ flex: 1 1 auto; }}
+/* o cartão de destaque (por onde se começa): texto à esquerda, botão à direita */
+.st-key-cartao_1_destaque {{
+  flex-direction: row !important; align-items: center !important; gap: 1.5rem !important; flex-wrap: wrap;
+  border-width: 2px !important; border-color: var(--lc-primary) !important;
+  background: linear-gradient(120deg, color-mix(in srgb, var(--lc-primary) 16%, var(--lc-surface)), var(--lc-surface)) !important;
+  margin-bottom: .4rem;
+}}
+.st-key-cartao_1_destaque > [data-testid="stElementContainer"]:first-child {{ flex: 1 1 360px; }}
+.st-key-cartao_1_destaque h4 {{ font-size: 1.35rem !important; }}
+.st-key-cartao_1_destaque [data-testid="stPageLink-NavLink"] {{ min-height: 52px; padding: 0 1.6rem !important; }}
+.st-key-cartao_1_destaque [data-testid="stPageLink-NavLink"] :is(span, p) {{ font-size: 1.08rem !important; }}
+/* as três partes da conta: emoji grande e mesma altura */
+.lc-parte {{ height: 100%; }}
+.lc-parte .lc-emoji {{ font-size: 2rem; margin-bottom: .35rem; }}
+.lc-grid > .lc-card {{ height: 100%; box-sizing: border-box; }}
+
+/* barra "para onde vai o teu dinheiro" */
+.lc-dinheiro {{ margin: .6rem 0 1rem; }}
+.lc-dinheiro .lc-n {{ font-family: Sora, sans-serif; font-weight: 800; color: var(--lc-gold-texto); font-size: .85rem; letter-spacing: .06em; }}
+.lc-barra {{ display: flex; height: 18px; border-radius: 999px; overflow: hidden; margin: .5rem 0 .6rem; background: var(--lc-surface-2); }}
+.lc-barra span {{ display: block; height: 100%; }}
+.lc-seg-energia {{ background: var(--lc-primary); }}
+.lc-seg-potencia {{ background: var(--lc-gold); }}
+.lc-seg-impostos {{ background: var(--lc-bronze); }}
+.lc-dinheiro ul {{ list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: .3rem 1.4rem; font-size: .95rem; }}
+.lc-ponto {{ display: inline-block; width: .8rem; height: .8rem; border-radius: 50%; margin-right: .4rem; vertical-align: -.05rem; }}
+
 /* glossário: termo sublinhado com balão */
 .lc-termo {{ border-bottom: 1px dotted var(--lc-gold); cursor: help; position: relative; outline: none; }}
 .lc-termo:hover::after, .lc-termo:focus::after {{
@@ -342,7 +379,11 @@ _CSS = """
 .lc-step-head p {{ margin: .15rem 0 0; color: var(--lc-muted); }}
 
 /* ---------- Cartões ---------- */
-.lc-grid {{ display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }}
+.lc-grid {{ display: flex; flex-wrap: wrap; gap: 1rem; align-items: stretch; --lc-min: 200px; --lc-cols: 4; }}
+.lc-grid > * {{
+  box-sizing: border-box; min-width: 0;
+  flex: 1 1 max(min(var(--lc-min), 100%), calc((100% - (var(--lc-cols) - 1) * 1rem) / var(--lc-cols) - 1px));
+}}
 .lc-card {{
   background: var(--lc-surface); border: 1px solid var(--lc-border);
   border-radius: 20px; padding: 1.15rem 1.25rem;
@@ -371,6 +412,9 @@ _CSS = """
 .lc-metric .lc-label {{ font-size: .95rem; color: var(--lc-muted); font-weight: 600; }}
 .lc-metric .lc-value {{ font-family: Sora, sans-serif; font-weight: 800; font-size: 2rem; line-height: 1.15; margin-top: .25rem; }}
 .lc-metric .lc-unit {{ font-size: 1rem; font-weight: 600; color: var(--lc-muted); margin-left: .25rem; }}
+.lc-metric .lc-unit-linha {{ display: block; margin: .15rem 0 0; font-size: .92rem; line-height: 1.3; }}
+.lc-metric.lc-metric-texto .lc-value {{ font-size: 1.25rem; line-height: 1.3; }}
+.lc-grid > .lc-metric {{ height: 100%; box-sizing: border-box; }}
 .lc-metric.lc-destaque {{
   border: 1px solid transparent;
   background:
