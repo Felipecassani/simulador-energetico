@@ -141,14 +141,22 @@ def cartao_ferramenta(passo, disponivel, destaque=False):
     selo = ('<span class="lc-badge lc-ok">Começa aqui</span>' if disponivel and destaque
             else "" if disponivel else badge(False))
     with st.container(border=True, key=f"cartao_{passo.numero}{'_destaque' if destaque else ''}"):
-        st.html(f"""
-        <div class="lc-card-flat">
-          <div class="lc-topo">
-            <span class="lc-emoji" aria-hidden="true">{passo.emoji}</span>{selo}
-          </div>
-          <h4>{escape(passo.titulo)}</h4>
-          <p>{escape(passo.descricao)}</p>
-        </div>""")
+        if destaque:          # ícone, título e selo na mesma linha; a descrição por baixo
+            st.html(f"""
+            <div class="lc-card-flat">
+              <div class="lc-topo"><span class="lc-emoji" aria-hidden="true">{passo.emoji}</span>
+                <h4>{escape(passo.titulo)}</h4>{selo}</div>
+              <p>{escape(passo.descricao)}</p>
+            </div>""")
+        else:
+            st.html(f"""
+            <div class="lc-card-flat">
+              <div class="lc-topo">
+                <span class="lc-emoji" aria-hidden="true">{passo.emoji}</span>{selo}
+              </div>
+              <h4>{escape(passo.titulo)}</h4>
+              <p>{escape(passo.descricao)}</p>
+            </div>""")
         st.page_link(passo.pagina, label=conteudo.ACAO.get(passo.numero, "Abrir") if disponivel else "Ver",
                      icon=":material/arrow_forward:")
 

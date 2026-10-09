@@ -225,13 +225,14 @@ _CSS = """
   margin-bottom: .4rem;
 }}
 .st-key-cartao_1_destaque > [data-testid="stElementContainer"]:first-child {{ flex: 1 1 360px; }}
-.st-key-cartao_1_destaque h4 {{ font-size: 1.35rem !important; }}
+.st-key-cartao_1_destaque h4 {{ font-size: 1.35rem !important; margin: 0 !important; }}
+.st-key-cartao_1_destaque .lc-topo {{ align-items: center; margin-bottom: .35rem; }}
+.st-key-cartao_1_destaque .lc-topo {{ justify-content: flex-start; gap: .7rem; }}
+.st-key-cartao_1_destaque > [data-testid="stElementContainer"]:last-child {{ align-self: center; }}
 .st-key-cartao_1_destaque [data-testid="stPageLink-NavLink"] {{ min-height: 52px; padding: 0 1.6rem !important; }}
 .st-key-cartao_1_destaque [data-testid="stPageLink-NavLink"] :is(span, p) {{ font-size: 1.08rem !important; }}
 /* as três partes da conta: emoji grande e mesma altura */
-.lc-parte {{ height: 100%; }}
 .lc-parte .lc-emoji {{ font-size: 2rem; margin-bottom: .35rem; }}
-.lc-grid > .lc-card {{ height: 100%; box-sizing: border-box; }}
 
 /* barra "para onde vai o teu dinheiro" */
 .lc-dinheiro {{ margin: .6rem 0 1rem; }}
@@ -381,7 +382,7 @@ _CSS = """
 /* ---------- Cartões ---------- */
 .lc-grid {{ display: flex; flex-wrap: wrap; gap: 1rem; align-items: stretch; --lc-min: 200px; --lc-cols: 4; }}
 .lc-grid > * {{
-  box-sizing: border-box; min-width: 0;
+  box-sizing: border-box; min-width: 0; align-self: stretch;
   flex: 1 1 max(min(var(--lc-min), 100%), calc((100% - (var(--lc-cols) - 1) * 1rem) / var(--lc-cols) - 1px));
 }}
 .lc-card {{
@@ -414,7 +415,6 @@ _CSS = """
 .lc-metric .lc-unit {{ font-size: 1rem; font-weight: 600; color: var(--lc-muted); margin-left: .25rem; }}
 .lc-metric .lc-unit-linha {{ display: block; margin: .15rem 0 0; font-size: .92rem; line-height: 1.3; }}
 .lc-metric.lc-metric-texto .lc-value {{ font-size: 1.25rem; line-height: 1.3; }}
-.lc-grid > .lc-metric {{ height: 100%; box-sizing: border-box; }}
 .lc-metric.lc-destaque {{
   border: 1px solid transparent;
   background:
