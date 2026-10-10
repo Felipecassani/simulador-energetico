@@ -64,7 +64,9 @@ Para correr os testes, dentro da pasta `simulador-energia`:
 
 ## Como o fiz
 
-Fiz este projeto sozinho, com um assistente de IA a ajudar na programação. As ideias, as decisões sobre o que o site devia fazer e a verificação das contas com faturas reais foram minhas.
+A parte mais grossa do código foi escrita com a ajuda de um assistente de IA. O meu trabalho foi decidir o que o site devia fazer, verificar as contas com faturas reais e rever e corrigir partes do código e do site.
+
+O projeto ainda não está completo: há secções por fazer e linhas de código que quero reescrever à minha maneira.
 
 ## Autor
 
