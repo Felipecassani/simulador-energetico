@@ -57,7 +57,7 @@ def cabecalho(titulo, subtitulo, kicker="", chips=()):
     <section class="lc-hero">
       <div class="lc-kicker">{escape(kicker)}</div>
       <h1>{escape(titulo)}</h1>
-      <p>{escape(subtitulo)}</p>
+      {f"<p>{escape(subtitulo)}</p>" if subtitulo else ""}
       <div class="lc-chips">{chips_html}</div>
     </section>""")
 

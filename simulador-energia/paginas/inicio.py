@@ -15,7 +15,7 @@ from nucleo import mercado, roteiro
 
 ui.cabecalho(
     "Descobre como pagar menos",
-    "Carrega a tua fatura ou escreve 4 números e vê quanto pagas e quanto podes poupar.",
+    "",
     kicker="Grátis · sem registo",
 )
 
