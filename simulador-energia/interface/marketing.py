@@ -1,6 +1,6 @@
-"""Marketing honesto: partilhar o resultado, cartão em imagem, avisos sazonais, «Ajudou-te?» e a
-visita guiada. Tudo com números calculados pelo site; nada de testemunhos, contadores ou urgência
-inventados.
+"""Pequenas ajudas para o site ser usado e partilhado: partilhar o resultado, cartão em imagem,
+avisos de datas, «Ajudou-te?» e a visita guiada.
+Regra: só mostro números calculados pelo site; nada de testemunhos ou contadores inventados.
 """
 import io
 import sys

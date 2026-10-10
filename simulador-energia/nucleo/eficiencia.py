@@ -36,8 +36,7 @@ class Dica:
 def nivel_consumo(perfil):
     """Classifica o consumo mensal por pessoa em 'baixo', 'medio' ou 'alto'."""
     por_pessoa = perfil.consumo_mensal_kwh / max(perfil.pessoas, 1)
-    # TODO(human): definir os limites (kWh/mês por pessoa) de cada nível.
-    # Versão provisória, só para a página funcionar.
+    # limites aproximados, em kWh por pessoa e por mês
     if por_pessoa < 60:
         return "baixo"
     if por_pessoa < 120:

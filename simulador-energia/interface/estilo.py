@@ -1,8 +1,7 @@
 """Identidade visual: paleta, fontes e CSS próprio.
 
-Paleta tirada da foto de referência:
-carmim do fundo · dourado do fio · bronze do tom de pele · vinho-noir do cabelo/barba.
-As cores base do Streamlit estão em .streamlit/config.toml; aqui ficam as
+Cores principais: carmim, dourado, bronze e vinho escuro. O tema claro usa tons de bege
+para não cansar a vista. As cores base do Streamlit estão em .streamlit/config.toml; aqui ficam as
 mesmas cores como variáveis CSS (--lc-*) para os componentes próprios.
 """
 import streamlit as st

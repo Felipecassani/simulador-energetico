@@ -1,6 +1,6 @@
 """Ler uma fatura de eletricidade (PDF ou foto) e sugerir os valores dos campos.
 
-Tudo acontece neste computador: o ficheiro é lido em memória e não é guardado.
+O ficheiro é lido em memória e não fica guardado em lado nenhum.
 As faturas variam de comercializador para comercializador, por isso isto é uma
 ajuda para preencher, não uma verdade: a pessoa confirma sempre os valores.
 """

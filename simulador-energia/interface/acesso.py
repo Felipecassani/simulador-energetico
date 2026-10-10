@@ -1,10 +1,10 @@
-"""Palavra-passe para quem entra de fora (link público do Tailscale Funnel).
+"""Palavra-passe opcional para quem abre o site de fora.
 
-Em localhost (o próprio Mac) o site abre sem pedir nada. De fora, pede a palavra-passe que está
-em .streamlit/secrets.toml ([acesso] senha = "..."); no Streamlit Cloud, em Settings › Secrets.
-Sem palavra-passe configurada, o acesso de fora fica fechado (falha fechada); para o abrir sem
-palavra-passe é preciso dizê-lo de propósito: [acesso] exigir = false. Esse ficheiro nunca vai para o repositório (.gitignore).
-A sessão fica autorizada até a página ser recarregada.
+No meu computador (localhost) o site abre sem pedir nada. De fora, pede a palavra-passe guardada
+em .streamlit/secrets.toml ([acesso] senha = "..."), que nunca vai para o repositório.
+Se não houver palavra-passe, o acesso de fora fica fechado por defeito; para o abrir a todos
+é preciso escrever [acesso] exigir = false (é o que o site público usa).
+Depois de entrar, a sessão fica aberta até a página ser recarregada.
 """
 import hmac
 import threading
@@ -28,10 +28,10 @@ PROXY = ("x-forwarded-for", "x-forwarded-host", "tailscale-funnel-request")
 
 
 def vem_de_fora(headers):
-    """True se o pedido não chegou direto por localhost (ex.: pelo link do Funnel).
+    """True se o pedido não chegou direto por localhost (por exemplo, através de um link público).
 
-    Dois sinais: o anfitrião pedido (o Funnel mantém o nome público) e os cabeçalhos que um
-    proxy acrescenta (X-Forwarded-For…), que nunca existem num acesso direto ao Mac.
+    Dois sinais: o anfitrião pedido (um link público mantém o seu nome) e os cabeçalhos que um
+    proxy acrescenta (X-Forwarded-For…), que nunca existem num acesso direto ao computador.
     """
     nomes = {k.lower() for k in headers}
     if any(p in nomes for p in PROXY):

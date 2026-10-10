@@ -1,7 +1,7 @@
-"""Ferramenta 1 — Fatura: carregar a fatura (fixa ou indexada) ou preencher à mão.
+"""Ferramenta 1 — A minha fatura: escrever os números da fatura (ou carregá-la) e ver quanto se paga.
 
-A página segue três passos numerados: 1. carregar a fatura (pode saltar-se), 2. confirmar os
-números, 3. ver quanto se paga. Os passos 2 e 3 ficam na parte «A tua fatura»; as partes
+Dois passos numerados: 1. os números da fatura, 2. quanto pagas e as ofertas mais baratas.
+Carregar a fatura ou os consumos da E-REDES é opcional e fica no fim da página; as partes
 «Como pagar menos» e «O teu ano» estão em interface/fatura_extra.py.
 
 O que a página mostra depende do tipo de preço:

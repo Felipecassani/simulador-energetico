@@ -1,16 +1,14 @@
-"""Simulador Energético — ponto de entrada.
+"""Simulador Energético: é aqui que o site arranca.
 
-Executar (a partir desta pasta):  python -m streamlit run app.py
-No PyCharm: botão ▶ "Simulador (Streamlit)".
+Para correr:  python -m streamlit run app.py
 
-Organização:
-  nucleo/     cálculos puros (sem Streamlit) + roteiro com a validação de cada ferramenta
-  interface/  paleta, CSS e componentes visuais
-  paginas/    uma página por ferramenta, mais a Início
-  tests/      pytest — o que ainda não foi feito aparece como "skipped"
-  docs/       guia PDF só para o programador (fórmulas, boas práticas, ambiente)
+Como está organizado:
+  nucleo/     as contas (Python simples, sem Streamlit, para se poderem testar)
+  interface/  cores, estilo e as peças visuais repetidas
+  paginas/    uma página por ferramenta, mais o Início e a Ajuda
+  tests/      testes com pytest
 
-O site é para qualquer pessoa: nada técnico aparece nas páginas.
+Este ficheiro monta o menu, aplica o tema e mostra a página escolhida.
 """
 import sys
 from pathlib import Path

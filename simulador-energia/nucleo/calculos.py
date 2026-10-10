@@ -1,6 +1,6 @@
-"""Cálculos do simulador — Python puro, sem Streamlit, para poder testar.
+"""Contas base do simulador, em Python simples (sem Streamlit) para se poderem testar.
 
-Regras (ver CLAUDE.md e nucleo/roteiro.py):
+Regras que sigo em todas as contas:
 - os preços vêm do utilizador ou de fontes oficiais (ERSE, OMIE); nada inventado;
 - entradas negativas são rejeitadas com ValueError;
 - unidades: kWh, €/kWh, €/dia, dias, %.

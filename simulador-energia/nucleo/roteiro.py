@@ -1,12 +1,12 @@
 """Roteiro do projeto: as ferramentas, o que cada uma pede e como se valida.
 
-Duas audiências, dois conjuntos de campos:
-- site (público):  titulo, emoji, icone, pagina, descricao
-- guia PDF (só para o programador, docs/gerar_pdf.py):
-  objetivo, formulas, conta, testes, comando
+Cada ferramenta tem duas partes:
+- o que aparece no site: titulo, icone, pagina, descricao;
+- as minhas notas de trabalho: objetivo, formulas, conta (feita à mão) e testes, usados
+  para confirmar que o site dá o mesmo resultado que a conta à mão.
 
-As fórmulas usam a marcação do reportlab (<sub>…</sub>) porque só aparecem no PDF.
-Sem Streamlit: também é usado pelos testes.
+As fórmulas têm marcação <sub>…</sub> porque também as uso num guia em PDF.
+Não usa Streamlit, por isso os testes conseguem importá-lo.
 """
 from dataclasses import dataclass, field
 
@@ -32,7 +32,7 @@ class Passo:
     formulas: list = field(default_factory=list)
     conta: list = field(default_factory=list)      # conta à mão do caso principal
     testes: list = field(default_factory=list)     # (entradas, resultado esperado)
-    comando: str = ""   # sugestão de pedido ao Claude para arrancar o passo
+    comando: str = ""   # nota curta de como começar o passo
 
 
 PASSOS = [

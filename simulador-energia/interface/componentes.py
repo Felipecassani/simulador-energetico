@@ -1,7 +1,7 @@
 """Componentes visuais reutilizáveis. Usam as classes .lc-* de estilo.py.
 
-O site é para qualquer pessoa: aqui não entra nada técnico (fórmulas,
-estados de desenvolvimento, comandos). Isso vive no guia PDF (docs/).
+O site é para qualquer pessoa, por isso aqui não entra nada técnico (fórmulas, comandos):
+só cartões, números grandes, notas «ⓘ» e botões.
 """
 import re
 from html import escape
