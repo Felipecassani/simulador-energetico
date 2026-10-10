@@ -110,7 +110,7 @@ st.html(f'''<div class="lc-nota-autor">
     e descobrir como pagar menos, de forma simples. Usei apenas dados oficiais e deixei tudo gratuito.
     Se tiveres uma ideia para o melhorar, fala comigo pelo LinkedIn ou por e-mail — encontras os
     contactos em Ajuda › Sobre o projeto.</p>
-    <span class="lc-assinatura">Luiz</span>
+    <span class="lc-assinatura">Luiz Cassani</span>
   </div>
 </div>''')
 with st.container(key="contactos_autor"):
