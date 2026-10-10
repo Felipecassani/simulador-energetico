@@ -56,9 +56,9 @@ p = pf.perfil()
 tarifa = erse()
 indexado = p.get("modalidade") == "indexado"
 
-ui.texto("Nesta página vês três coisas: **1.** a que horas a eletricidade está mais barata no "
+ui.nota("Nesta página vês três coisas: **1.** a que horas a eletricidade está mais barata no "
             "mercado; **2.** quanto pagarias com cada tipo de horário; **3.** o teu contrato ao lado "
-            "de outros preços.")
+            "de outros preços.", "O que vês nesta página")
 exemplo = not p.get("da_fatura") and all(p[k] == pf.PADRAO[k]
                                          for k in ("consumo_kwh", "dias", "kva", "pct_vazio"))
 if exemplo:
@@ -103,10 +103,9 @@ else:
     # as horas seguidas mais baratas (para pôr as máquinas a trabalhar)
     st.write("")
     ui.texto("**Quando ligar as máquinas** · as horas seguidas mais baratas do mercado")
-    st.info("Isto só te poupa dinheiro se o teu contrato cobrar cada hora, ou cada 15 minutos, ao preço "
+    ui.nota("Isto só te poupa dinheiro se o teu contrato cobrar cada hora, ou cada 15 minutos, ao preço "
             "do mercado. Com preço fixo, ou com um indexado que usa a média do mês, a hora a que ligas as "
-            f"máquinas não muda o preço. Aí o que conta é o vazio, {NOITE}, se tiveres bi-horário.",
-            icon=":material/lightbulb:")
+            f"máquinas não muda o preço. Aí o que conta é o vazio, {NOITE}, se tiveres bi-horário.", "Só poupa com tarifário indexado")
     horas = st.slider("Quantas horas demora o que queres ligar?", 1, 8, 3, key="g_janela", format="%d h",
                       help="Exemplos: máquina da loiça, cerca de 2 horas; máquina da roupa, 3 horas; "
                            "carregar um carro elétrico, 6 horas. Mostro-te as horas seguidas mais "
@@ -134,9 +133,8 @@ sem_margem = medias is not None and not perdas and not margem
 linhas = tarifas.comparar_opcoes(p["consumo_kwh"], p["pct_vazio"], p["pct_ponta"], p["dias"],
                                  p["kva"], tarifa, medias_omie=medias,
                                  perdas_pct=perdas, margem_eur_kwh=margem)
-st.info("Os valores em euros desta página ainda não têm IVA nem taxas, por isso são mais baixos do que "
-        "a tua conta. Servem para comparar: o que aqui é mais barato quase sempre também o é com impostos.",
-        icon=":material/receipt:")
+ui.nota("Os valores em euros desta página ainda não têm IVA nem taxas, por isso são mais baixos do que "
+        "a tua conta. Servem para comparar: o que aqui é mais barato quase sempre também o é com impostos.", "Sem IVA nem taxas")
 avisos = []
 ponta_estimada = p.get("perfil_da_fatura") and not p.get("ponta_na_fatura", True)
 if not p.get("perfil_da_fatura"):
@@ -149,8 +147,7 @@ if sem_margem:
     avisos.append("Nas opções «indexado» ainda faltam as **perdas e a margem** da empresa, que não "
                   "puseste: na prática ficam mais caras do que aqui.")
 if avisos:
-    st.warning("**Antes de mudares de contrato:**\n\n" + "\n".join(f"- {a}" for a in avisos),
-               icon=":material/warning:")
+    ui.nota("**Antes de mudares de contrato:**\n\n" + "\n".join(f"- {a}" for a in avisos), "Antes de mudares de contrato")
     st.page_link("paginas/bi_horario.py", label="Acertar estes valores em «Bi-horário compensa?»",
                  icon=":material/tune:")
 

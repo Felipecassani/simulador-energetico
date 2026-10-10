@@ -107,9 +107,8 @@ if not lista_erse:
             icon=":material/cloud_off:")
 else:
     if not com_iva:
-        st.info("Atenção: estes valores não têm IVA nem taxas. Por isso são mais baixos do que o total "
-                f"da tua fatura em papel. Para os veres com tudo, liga «{ROTULO_IVA}» no passo 1.",
-                icon=":material/info:")
+        ui.nota("Atenção: estes valores não têm IVA nem taxas. Por isso são mais baixos do que o total "
+                f"da tua fatura em papel. Para os veres com tudo, liga «{ROTULO_IVA}» no passo 1.", "Sem IVA nem taxas")
     top = of.mais_baratas(lista_erse, consumo, dias, kva, pv, pp)
     if top:
         linhas = [(o, por_mes(c - o.potencia_dia * dias, o.potencia_dia * dias)) for o, c in top]
@@ -340,8 +339,8 @@ with st.expander("Ofertas com preço que muda todos os meses (indexadas)", icon=
         st.info("Não consegui ver o preço do mercado agora. Tenta daqui a pouco.", icon=":material/wifi_off:")
     else:
         _paragrafo("Num tarifário indexado, o preço da energia acompanha o mercado e muda todos os meses.")
-        st.info("É só uma estimativa, feita com o preço médio do mercado nos últimos 30 dias. No próximo "
-                "mês pode ser mais ou menos.", icon=":material/info:")
+        ui.nota("É só uma estimativa, feita com o preço médio do mercado nos últimos 30 dias. No próximo "
+                "mês pode ser mais ou menos.", "É uma estimativa")
         omie_mwh = medias30["simples"]["simples"]
         tar = tarifa["tar"]["energia_eur_kwh"]["simples"]["simples"]
         potencias = of.potencia_indexadas(lista_erse, kva, [(f.comercializador, f.procurar)
@@ -386,10 +385,10 @@ with caixa_comparacao:
     resultados = calculos.comparar_tarifarios(consumo, dias, lista)
 
     if indexado:
-        st.info(f"A linha «{indexado['nome']}» é só uma conta aproximada para um tarifário com preço que "
+        ui.nota(f"A linha «{indexado['nome']}» é só uma conta aproximada para um tarifário com preço que "
                 "muda todos os meses (indexado). "
                 + ("Na prática, sai mais caro do que isto. " if minimo_idx else "")
-                + "Se não tens uma proposta assim, podes ignorá-la.", icon=":material/info:")
+                + "Se não tens uma proposta assim, podes ignorá-la.", "Conta aproximada")
     # o total de cada linha, já com IVA e taxas se o interruptor estiver ligado: a frase e a tabela
     # usam estes mesmos números
     totais = [total_periodo(r["energia"], r["potencia"]) for r in resultados]

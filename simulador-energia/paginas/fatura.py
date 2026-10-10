@@ -166,12 +166,8 @@ if st.session_state.get("fatura_resumo"):
                else "Li estes números da tua fatura: confirma-os")
     st.success(prefixo + " no papel e, se algum estiver errado, corrige-o em baixo.\n\n"
                + st.session_state["fatura_resumo"], icon=":material/task_alt:")
-else:
-    ui.texto("📄 **Tens a fatura em PDF" + (" ou foto" if com_fotos else "") + "?** Carrega-a no fim desta "
-             "página e os números preenchem-se sozinhos. Ou escreve-os já em baixo.")
 
 st.write("")
-ui.texto("**3 partes:** toca no nome de cada uma para a abrir.")
 aba_fatura, aba_explorar, aba_ano = st.tabs([":material/receipt_long: A tua fatura",
                                              ":material/savings: Como pagar menos",
                                              ":material/calendar_month: O teu ano (várias faturas)"])
@@ -187,9 +183,9 @@ with aba_fatura:
             ui.texto(ONDE_ENCONTRAR)
         p_inicial = pf.perfil()
         if not p_inicial.get("da_fatura"):
-            st.info(f"Os números já preenchidos são um exemplo: uma casa que gasta "
+            ui.nota(f"Os números já preenchidos são um exemplo: uma casa que gasta "
                     f"{ui.numero(pf.PADRAO['consumo_kwh'])} kWh em {pf.PADRAO['dias']} dias, na tarifa regulada. "
-                    "Troca-os pelos da tua fatura para veres a tua conta.", icon=":material/edit:")
+                    "Troca-os pelos da tua fatura para veres a tua conta.", "Números de exemplo")
         elif p_inicial.get("precos_em_falta"):
             nomes = {"preco_energia": "o preço da energia", "preco_diario": "o preço da potência"}
             dois = len(p_inicial["precos_em_falta"]) > 1
@@ -287,8 +283,7 @@ with aba_fatura:
                        ui.metrica("Total sem IVA", ui.euros(f["total"]), "€", destaque=not p.get("com_impostos"))],
                       largura_min=140)
             if not p.get("com_impostos"):
-                ui.texto(f"Com IVA e taxas, isto dá cerca de **{ui.euros(ci['total'])} €** — é este o valor "
-                            "a comparar com o total da tua fatura.")
+                ui.texto(f"Com IVA e taxas: cerca de **{ui.euros(ci['total'])} €**, o valor a comparar com a fatura.")
             ui.nota(f"Em {p['dias']} dias: {ui.euros(f['energia'])} € pela eletricidade que gastaste e "
                        f"{ui.euros(f['potencia'])} € pela potência (a parte fixa, que pagas mesmo sem gastar). "
                        f"De onde vêm os preços: {p['fonte']}.")

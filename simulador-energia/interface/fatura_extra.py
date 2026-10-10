@@ -185,9 +185,8 @@ def explorar(c):
         ui.nota("Arrasta as bolinhas para experimentar. Em baixo vês quanto pagarias com a oferta mais "
                    "barata para esse caso.")
         if pv is None:
-            st.info("Para experimentar as horas baratas preciso de saber a que horas gastas: carrega uma fatura "
-                    "bi ou tri-horária ou os ficheiros do contador (E-REDES), em «Carregar a fatura», no fim da página.",
-                    icon=":material/schedule:")
+            ui.nota("Para experimentar as horas baratas preciso de saber a que horas gastas: carrega uma fatura "
+                    "bi ou tri-horária ou os ficheiros do contador (E-REDES), em «Carregar a fatura», no fim da página.", "Porque não posso mexer nas horas?")
         c1, c2, c3 = st.columns(3)
         with c1:
             mais_vazio = st.slider("Passar consumo para as horas baratas (%)", 0, 40, 10, key="x_vazio",

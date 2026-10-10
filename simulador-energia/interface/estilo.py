@@ -175,14 +175,21 @@ _CSS = """
 }}
 /* botão de tema: um só, alterna entre claro e escuro a cada clique */
 .lc-tema {{
-  all: unset; box-sizing: border-box; width: 44px; height: 44px; display: grid; place-items: center; cursor: pointer;
+  all: unset; box-sizing: border-box; height: 44px; display: inline-flex; align-items: center; gap: .45rem;
+  padding: 0 1rem 0 .85rem; cursor: pointer; font-weight: 700; font-size: .95rem;
   border-radius: 999px; color: var(--lc-gold-texto); background: var(--lc-surface);
   border: 1px solid var(--lc-border); box-shadow: 0 10px 24px -16px rgba(0,0,0,.6);
   transition: transform .25s ease, border-color .2s ease;
 }}
-.lc-tema:hover {{ border-color: var(--lc-gold); transform: rotate(-12deg); }}
+.lc-tema:hover {{ border-color: var(--lc-gold); }}
+.lc-tema:hover svg {{ transform: rotate(-20deg); transition: transform .25s ease; }}
 .lc-tema:focus-visible {{ outline: 2px solid var(--lc-gold); outline-offset: 2px; }}
-.lc-tema svg {{ width: 20px; height: 20px; }}
+.lc-tema svg {{ width: 20px; height: 20px; flex: none; }}
+.lc-tema-txt {{ color: var(--lc-text); }}
+@media (max-width: 767.98px) {{          /* telemóvel: só o ícone (não cabe o texto) */
+  .lc-tema {{ width: 44px; padding: 0; justify-content: center; }}
+  .lc-tema-txt {{ display: none; }}
+}}
 @media (prefers-reduced-motion: reduce) {{ .lc-tema {{ transition: none !important; }} }}
 
 /* ---------- Cartões das ferramentas: o cartão inteiro é a ligação ---------- */

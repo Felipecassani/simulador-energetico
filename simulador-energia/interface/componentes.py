@@ -381,10 +381,9 @@ def aviso_fatura(p):
     from interface.perfil import PADRAO
     exemplo = all(p.get(k) == PADRAO[k] for k in ("consumo_kwh", "dias", "kva"))
     if not p.get("da_fatura") and exemplo:
-        st.info("Os números já preenchidos são um **exemplo**: uma casa que gasta "
+        nota("Os números já preenchidos são um **exemplo**: uma casa que gasta "
                 f"{numero(p['consumo_kwh'])} kWh em {p['dias']} dias, com os preços da tarifa regulada. "
-                "Troca-os pelos da tua fatura, ou carrega-a em «A minha fatura» e eles passam para aqui sozinhos.",
-                icon=":material/info:")
+                "Troca-os pelos da tua fatura, ou carrega-a em «A minha fatura» e eles passam para aqui sozinhos.", "Números de exemplo")
         st.page_link("paginas/fatura.py", label="Carregar a minha fatura", icon=":material/receipt_long:")
         return
     try:

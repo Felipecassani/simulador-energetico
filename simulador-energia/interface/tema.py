@@ -24,7 +24,7 @@ _LUA = ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width
         'stroke-linejoin="round"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg>')
 
 _HTML = """
-<button type="button" class="lc-tema" id="lc-tema" title="{rotulo}" aria-label="{rotulo}"></button>
+<button type="button" class="lc-tema" id="lc-tema" title="{rotulo}" aria-label="{rotulo}"><span class="lc-tema-txt">{texto}</span></button>
 <script>
 (function () {{
   // no Streamlit Cloud a app corre em /~/+/(página): o prefixo é o que sobra do endereço
@@ -38,7 +38,7 @@ _HTML = """
   const botao = document.getElementById("lc-tema");
   if (!botao) return;
   // o st.html retira os svg (mesmo dentro do script): vêm em base64 e entram aqui
-  if (!botao.innerHTML.trim()) botao.innerHTML = atob(escuro ? "{sol}" : "{lua}");
+  if (!botao.querySelector("svg")) botao.insertAdjacentHTML("afterbegin", atob(escuro ? "{sol}" : "{lua}"));
   botao.onclick = () => {{
     const novo = escuro ? "Light" : "Dark";
     try {{ chaves.forEach(k => localStorage.setItem(k, JSON.stringify(novo))); }} catch (e) {{}}
@@ -65,6 +65,7 @@ def seletor_tema(caminhos):
     escuro = tema_atual() == "dark"
     html = _HTML.format(
         rotulo="Mudar para o tema claro" if escuro else "Mudar para o tema escuro",
+        texto="Claro" if escuro else "Escuro",
         caminhos=json.dumps(list(caminhos)),
         fundos=json.dumps({t: p["bg"] for t, p in PALETAS.items()}),
         escuro="true" if escuro else "false",

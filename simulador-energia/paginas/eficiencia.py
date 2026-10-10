@@ -16,12 +16,12 @@ ui.cabecalho_ferramenta(passo, roteiro.disponivel(2))
 p = pf.perfil()
 ui.aviso_fatura(p)
 
-ui.texto("**Como usar esta página**\n\n"
+ui.nota("**Como usar esta página**\n\n"
             + ("1. Confirma os números da tua fatura.\n" if p.get("da_fatura")
                else "1. Escreve os números da tua fatura.\n") +
             "2. Marca os aparelhos que tens em casa.\n"
             "3. Lê as dicas: as que poupam mais aparecem primeiro.\n"
-            "4. No fim, vê quanto podes poupar.")
+            "4. No fim, vê quanto podes poupar.", "Como usar esta página")
 
 NIVEL_TEXTO = {"baixo": "baixo", "medio": "médio", "alto": "alto"}
 # A dica que mais poupa fica a verde (o vermelho lembra erro) e a que menos poupa a cinzento
@@ -135,8 +135,8 @@ with coluna_slider:
                             "Se não sabes, deixa nos 10 %.")
 
 r = calculos.cenario_eficiencia(consumo, p["preco_energia"], p["preco_diario"], dias, reducao)
-st.info("É uma estimativa, sem IVA nem taxas. Na fatura, a poupança é um pouco maior, "
-        "porque o IVA também desce.", icon=":material/info:")
+ui.nota("É uma estimativa, sem IVA nem taxas. Na fatura, a poupança é um pouco maior, "
+        "porque o IVA também desce.", "É uma estimativa")
 ui.grelha([
     ui.metrica("Poupas por ano", ui.euros(r["poupanca_anual"]), "€", destaque=True),
     ui.metrica("Poupas por mês", ui.euros(r["poupanca_mensal"]), "€"),

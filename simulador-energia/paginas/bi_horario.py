@@ -121,23 +121,22 @@ st.session_state["opcoes_linhas"] = linhas
 st.write("")
 st.subheader(":material/payments: 2. Quanto pagarias")
 p = pf.perfil()
-st.info("Estes valores ainda não têm IVA nem taxas, por isso a tua conta real é mais alta. A ordem do mais "
-        "barato ao mais caro quase não muda.", icon=":material/receipt:")
+ui.nota("Estes valores ainda não têm IVA nem taxas, por isso a tua conta real é mais alta. A ordem do mais "
+        "barato ao mais caro quase não muda.", "Sem IVA nem taxas")
 if not p.get("perfil_da_fatura"):
-    st.warning("Atenção: estas contas usam uma estimativa do que gastas à noite e na ponta. Antes de mudares de "
-               "contrato, confirma esses valores na fatura ou com os consumos da E-REDES (em cima).",
-               icon=":material/warning:")
+    ui.nota("Atenção: estas contas usam uma estimativa do que gastas à noite e na ponta. Antes de mudares de "
+               "contrato, confirma esses valores na fatura ou com os consumos da E-REDES (em cima).", "Atenção: é uma estimativa")
 sem_margem = medias is not None and not perdas and not margem
 if sem_margem:
-    st.warning("Nas opções «indexado» ainda faltam as perdas e a margem da empresa. Põe-nas em «Só para "
+    ui.nota("Nas opções «indexado» ainda faltam as perdas e a margem da empresa. Põe-nas em «Só para "
                "contratos indexados: perdas e margem», em cima. Se não as souberes, põe 16 % de perdas. Sem "
-               "elas, o indexado parece mais barato do que é.", icon=":material/warning:")
+               "elas, o indexado parece mais barato do que é.", "Faltam as perdas e a margem")
 
 melhor = linhas[0]
 ponta_estimada = p.get("perfil_da_fatura") and not p.get("ponta_na_fatura", True)
 if ponta_estimada and melhor["opcao"] == "tri":
-    st.warning("A tua fatura não diz quanto gastas nas horas mais caras (ponta): o resultado do tri-horário "
-               "é uma **estimativa**.", icon=":material/warning:")
+    ui.nota("A tua fatura não diz quanto gastas nas horas mais caras (ponta): o resultado do tri-horário "
+               "é uma **estimativa**.", "Tri-horário: estimativa")
 simples_fixo = melhor["opcao"] == "simples" and melhor["modalidade"] == "fixo"
 if simples_fixo:
     # sem fatura não sabemos que contrato a pessoa tem («simples» e «fixo» são só os valores por omissão)

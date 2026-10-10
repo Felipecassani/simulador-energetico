@@ -38,8 +38,7 @@ class Passo:
 PASSOS = [
     Passo(
         1, "A minha fatura", "🧾", ":material/receipt_long:", "paginas/fatura.py",
-        "Carrega a tua fatura (PDF ou foto) ou escreve os números, e vê quanto pagas e que ofertas te saem "
-        "mais baratas. Começa aqui.",
+        "Vê quanto pagas e que ofertas te saem mais baratas.",
         "Calcular uma fatura simplificada a partir do consumo, do preço da energia, do preço "
         "diário da potência e dos dias de faturação. Os valores podem vir de uma fatura "
         "carregada (PDF ou foto, lida localmente) ou ser preenchidos à mão; os preços de "
@@ -60,7 +59,7 @@ PASSOS = [
     ),
     Passo(
         2, "Poupar em casa", "🌿", ":material/eco:", "paginas/eficiencia.py",
-        "Dicas para gastar menos na tua casa e quanto poupas por mês e por ano.",
+        "Dicas para gastar menos e quanto poupas.",
         "Sugerir dicas de eficiência conforme o consumo por pessoa e os equipamentos da casa, e "
         "comparar antes e depois de uma redução entre 0 % e 100 %: kWh evitados, custos, "
         "poupança mensal e anual e payback simples.",
@@ -87,7 +86,7 @@ PASSOS = [
     ),
     Passo(
         3, "Comparar ofertas", "⚖️", ":material/compare_arrows:", "paginas/tarifarios.py",
-        "Vê se há um tarifário mais barato do que o teu, com as ofertas de todas as empresas.",
+        "Há um tarifário mais barato do que o teu?",
         "Mostrar o mercado OMIE de hoje e de amanhã e a tarifa regulada da ERSE (com leitura "
         "ao vivo do documento oficial), e comparar até três ofertas do utilizador com a regulada "
         "e uma estimativa indexada, com o mesmo consumo e os mesmos dias, do mais barato para o "
@@ -107,7 +106,7 @@ PASSOS = [
     ),
     Passo(
         4, "Preço hora a hora", "📊", ":material/bar_chart:", "paginas/graficos.py",
-        "A que horas a eletricidade está mais barata hoje e amanhã, e as opções lado a lado em gráficos.",
+        "A que horas a eletricidade está mais barata.",
         "Preço OMIE hora a hora (hoje e amanhã) com o vazio assinalado, custo de cada opção "
         "horária (energia + potência), repartição do consumo por período e os tarifários numa "
         "tabela pandas com a diferença para o mais barato e um gráfico de barras.",
@@ -123,7 +122,7 @@ PASSOS = [
     ),
     Passo(
         5, "Bi-horário compensa?", "🌙", ":material/schedule:", "paginas/bi_horario.py",
-        "Pagar o mesmo a qualquer hora ou menos à noite? Vê se o bi-horário ou o tri-horário compensa para ti.",
+        "Pagar menos à noite compensa para ti?",
         "Consumo e preço separados por período (vazio, fora de vazio, ponta, cheias) e as seis "
         "combinações simples/bi/tri × fixo/indexado, com a poupança face ao simples fixo. A "
         "repartição do consumo vem do utilizador ou da fatura, nunca de um 50/50 automático.",
