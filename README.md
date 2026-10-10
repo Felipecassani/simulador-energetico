@@ -1,5 +1,7 @@
 # Simulador Energético
 
+[![Testes](https://github.com/Felipecassani/simulador-energetico/actions/workflows/testes.yml/badge.svg)](https://github.com/Felipecassani/simulador-energetico/actions/workflows/testes.yml)
+
 Um site gratuito que ajuda qualquer pessoa em Portugal a perceber a conta da luz e a descobrir se pode pagar menos.
 
 **Experimentar:** https://simulador-energetico-8ufymt75zojdygw4tfgxjm.streamlit.app
