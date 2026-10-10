@@ -2,6 +2,8 @@
 
 [![Testes](https://github.com/Felipecassani/simulador-energetico/actions/workflows/testes.yml/badge.svg)](https://github.com/Felipecassani/simulador-energetico/actions/workflows/testes.yml)
 
+*English version: [README.en.md](README.en.md)*
+
 Um site gratuito que ajuda qualquer pessoa em Portugal a perceber a conta da luz e a descobrir se pode pagar menos.
 
 **Experimentar:** https://simulador-energetico-8ufymt75zojdygw4tfgxjm.streamlit.app
@@ -46,7 +48,7 @@ Separei as contas (`nucleo/`) do que se vê no ecrã (`interface/` e `paginas/`)
 ## Alguns pormenores
 
 - **Números verdadeiros.** Os preços vêm de fontes oficiais: tarifas e ofertas da ERSE e preços diários do OMIE. O IVA e as taxas foram conferidos com uma fatura real e o total bate ao cêntimo.
-- **Testado.** Há 228 testes: os cálculos são comparados com contas feitas à mão e cada página é aberta para confirmar que não dá erro.
+- **Testado.** Há 228 testes: os cálculos são comparados com contas feitas à mão e cada página é aberta para confirmar que não dá erro. Correm sozinhos no GitHub a cada envio de código.
 - **Para quem não percebe de energia.** As palavras técnicas aparecem sublinhadas e explicam-se ao passar o rato. Os detalhes ficam guardados atrás de um «ⓘ».
 - **Privacidade.** A fatura é lida em memória para preencher os campos e não fica guardada.
 - **Tema claro e escuro**, pensado também para o telemóvel.

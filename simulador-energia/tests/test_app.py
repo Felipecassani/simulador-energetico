@@ -218,10 +218,10 @@ def test_de_fora_sem_senha_nao_mostra_o_site(monkeypatch):
     app.run()
     texto = _texto_visivel(app)
     assert "Acesso de teste" in texto and "Ferramentas" not in texto
-    app.text_input[0].input("errada").run()
+    app.text_input[0].input("errada")         # num formulário, o valor só segue com o botão
     app.button[0].click().run()
     assert "Palavra-passe errada" in _texto_visivel(app)
-    app.text_input[0].input("teste-certo").run()
+    app.text_input[0].input("teste-certo")         # num formulário, o valor só segue com o botão
     app.button[0].click().run()
     assert "Ferramentas" in _texto_visivel(app) and not app.exception
 
@@ -274,7 +274,7 @@ def test_segredos_com_maiuscula_e_numa_linha(monkeypatch):
     app.secrets["Acesso"] = {"senha": "certa"}
     app.run()
     assert "Acesso de teste" in _texto_visivel(app)
-    app.text_input[0].input("certa").run()
+    app.text_input[0].input("certa")         # num formulário, o valor só segue com o botão
     app.button[0].click().run()
     assert "Ferramentas" in _texto_visivel(app)
 
