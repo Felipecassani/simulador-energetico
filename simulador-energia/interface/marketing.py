@@ -34,23 +34,33 @@ def cartao_png(poupanca_ano):
         d.line([(0, y), (lado, y)], fill=(int(200 - 90 * t), int(40 - 26 * t), int(60 - 32 * t)))
     d.rounded_rectangle([60, 60, lado - 60, lado - 60], radius=60, outline="#D9B45B", width=6)
 
-    def fonte(tam):
-        return ImageFont.load_default(size=tam)
+    # a letra que o Pillow traz de origem não tem «É», «á» nem «€» (saíam quadrados); a Vera vem com o
+    # reportlab (já usado no PDF), tem os acentos portugueses e o euro, e existe também no Streamlit Cloud
+    from pathlib import Path
 
-    def centrado(texto, y, tam, cor):
-        f = fonte(tam)
+    import reportlab
+    pasta = Path(reportlab.__file__).parent / "fonts"
+
+    def fonte(tam, negrito=False):
+        try:
+            return ImageFont.truetype(str(pasta / ("VeraBd.ttf" if negrito else "Vera.ttf")), tam)
+        except OSError:
+            return ImageFont.load_default(size=tam)
+
+    def centrado(texto, y, tam, cor, negrito=False):
+        f = fonte(tam, negrito)
         largura = d.textlength(texto, font=f)
         d.text(((lado - largura) / 2, y), texto, font=f, fill=cor)
 
-    centrado("SIMULADOR ENERGÉTICO", 150, 44, "#FFE9B8")
+    centrado("SIMULADOR ENERGÉTICO", 150, 42, "#FFE9B8", negrito=True)
     if poupanca_ano >= 1:
-        centrado("Posso poupar cerca de", 330, 64, "#FFF7F2")
-        centrado(f"{numero(poupanca_ano)} €", 440, 200, "#FFE9B8")
-        centrado("por ano na conta da luz", 700, 64, "#FFF7F2")
+        centrado("Posso poupar cerca de", 330, 60, "#FFF7F2")
+        centrado(f"{numero(poupanca_ano)} €", 445, 180, "#FFE9B8", negrito=True)
+        centrado("por ano na conta da luz", 700, 60, "#FFF7F2")
     else:
         centrado("Fiz as contas à", 380, 72, "#FFF7F2")
         centrado("minha conta da luz", 480, 72, "#FFF7F2")
-    centrado("Faz a tua conta: grátis e sem registo", 880, 40, "#FFE9B8")
+    centrado("Faz a tua conta: grátis e sem registo", 880, 38, "#FFE9B8")
     saida = io.BytesIO()
     img.save(saida, format="PNG")
     return saida.getvalue()

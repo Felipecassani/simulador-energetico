@@ -470,3 +470,14 @@ def test_script_das_animacoes_passa_o_filtro():
     from interface import animacoes
     script = animacoes._SCRIPT.split("<script>", 1)[1].rsplit("</script>", 1)[0]
     assert not _re.search(r"<[/\w!]", script)          # o DOMPurify apagava o script inteiro
+
+
+def test_cartao_usa_uma_letra_com_acentos_e_euro():
+    """A letra de origem do Pillow não tem «É», «á» nem «€» (saíam quadrados no cartão)."""
+    from pathlib import Path
+
+    import reportlab
+    from PIL import ImageFont
+    fonte = ImageFont.truetype(str(Path(reportlab.__file__).parent / "fonts" / "VeraBd.ttf"), 40)
+    falta = bytes(fonte.getmask("￿"))
+    assert all(bytes(fonte.getmask(c)) != falta for c in "ÉáçãõêÓ€")
