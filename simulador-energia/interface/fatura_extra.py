@@ -132,7 +132,7 @@ def explorar(c):
         hoje = date.today()
         lista_cen = cenarios.explorar(kwh_mes, p["kva"], pv, pp, tarifa, lista_ex, medias, hoje,
                                       pico_kw=_pico_medido())
-        st.subheader("O que podes mudar e quanto custaria")
+        st.subheader(":material/savings: O que podes mudar e quanto custaria")
         ui.nota(f"Contas para {ui.numero(kwh_mes)} kWh por mês ({origem})"
                    + (f", com as horas a que gastas tiradas {origem_perfil}" if origem_perfil else "")
                    + ". Valores por mês, sem IVA."
@@ -181,7 +181,7 @@ def explorar(c):
                 st.dataframe(ui.tabela_formatada(pd.DataFrame(linhas)), hide_index=True, width="stretch")
 
         st.write("")
-        st.subheader("E se… mudares alguns hábitos?")
+        st.subheader(":material/tune: E se… mudares alguns hábitos?")
         ui.nota("Arrasta as bolinhas para experimentar. Em baixo vês quanto pagarias com a oferta mais "
                    "barata para esse caso.")
         if pv is None:
@@ -236,7 +236,7 @@ def o_teu_ano(c):
                 "quanto gastas no inverno e no verão, os meses fora do normal e o contrato mais barato para o "
                 "ano todo.", icon=":material/calendar_month:")
     if len(per) >= 2:
-        st.subheader("As tuas faturas")
+        st.subheader(":material/receipt_long: As tuas faturas")
         intervalo = (f"{ano['inicio']:%d/%m/%Y} a {ano['fim']:%d/%m/%Y}" if ano["inicio"] else f"{ano['dias']} dias")
         ui.grelha([
             ui.metrica("Faturas", str(ano["faturas"]), intervalo),
@@ -302,7 +302,7 @@ def o_teu_ano(c):
 
     if pad:
         st.write("")
-        st.subheader("Os teus consumos da E-REDES")
+        st.subheader(":material/electric_meter: Os teus consumos da E-REDES")
         preco_ref = p["preco_energia"]
         base_eur = pad["base_kwh_ano"] * preco_ref if pad["base_kwh_ano"] else None
         ui.grelha([

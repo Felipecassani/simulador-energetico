@@ -380,7 +380,7 @@ with aba_fatura:
         st.write("")
         if p.get("da_fatura"):
             ui.cartao_meu_tarifario(p, f["total"] * 30 / p["dias"], na_fatura=True)
-        st.subheader("Recomendações para ti")
+        st.subheader(":material/recommend: Recomendações para ti")
         ui.nota("Ideias para pagares menos, da que poupa mais para a que poupa menos. Valores por mês, sem IVA.")
         dados_fatura = {
             "consumo_kwh": p["consumo_kwh"], "preco_energia": p["preco_energia"],
@@ -401,7 +401,7 @@ with aba_fatura:
             top = ofertas.mais_baratas(lista, p["consumo_kwh"], p["dias"], p["kva"],
                                        dados_fatura["pct_vazio"], dados_fatura["pct_ponta"])
             st.write("")
-            st.subheader("As ofertas mais baratas para ti")
+            st.subheader(":material/emoji_events: As ofertas mais baratas para ti")
             if top:
                 vista = st.segmented_control(
                     "Mostrar o custo", ["Por mês", "No 1.º ano"], default="Por mês", key="f_vista_ofertas",

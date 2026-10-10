@@ -53,7 +53,7 @@ for i, (titulo, resumo, temas, ferramentas) in enumerate(grupos, 1):
                        f'<h4>{escape(tema)}</h4><p>{ui.com_glossario(textos[tema])}</p></div>')
     if not cartoes:
         continue
-    st.subheader(titulo)
+    st.subheader(f":material/menu_book: {titulo}")
     if resumo:
         ui.nota(resumo)
     ui.grelha(cartoes, largura_min=320)

@@ -73,7 +73,7 @@ st.page_link("paginas/bi_horario.py", label="Mudar estes números", icon=":mater
 
 # ---------- 1. o preço do mercado, hora a hora
 st.write("")
-st.subheader("1. A que horas a eletricidade está mais barata no mercado")
+st.subheader(":material/show_chart: 1. A que horas a eletricidade está mais barata no mercado")
 if indexado:
     _texto("O teu contrato é **indexado**: o preço que pagas acompanha esta linha. Se o teu contrato cobrar "
            "cada hora ao preço do mercado, ligar as máquinas quando a linha está mais baixa faz baixar a tua "
@@ -127,7 +127,7 @@ else:
 
 # ---------- 2. quanto custa cada tipo de horário
 st.write("")
-st.subheader("2. Quanto pagarias com cada tipo de horário")
+st.subheader(":material/payments: 2. Quanto pagarias com cada tipo de horário")
 medias, _ = medias_omie(7)
 perdas, margem = p.get("perdas_pct") or 0.0, p.get("margem_kwh") or 0.0
 sem_margem = medias is not None and not perdas and not margem
@@ -187,7 +187,7 @@ with direita:
 
 # ---------- 3. o contrato da pessoa ao lado de outros preços
 st.write("")
-st.subheader("3. O teu contrato ao lado de outros preços")
+st.subheader(":material/compare_arrows: 3. O teu contrato ao lado de outros preços")
 # recalculado sempre com os dados atuais (as ofertas vêm do perfil, preenchidas em «Comparar ofertas»)
 fixos = tarifas.precos_fixos(tarifa, p["kva"])
 potencia = tarifas.preco_potencia(tarifa, p["kva"])

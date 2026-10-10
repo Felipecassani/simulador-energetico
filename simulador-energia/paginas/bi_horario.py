@@ -57,7 +57,7 @@ with st.expander("O que são simples, bi-horário e tri-horário?", icon=":mater
         "dizer que o preço segue o mercado e muda sempre.")
 
 # ---------- 1. os números da pessoa
-st.subheader("1. Os teus números")
+st.subheader(":material/edit_note: 1. Os teus números")
 ui.nota("Copia-os da tua fatura. Se já preencheste «A minha fatura», já estão aqui.")
 col_a, col_b = st.columns(2, gap="large")
 with col_a:
@@ -119,7 +119,7 @@ st.session_state["opcoes_linhas"] = linhas
 
 # ---------- 2. o resultado
 st.write("")
-st.subheader("2. Quanto pagarias")
+st.subheader(":material/payments: 2. Quanto pagarias")
 p = pf.perfil()
 st.info("Estes valores ainda não têm IVA nem taxas, por isso a tua conta real é mais alta. A ordem do mais "
         "barato ao mais caro quase não muda.", icon=":material/receipt:")
@@ -193,7 +193,7 @@ else:
 
 # ---------- 3. as horas de cada período
 st.write("")
-st.subheader("3. A que horas é mais barato")
+st.subheader(":material/schedule: 3. A que horas é mais barato")
 ui.texto("**Agora mesmo**, para quem tem bi-horário ou tri-horário:")
 ui.periodo_atual()
 

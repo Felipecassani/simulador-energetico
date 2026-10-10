@@ -50,7 +50,7 @@ for assunto, perguntas in grupos:
     perguntas = [q for q in perguntas if q in respostas]   # pergunta que mudou de texto: não rebenta
     if not perguntas:
         continue
-    st.subheader(assunto)
+    st.subheader(f":material/help: {assunto}")
     for pergunta in perguntas:
         indice += 1
         resposta = respostas[pergunta]

@@ -47,7 +47,7 @@ EQUIPAMENTOS = {
 esquerda, direita = st.columns([1, 1.6], gap="large")
 
 with esquerda:
-    st.subheader("1. Os números da tua fatura")
+    st.subheader(":material/edit_note: 1. Os números da tua fatura")
     consumo = pf.campo(st.number_input, "Consumo da fatura (kWh)", "consumo_kwh", "e_consumo",
                        min_value=0.0, step=10.0, format="%.0f",
                        help="Na fatura, procura o consumo do período, por exemplo «Consumo: 258 kWh». "
@@ -68,7 +68,7 @@ with esquerda:
                        help="Conta contigo. Serve para ver se gastas pouco ou muito para o tamanho "
                             "da família.")
 
-    st.subheader("2. O que tens em casa")
+    st.subheader(":material/home: 2. O que tens em casa")
     ui.nota("Marca só o que é elétrico e usas. Podes marcar vários ou nenhum. "
                "As dicas mudam conforme o que marcares.")
     # guardados no perfil: não se perdem ao mudar de página
@@ -101,7 +101,7 @@ def _mostrar(lista):
 
 
 with direita:
-    st.subheader("3. Dicas para gastar menos")
+    st.subheader(":material/tips_and_updates: 3. Dicas para gastar menos")
     por_pessoa = consumo_mensal / max(int(pessoas), 1)
     n = int(pessoas)
     inicio = "Com estes números" if p.get("da_fatura") else "Com os números de exemplo"
@@ -121,7 +121,7 @@ with direita:
             _mostrar(dicas[3:])
 
 st.write("")
-st.subheader("4. Quanto podes poupar")
+st.subheader(":material/savings: 4. Quanto podes poupar")
 if p.get("da_fatura"):
     ui.nota("As contas usam os preços da tua fatura.")
 else:

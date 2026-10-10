@@ -39,7 +39,7 @@ def _paragrafo(texto):
 
 # ---------- 1. os teus dados (mudam todas as contas da página)
 st.write("")
-st.subheader("1. Os teus dados")
+st.subheader(":material/edit_note: 1. Os teus dados")
 c1, c2, c3 = st.columns(3)
 with c1:
     kva = pf.campo(st.selectbox, "Potência contratada", "kva", "t_kva", options=pf.ESCALOES_KVA,
@@ -87,7 +87,7 @@ atual_mes = por_mes(energia_atual, potencia_atual)
 
 # ---------- 2. as ofertas mais baratas (dados oficiais da ERSE)
 st.write("")
-st.subheader("2. As ofertas mais baratas para ti")
+st.subheader(":material/emoji_events: 2. As ofertas mais baratas para ti")
 lista_erse, data_erse = ofertas_erse()
 com_perfil = p.get("perfil_da_fatura", False)
 pv = p["pct_vazio"] if com_perfil else None
@@ -194,7 +194,7 @@ else:
 
 # ---------- 3. comparar uma proposta de outra empresa (opcional)
 st.write("")
-st.subheader("3. Tens uma proposta de outra empresa? (opcional)")
+st.subheader(":material/mail: 3. Tens uma proposta de outra empresa? (opcional)")
 ui.nota("Escreve os preços da proposta e vê-a ao lado " + ("da tua fatura" if da_fatura else
            "dos teus preços") + ". Uma proposta só entra na comparação quando escreves o preço da "
            "energia.")
@@ -231,7 +231,7 @@ caixa_comparacao = st.container()     # a tabela é desenhada no fim: o indexado
 
 # ---------- para saber mais (fechado: não é preciso para comparar)
 st.write("")
-st.subheader("Para saber mais")
+st.subheader(":material/info: Para saber mais")
 ui.nota("Não precisas disto para comparar. Abre só o que te interessar.")
 
 with st.expander("O preço do mercado hoje (interessa a quem tem tarifário indexado)",

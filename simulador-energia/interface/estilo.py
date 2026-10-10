@@ -159,9 +159,19 @@ _CSS = """
 [data-testid="stTooltipIcon"] svg {{ width: 1.25rem; height: 1.25rem; }}
 [data-testid="stCaptionContainer"] {{ font-size: .95rem; }}
 [data-testid="stWidgetLabel"] p {{ font-size: 1rem; }}
+/* rótulos compridos (caixas, interruptores) mudam de linha em vez de sair do ecrã do telemóvel */
+:is([data-testid="stCheckbox"], [data-testid="stToggle"], [data-testid="stWidgetLabel"], [data-testid="stRadio"]) label p {{
+  white-space: normal !important; overflow-wrap: anywhere;
+}}
+:is([data-testid="stCheckbox"], [data-testid="stToggle"]) label {{ max-width: 100%; }}
 
 /* logótipo no topo, com o nome «Simulador Energético» legível */
 [data-testid="stHeaderLogo"] {{ height: 2.6rem !important; max-width: none !important; width: auto !important; }}
+/* telemóvel: não cabem logótipo com nome + Menu + seletor de tema → só o símbolo (o nome está no menu) */
+@media (max-width: 767.98px) {{
+  [data-testid="stHeaderLogo"] {{ height: 2.4rem !important; width: 2.4rem !important;
+    object-fit: cover; object-position: left center; }}
+}}
 
 /* ---------- Botão claro/escuro: mosaico fixo no canto ---------- */
 .st-key-tema_mosaico {{
