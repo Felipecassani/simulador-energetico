@@ -71,25 +71,13 @@ def badge(disponivel):
 def cabecalho_ferramenta(passo, disponivel=True):
     selo = "" if disponivel else badge(False)
     st.html(f"""
-    <div class="lc-step-head">
+    <div class="lc-step-head lc-cor-{passo.numero}">
       <div class="lc-step-num" aria-hidden="true">{passo.emoji}</div>
       <div class="lc-step-text">
         <div class="lc-step-title"><h2>{escape(passo.titulo)}</h2>{selo}</div>
         <p>{com_glossario(passo.descricao)}</p>
       </div>
     </div>""")
-    palavras(passo.numero)
-
-
-def palavras(numero):
-    """As palavras difíceis da ferramenta, explicadas (fechado: não empurra os campos para baixo)."""
-    termos = [t for t in conteudo.TERMOS.get(numero, []) if t in conteudo.GLOSSARIO]
-    if not termos:
-        return
-    with st.expander("Não percebes alguma palavra? Vê aqui o que quer dizer", icon=":material/menu_book:"):
-        grelha([f'<div class="lc-card"><h4>{escape(t)}</h4><p>{escape(conteudo.GLOSSARIO[t][1])}</p></div>'
-                for t in termos], largura_min=220)
-        st.page_link("paginas/recursos.py", label="Ver todas as palavras no glossário", icon=":material/menu_book:")
 
 
 def para_onde_vai(energia, potencia, impostos_e_taxas):
@@ -350,6 +338,30 @@ def com_glossario(texto):
     return html
 
 
+def texto(md):
+    """Como st.markdown (negrito com **, linhas começadas por "- " em lista), mas com as palavras
+    técnicas do glossário sublinhadas e explicadas num balão ao passar o rato ou tocar."""
+    html = com_glossario(str(md))
+    html = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", html, flags=re.S)
+    linhas, saida, lista = html.split("\n"), [], []
+    for linha in linhas + [""]:
+        if linha.startswith("- "):
+            lista.append(f"<li>{linha[2:]}</li>")
+            continue
+        if lista:
+            saida.append(f"<ul>{''.join(lista)}</ul>"); lista = []
+        if linha.strip():
+            saida.append(f"<p>{linha}</p>")
+    st.html(f'<div class="lc-texto">{"".join(saida)}</div>')
+
+
+def nota(md, rotulo="Saber mais"):
+    """Explicação secundária escondida num "ⓘ": aparece ao passar o rato ou ao tocar (menos texto à vista)."""
+    limpo = re.sub(r"\*\*(.+?)\*\*", r"\1", str(md))
+    st.html(f'<span class="lc-nota" tabindex="0" role="note" aria-label="{escape(limpo, quote=True)}" '
+            f'data-def="{escape(limpo, quote=True)}"><span aria-hidden="true">ⓘ</span> {escape(rotulo)}</span>')
+
+
 def cartao_recomendacao(rec):
     """Cartão de uma recomendação, com a poupança mensal à esquerda (se houver)."""
     if rec.poupanca_mensal is not None:
@@ -411,5 +423,5 @@ def rodape():
     st.html(f"""
     <footer class="lc-footer">
       <span><b>{escape(MARCA)}</b> · feito por {escape(conteudo.AUTOR["nome"])} · resultados indicativos</span>
-      <span>Preços da tua fatura ou oficiais (ERSE, OMIE) · nada do que escreves ou carregas é guardado</span>
+      <span>Preços da tua fatura ou oficiais (ERSE, OMIE)</span>
     </footer>""")

@@ -4,6 +4,7 @@
 2. O site é para qualquer pessoa: nenhuma página mostra fórmulas, blocos de
    código ou texto de desenvolvimento. Isso fica no guia PDF (docs/).
 """
+import html as html_mod
 import re
 from pathlib import Path
 
@@ -47,7 +48,10 @@ def _texto_visivel(app):
                 valor = getattr(proto, campo, None) if proto is not None else None
                 if isinstance(valor, str) and valor:
                     # o CSS do tema não é texto visível (e tem parênteses de var(...))
-                    partes.append(re.sub(r"<(style|script)>.*?</\1>", "", valor, flags=re.S))
+                    sem_css = re.sub(r"<(style|script)>.*?</\1>", "", valor, flags=re.S)
+                    # o que aparece nos balões (palavras técnicas, notas ⓘ) também é texto que se lê
+                    baloes = " ".join(re.findall(r'data-def="([^"]*)"', sem_css))
+                    partes.append(html_mod.unescape(re.sub(r"<[^>]+>", "", sem_css) + " " + baloes))
     return "\n".join(partes)
 
 
@@ -379,7 +383,7 @@ def test_guia_tem_todos_os_temas_nos_3_passos(monkeypatch):
     app = _abrir("paginas/guia.py", monkeypatch)
     assert not app.exception
     texto = _texto_visivel(app)
-    assert all(f"<h4>{t}</h4>" in texto for t, _ in GUIA) and "Mais temas" not in texto
+    assert all(t in texto for t, _ in GUIA) and "Mais temas" not in texto
     rotulos = [ligacao.proto.label for ligacao in app.get("page_link")]
     assert sum(r.startswith("Experimenta: «") for r in rotulos) == sum(len(f) for *_, f in grupos)
 
@@ -399,8 +403,21 @@ def test_glossario_e_o_primeiro_separador_e_procura(monkeypatch):
     assert app.tabs[0].label == "O que quer dizer cada palavra"
     app.text_input(key="r_procura").input("kva").run()
     texto = _texto_visivel(app)
-    assert "<h4>kVA</h4>" in texto and "Encontrei" in texto
+    assert "kVA" in texto and "Encontrei" in texto
     app.text_input(key="r_procura").input("potencia").run()
-    assert "<h4>potência contratada</h4>" in _texto_visivel(app).lower()
+    assert "potência contratada" in _texto_visivel(app).lower()
     app.text_input(key="r_procura").input("palavra que não existe").run()
     assert "Não encontrei essa palavra" in _texto_visivel(app) and not app.exception
+
+
+def test_estimar_pelos_aparelhos_preenche_o_consumo(monkeypatch):
+    """Os aparelhos marcados por omissão dão uma estimativa; o botão põe-na em «Eletricidade gasta»."""
+    from nucleo import aparelhos
+    esperado = round(aparelhos.estimar([(a.nome, a.comum, a.potencia_w, a.horas_dia)
+                                        for a in aparelhos.APARELHOS])[0])
+    app = _abrir("paginas/fatura.py", monkeypatch)
+    app.button(key="f_usar_aparelhos").click().run()
+    assert not app.exception
+    consumo = next(n for n in app.number_input if n.key.startswith("f_consumo"))
+    dias = next(n for n in app.number_input if n.key.startswith("f_dias"))
+    assert consumo.value == esperado and dias.value == 30

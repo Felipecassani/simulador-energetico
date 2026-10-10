@@ -34,7 +34,7 @@ def secao(prefixo):
     analise = st.session_state.get("eredes_analise")
     with st.expander("Opcional · Consumos do contador inteligente (E-REDES)" + (" · em uso" if analise else ""),
                      icon=":material/upload_file:", expanded=False):
-        st.caption("Podes saltar esta parte. A E-REDES é a empresa dos contadores e da rede, não é quem te vende "
+        ui.nota("Podes saltar esta parte. A E-REDES é a empresa dos contadores e da rede, não é quem te vende "
                    "a luz. Se tens contador inteligente, entra no Balcão Digital da E-REDES "
                    "(balcaodigital.e-redes.pt), descarrega os teus consumos em Excel e carrega o ficheiro aqui: "
                    "o simulador fica a saber a que horas gastas. Podes juntar até um ano, um ficheiro por mês, "
@@ -51,7 +51,7 @@ def secao(prefixo):
             st.info(f"Carregaste {len(ficheiros)} ficheiros: leio os primeiros {MAX_FICHEIROS}.", icon=":material/info:")
         assinatura = tuple(sorted(f.file_id for f in ficheiros)) if ficheiros else None
         if ficheiros and assinatura == st.session_state.get("eredes_ignorados"):
-            st.caption("Deixaste de usar estes ficheiros. Para voltares a usar os consumos da E-REDES, tira-os "
+            ui.nota("Deixaste de usar estes ficheiros. Para voltares a usar os consumos da E-REDES, tira-os "
                        "da caixa e carrega-os de novo, ou carrega outros.")
         elif ficheiros:
             if st.session_state.get("eredes_assinatura") != assinatura:
@@ -91,11 +91,11 @@ def _resumo(analise, prefixo):
     ], largura_min=150)
     grafico = pd.DataFrame({"Hora": [f"{h:02d}h" for h in range(24)], "kWh por dia": analise["media_por_hora"]})
     st.bar_chart(grafico, x="Hora", y="kWh por dia", height=200, color="#C8283C")
-    st.caption(f"Quanto gastas, em média, em cada hora do dia, de {analise['inicio']:%d/%m} a "
+    ui.nota(f"Quanto gastas, em média, em cada hora do dia, de {analise['inicio']:%d/%m} a "
                f"{analise['fim']:%d/%m/%Y}.")
     estimados = st.session_state.get("eredes_estimados", 0)
     if estimados:
-        st.caption(f"Atenção: {estimados} dos valores do ficheiro são estimados pela E-REDES, não lidos no contador.")
+        ui.nota(f"Atenção: {estimados} dos valores do ficheiro são estimados pela E-REDES, não lidos no contador.")
     if analise["pico_kw"] < 0.5 * kva_atual:
         st.info(f"O teu maior consumo de uma vez foi {ui.numero(analise['pico_kw'], 1)} kW, menos de metade dos "
                 f"{kva_texto} kVA contratados: talvez possas baixar a potência. Deixa alguma folga: os picos "
@@ -106,7 +106,7 @@ def _resumo(analise, prefixo):
         pond = eredes.preco_ponderado(registos, mercado_er[0])
         if pond:
             ajuda = pond["ponderado"] < pond["simples"]
-            st.caption(f"Só para tarifários indexados que cobram cada quarto de hora ao preço do mercado: com o "
+            ui.nota(f"Só para tarifários indexados que cobram cada quarto de hora ao preço do mercado: com o "
                        f"teu consumo, pagarias em média {ui.numero(pond['ponderado'] / 10, 2)} cêntimos por kWh "
                        f"pela parte do mercado. A média do mercado nesses dias foi "
                        f"{ui.numero(pond['simples'] / 10, 2)} cêntimos: as horas em que gastas são "

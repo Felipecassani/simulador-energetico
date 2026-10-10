@@ -23,7 +23,7 @@ p = pf.perfil()
 da_fatura = bool(p.get("da_fatura"))
 tarifa = erse()
 
-st.caption("São 3 passos: confirma os teus dados, vê as ofertas mais baratas e, se recebeste uma "
+ui.nota("São 3 passos: confirma os teus dados, vê as ofertas mais baratas e, se recebeste uma "
            "proposta de outra empresa, compara-a. No fim da página há mais informação, se quiseres.")
 
 
@@ -121,12 +121,12 @@ else:
         else:
             conclusao = ("Nenhuma oferta de preço fixo fica mais barata do que "
                          + ("o que pagas hoje." if da_fatura else "os preços preenchidos."))
-        st.markdown(f"Com o teu consumo, a oferta mais barata é **{_texto(melhor.comercializador)} – "
+        ui.texto(f"Com o teu consumo, a oferta mais barata é **{_texto(melhor.comercializador)} – "
                     f"{_texto(melhor.nome)}**: {ui.euros(valor)} € por mês. {hoje_pagas} cerca de "
                     f"{ui.euros(atual_mes)} € por mês. {conclusao}")
         ui.podio_ofertas(linhas, atual_mes, "por mês", p.get("comercializador"),
                          com_fatura=bool(p.get("da_fatura")))
-        st.caption(f"A melhor oferta de cada empresa, só de eletricidade e para qualquer casa. Valores por "
+        ui.nota(f"A melhor oferta de cada empresa, só de eletricidade e para qualquer casa. Valores por "
                    f"mês, {nota_iva}. Antes de mudar, confirma as condições no site da empresa.")
     else:
         st.info("Não encontrei ofertas de preço fixo para esta potência contratada.",
@@ -134,7 +134,7 @@ else:
 
     st.write("")
     with st.expander("Todas as ofertas do mercado (lista completa, com filtros)", icon=":material/list:"):
-        st.caption("Filtros (opcional): escolhe o que queres ver na lista.")
+        ui.nota("Filtros (opcional): escolhe o que queres ver na lista.")
         empresas = sorted({o.comercializador for o in lista_erse if o.com != "TUR"})
         esconder = st.multiselect("Esconder empresas", empresas, key="t_esconder",
                                   placeholder="Nenhuma: mostra todas",
@@ -183,7 +183,7 @@ else:
                     "Condições", display_text="ver no site",
                     help="As condições da oferta no site da empresa, numa janela nova."),
             })
-            st.caption(f"Todas as ofertas do mercado com estas escolhas: {len(todas)} de preço fixo para "
+            ui.nota(f"Todas as ofertas do mercado com estas escolhas: {len(todas)} de preço fixo para "
                        f"{ui.numero(kva, 2)} kVA, da mais barata (no topo) para a mais cara. Preços "
                        f"oficiais da ERSE, atualizados a "
                        f"{data_erse:%d/%m/%Y}. Valores por mês, {nota_iva}. Benefícios à parte, como saldo "
@@ -195,7 +195,7 @@ else:
 # ---------- 3. comparar uma proposta de outra empresa (opcional)
 st.write("")
 st.subheader("3. Tens uma proposta de outra empresa? (opcional)")
-st.caption("Escreve os preços da proposta e vê-a ao lado " + ("da tua fatura" if da_fatura else
+ui.nota("Escreve os preços da proposta e vê-a ao lado " + ("da tua fatura" if da_fatura else
            "dos teus preços") + ". Uma proposta só entra na comparação quando escreves o preço da "
            "energia.")
 
@@ -232,7 +232,7 @@ caixa_comparacao = st.container()     # a tabela é desenhada no fim: o indexado
 # ---------- para saber mais (fechado: não é preciso para comparar)
 st.write("")
 st.subheader("Para saber mais")
-st.caption("Não precisas disto para comparar. Abre só o que te interessar.")
+ui.nota("Não precisas disto para comparar. Abre só o que te interessar.")
 
 with st.expander("O preço do mercado hoje (interessa a quem tem tarifário indexado)",
                  icon=":material/show_chart:"):
@@ -254,7 +254,7 @@ with st.expander("O preço do mercado hoje (interessa a quem tem tarifário inde
                                        ui.euros(mercado.resumo_omie(amanha)["media"] / 10), unidade))
         ui.grelha(metricas, largura_min=150)
         st.plotly_chart(grafico_omie(hoje, amanha, altura=260), config=CONFIG, width="stretch")
-        st.caption(f"Preço de cada hora, hoje{' e amanhã' if amanha else ''}, em hora de Portugal. A zona "
+        ui.nota(f"Preço de cada hora, hoje{' e amanhã' if amanha else ''}, em hora de Portugal. A zona "
                    f"sombreada a dourado são as horas de vazio, das {periodos.VAZIO_INICIO.hour}h às "
                    f"{periodos.VAZIO_FIM.hour}h. Ainda faltam as redes, os custos da empresa e os "
                    f"impostos. Por exemplo, {ui.euros(r_hoje['media'] / 10)} cêntimos por kWh é o mesmo "
@@ -275,10 +275,10 @@ with st.expander("Os preços da tarifa regulada (ERSE)", icon=":material/account
         st.table(ui.tabela_formatada(tabela_erse, {"Preço por kWh (€)": 4}), hide_index=True)
     with col_info:
         ui.grelha([ui.metrica("Preço da potência", ui.preco(potencia_dia), "€ por dia")], largura_min=150)
-        st.caption(f"Pagas este valor todos os dias, mesmo sem gastar. É o preço para "
+        ui.nota(f"Pagas este valor todos os dias, mesmo sem gastar. É o preço para "
                    f"{ui.numero(kva, 2)} kVA.")
         data = "/".join(reversed(tarifa["extraido_em"].split("-")))
-        st.caption(f"Preços oficiais da ERSE para {tarifa.get('ano', date.today().year)}, atualizados a "
+        ui.nota(f"Preços oficiais da ERSE para {tarifa.get('ano', date.today().year)}, atualizados a "
                    f"{data}. Sem IVA nem taxas.")
         if st.button("Confirmar no site da ERSE se os preços mudaram", icon=":material/sync:",
                      help="Vai ao site da ERSE e compara os preços oficiais com os que estou a usar. "
@@ -307,7 +307,7 @@ indexado = None
 with st.expander("Comparar também com um tarifário indexado (preço que muda com o mercado)",
                  icon=":material/tune:"):
     if medias is None:
-        st.caption("Sem o preço do mercado agora, não consigo estimar o indexado. Tenta mais tarde.")
+        ui.nota("Sem o preço do mercado agora, não consigo estimar o indexado. Tenta mais tarde.")
     else:
         _paragrafo("Num tarifário indexado, o preço da energia acompanha o mercado. Se tens uma proposta "
                    "assim, escreve as perdas e a margem que vêm nas condições do contrato: a estimativa "
@@ -328,13 +328,13 @@ with st.expander("Comparar também com um tarifário indexado (preço que muda c
         minimo_idx = perdas == 0 and margem == 0
         indexado = {"nome": "Indexado (mínimo possível)" if minimo_idx else "Indexado (estimativa)",
                     "preco_energia": preco_idx, "preco_diario": potencia_dia}
-        st.caption(f"Com o preço do mercado dos últimos {info_omie['dias']} dias, um indexado ficaria em "
+        ui.nota(f"Com o preço do mercado dos últimos {info_omie['dias']} dias, um indexado ficaria em "
                    f"cerca de {ui.preco(preco_idx)} € por kWh, sem IVA."
                    + (" Com perdas e margem a 0, este é o valor mais baixo possível: na prática é mais "
                       "caro." if minimo_idx else ""))
 
 with st.expander("Ofertas com preço que muda todos os meses (indexadas)", icon=":material/trending_up:"):
-    st.caption("Ofertas indexadas · estimativa por empresa, com o preço do mercado dos últimos 30 dias.")
+    ui.nota("Ofertas indexadas · estimativa por empresa, com o preço do mercado dos últimos 30 dias.")
     medias30, info30 = medias_omie(30)
     if medias30 is None:
         st.info("Não consegui ver o preço do mercado agora. Tenta daqui a pouco.", icon=":material/wifi_off:")
@@ -366,7 +366,7 @@ with st.expander("Ofertas com preço que muda todos os meses (indexadas)", icon=
                              "Condições", display_text="ver no site",
                              help="As condições publicadas pela empresa, numa janela nova."),
                      })
-        st.caption(f"Valores por mês, {nota_iva}. Preço médio do mercado nos últimos {info30['dias']} "
+        ui.nota(f"Valores por mês, {nota_iva}. Preço médio do mercado nos últimos {info30['dias']} "
                    f"dias: {ui.numero(omie_mwh / 10, 1)} cêntimos por kWh. Cada empresa publica a sua "
                    f"regra de preço (consultada a {indexados.FORMULAS[0].consultado}). O preço da "
                    "potência é o de cada empresa, quando a ERSE o publica; senão, o da tarifa regulada. "
@@ -401,17 +401,17 @@ with caixa_comparacao:
     diferenca = total_atual - total_outro
     if diferenca > 0.005:
         quem = "Com a tua fatura" if da_fatura else "Com os teus preços"
-        st.markdown(f"Com {ui.numero(consumo)} kWh em {dias} dias, o mais barato desta tabela é "
+        ui.texto(f"Com {ui.numero(consumo)} kWh em {dias} dias, o mais barato desta tabela é "
                     f"**{nome_outro}**: {ui.euros(total_outro)} €, {nota_iva}. {quem}, também "
                     f"{nota_iva}, pagas {ui.euros(total_atual)} €. São {ui.euros(diferenca)} € a mais "
                     f"do que com **{nome_outro}**.")
     elif diferenca < -0.005:
-        st.markdown("Com estes valores, " + ("a tua fatura já é a mais barata" if da_fatura
+        ui.texto("Com estes valores, " + ("a tua fatura já é a mais barata" if da_fatura
                                               else "os teus preços já são os mais baratos")
                     + f" desta tabela: pagas menos {ui.euros(-diferenca)} € do que com "
                       f"**{nome_outro}**, {nota_iva}.")
     else:
-        st.markdown("Com estes valores, " + ("a tua fatura custa" if da_fatura else "os teus preços custam")
+        ui.texto("Com estes valores, " + ("a tua fatura custa" if da_fatura else "os teus preços custam")
                     + f" o mesmo que **{nome_outro}**, o mais barato desta tabela.")
 
     tabela = calculos.tabela_comparativa(resultados)
@@ -425,7 +425,7 @@ with caixa_comparacao:
         "Total (€)": f"Sem IVA, em {dias} dias (€)" if com_iva else f"Total em {dias} dias (€)",
         "Diferença (€)": "A mais do que o mais barato (€)"})
     st.dataframe(ui.tabela_formatada(tabela), hide_index=True, width="stretch")
-    st.caption("Do mais barato para o mais caro, com o mesmo consumo e os mesmos dias para todos. "
+    ui.nota("Do mais barato para o mais caro, com o mesmo consumo e os mesmos dias para todos. "
                + ("As colunas «Total com IVA e taxas» e «A mais do que o mais barato» já têm o IVA e as "
                   "taxas; as outras não. " if com_iva else "Sem IVA nem taxas. ")
                + "O preço não é tudo: vê também a fidelização e o que cada oferta inclui.")

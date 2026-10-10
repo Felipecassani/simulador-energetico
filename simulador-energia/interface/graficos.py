@@ -20,7 +20,11 @@ def tema_plotly():
     nome = f"lc-{tema_atual()}"
     if nome not in pio.templates:
         p = paleta()
-        pio.templates[nome] = go.layout.Template(layout=dict(
+        pio.templates[nome] = go.layout.Template(
+            data=dict(scatter=[go.Scatter(line=dict(shape="spline", smoothing=0.6, width=3))],
+                      pie=[go.Pie(hole=0.55, marker=dict(line=dict(color=p["bg"], width=3)))]),
+            layout=dict(
+            barcornerradius=10,
             font=dict(family="Inter, sans-serif", color=p["text"], size=13),
             paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
             colorway=[p["primary"], p["gold"], p["bronze"], p["err"], p["muted"]],

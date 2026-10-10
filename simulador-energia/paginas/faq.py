@@ -43,7 +43,7 @@ grupos = GRUPOS + ([("Outras perguntas", soltas)] if soltas else [])
 ui.cabecalho("Perguntas frequentes",
              "Respostas curtas às dúvidas mais comuns. Toca numa pergunta para veres a resposta.",
              kicker="Ajuda")
-st.caption("As palavras sublinhadas explicam-se ao tocar nelas (no computador, basta passar o rato por cima).")
+ui.nota("As palavras sublinhadas explicam-se ao tocar nelas (no computador, basta passar o rato por cima).")
 
 indice = 0
 for assunto, perguntas in grupos:
@@ -64,7 +64,7 @@ for assunto, perguntas in grupos:
                         st.page_link(p.pagina, label=f"Abrir «{p.titulo}»", icon=p.icone)
 
 st.write("")
-st.caption("Não encontras a tua dúvida? Experimenta com a tua própria fatura: muitas respostas ficam "
+ui.nota("Não encontras a tua dúvida? Experimenta com a tua própria fatura: muitas respostas ficam "
            "mais claras com os teus números.")
 with st.container(horizontal=True, key="botoes_faq_mais"):
     fatura = roteiro.passo(1)

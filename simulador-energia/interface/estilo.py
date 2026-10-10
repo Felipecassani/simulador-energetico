@@ -17,6 +17,8 @@ PALETAS = {
         "gold": "#D9B45B", "bronze": "#B9805E",
         "ok": "#5BBF8E", "warn": "#D9B45B", "err": "#E0485A",
         "gold-texto": "#D9B45B", "ok-texto": "#5BBF8E",
+        # uma cor por ferramenta: fatura, poupar, comparar, preço hora a hora, bi-horário
+        "c1": "#E0485A", "c2": "#5BBF8E", "c3": "#D9B45B", "c4": "#4FB3C4", "c5": "#8C8CF0",
     },
     "light": {
         "bg": "#FBF6F2", "surface": "#FFFFFF", "surface-2": "#F3E8E1",
@@ -26,6 +28,7 @@ PALETAS = {
         "ok": "#2F8A5E", "warn": "#A8842E", "err": "#A8192E",
         # texto pequeno no tema claro: o dourado e o verde normais ficam abaixo de 4,5:1
         "gold-texto": "#7A5C1A", "ok-texto": "#23704B",
+        "c1": "#A8192E", "c2": "#23704B", "c3": "#8C6A1F", "c4": "#1C6F7C", "c5": "#4B4BB8",
     },
 }
 
@@ -157,6 +160,9 @@ _CSS = """
 [data-testid="stCaptionContainer"] {{ font-size: .95rem; }}
 [data-testid="stWidgetLabel"] p {{ font-size: 1rem; }}
 
+/* logótipo no topo, com o nome «Simulador Energético» legível */
+[data-testid="stHeaderLogo"] {{ height: 2.6rem !important; max-width: none !important; width: auto !important; }}
+
 /* ---------- Botão claro/escuro: mosaico fixo no canto ---------- */
 .st-key-tema_mosaico {{
   position: fixed !important; top: .6rem; right: clamp(.8rem, 2vw, 1.6rem); z-index: 1000001;
@@ -232,7 +238,8 @@ _CSS = """
 .st-key-cartao_1_destaque [data-testid="stPageLink-NavLink"] {{ min-height: 52px; padding: 0 1.6rem !important; }}
 .st-key-cartao_1_destaque [data-testid="stPageLink-NavLink"] :is(span, p) {{ font-size: 1.08rem !important; }}
 /* as três partes da conta: emoji grande e mesma altura */
-.lc-parte .lc-emoji {{ font-size: 2rem; margin-bottom: .35rem; }}
+.lc-parte .lc-emoji, .lc-passo .lc-emoji {{ display: inline-grid; place-items: center; width: 3rem; height: 3rem;
+  border-radius: 16px; font-size: 1.6rem; margin-bottom: .45rem; background: color-mix(in srgb, var(--lc-gold) 16%, transparent); }}
 
 /* barra "para onde vai o teu dinheiro" */
 .lc-dinheiro {{ margin: .6rem 0 1rem; }}
@@ -244,6 +251,45 @@ _CSS = """
 .lc-seg-impostos {{ background: var(--lc-bronze); }}
 .lc-dinheiro ul {{ list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: .3rem 1.4rem; font-size: .95rem; }}
 .lc-ponto {{ display: inline-block; width: .8rem; height: .8rem; border-radius: 50%; margin-right: .4rem; vertical-align: -.05rem; }}
+
+/* ---------- cor de cada ferramenta (cartões da Início e cabeçalho da página) ---------- */
+.st-key-cartao_1_destaque, .st-key-cartao_1, .lc-cor-1 {{ --lc-cor: var(--lc-c1); }}
+.st-key-cartao_2, .lc-cor-2 {{ --lc-cor: var(--lc-c2); }}
+.st-key-cartao_3, .lc-cor-3 {{ --lc-cor: var(--lc-c3); }}
+.st-key-cartao_4, .lc-cor-4 {{ --lc-cor: var(--lc-c4); }}
+.st-key-cartao_5, .lc-cor-5 {{ --lc-cor: var(--lc-c5); }}
+[class*="st-key-cartao_"]:not([class*="st-key-cartao_breve"]) {{
+  border-top: 5px solid var(--lc-cor) !important;
+}}
+[class*="st-key-cartao_"] .lc-emoji {{
+  display: inline-grid; place-items: center; width: 3rem; height: 3rem; border-radius: 16px; font-size: 1.6rem;
+  background: color-mix(in srgb, var(--lc-cor, var(--lc-gold)) 18%, transparent);
+}}
+.lc-step-head[class*="lc-cor-"] .lc-step-num {{
+  color: var(--lc-cor); border-color: color-mix(in srgb, var(--lc-cor) 50%, transparent);
+  background: color-mix(in srgb, var(--lc-cor) 16%, transparent);
+}}
+.lc-step-head[class*="lc-cor-"] {{ border-left: 5px solid var(--lc-cor); padding-left: 1rem; }}
+
+/* texto com palavras técnicas sublinhadas (ui.texto) */
+.lc-texto p {{ margin: 0 0 .5rem; line-height: 1.6; }}
+.lc-texto ul {{ margin: .2rem 0 .6rem 1.1rem; padding: 0; }}
+.lc-texto li {{ margin: .15rem 0; line-height: 1.55; }}
+
+/* nota "ⓘ Saber mais": a explicação aparece num balão (rato ou toque) */
+.lc-nota {{
+  display: inline-flex; align-items: center; gap: .3rem; position: relative; cursor: help; outline: none;
+  font-size: .88rem; font-weight: 600; color: var(--lc-gold-texto); padding: .15rem .6rem; border-radius: 999px;
+  background: color-mix(in srgb, var(--lc-gold) 12%, transparent); margin: .1rem 0 .3rem;
+}}
+.lc-nota:hover::after, .lc-nota:focus::after {{
+  content: attr(data-def); position: absolute; left: 0; top: calc(100% + 8px); z-index: 60;
+  width: max-content; max-width: min(360px, 86vw); white-space: normal; text-align: left;
+  background: var(--lc-surface-2); color: var(--lc-text); border: 1px solid var(--lc-border);
+  border-radius: 12px; padding: .65rem .8rem; font-size: .9rem; line-height: 1.45; font-weight: 400;
+  box-shadow: 0 14px 30px -14px rgba(0,0,0,.6);
+}}
+[data-testid="stHtml"]:has(.lc-nota), [data-testid="stElementContainer"]:has(.lc-nota) {{ overflow: visible !important; }}
 
 /* glossário: termo sublinhado com balão */
 .lc-termo {{ border-bottom: 1px dotted var(--lc-gold); cursor: help; position: relative; outline: none; }}

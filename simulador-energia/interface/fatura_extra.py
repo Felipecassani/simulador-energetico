@@ -13,7 +13,8 @@ from interface import componentes as ui
 from interface.dados import ofertas_erse
 from interface.graficos import CONFIG
 from interface.graficos_ano import grafico_cenarios, grafico_faturas, grafico_meses, grafico_semana, mapa_calor
-from nucleo import cenarios, historico, periodos
+from interface import perfil as pf
+from nucleo import aparelhos, cenarios, historico, periodos
 
 
 @dataclass
@@ -132,7 +133,7 @@ def explorar(c):
         lista_cen = cenarios.explorar(kwh_mes, p["kva"], pv, pp, tarifa, lista_ex, medias, hoje,
                                       pico_kw=_pico_medido())
         st.subheader("O que podes mudar e quanto custaria")
-        st.caption(f"Contas para {ui.numero(kwh_mes)} kWh por mês ({origem})"
+        ui.nota(f"Contas para {ui.numero(kwh_mes)} kWh por mês ({origem})"
                    + (f", com as horas a que gastas tiradas {origem_perfil}" if origem_perfil else "")
                    + ". Valores por mês, sem IVA."
                    + ("" if origem_perfil else " Como ainda não sei a que horas gastas, só comparo preços "
@@ -153,7 +154,7 @@ def explorar(c):
                     ui.metrica("Hoje pagas", ui.euros(atual_mes), "€ por mês", destaque=True),
                     ui.metrica("A mudança menos cara", ui.euros(melhor_c.mensal), "€ por mês", destaque=False),
                 ], largura_min=160)
-                st.markdown(f"A mudança menos cara seria: **{nome_melhor}**. {consiste} Mesmo assim, pagarias "
+                ui.texto(f"A mudança menos cara seria: **{nome_melhor}**. {consiste} Mesmo assim, pagarias "
                             f"mais {ui.euros(melhor_c.mensal - atual_mes)} € por mês. Conta feita com: {contrato}.")
             else:
                 ui.grelha([
@@ -161,9 +162,9 @@ def explorar(c):
                     ui.metrica("Com a melhor mudança", ui.euros(melhor_c.mensal), "€ por mês", destaque=True),
                     ui.metrica("Poupavas por ano", ui.euros(max(0.0, poupanca)), "€"),
                 ], largura_min=160)
-                st.markdown(f"A mudança que mais poupa: **{nome_melhor}**. {consiste} "
+                ui.texto(f"A mudança que mais poupa: **{nome_melhor}**. {consiste} "
                             f"Conta feita com: {contrato}.")
-            st.caption("Cada barra é uma mudança possível e mostra quanto pagarias por mês. A linha tracejada "
+            ui.nota("Cada barra é uma mudança possível e mostra quanto pagarias por mês. A linha tracejada "
                        "é o que pagas hoje: as barras verdes acabam antes dela, ou seja, poupas.")
             st.plotly_chart(grafico_cenarios(lista_cen, atual_mes, nomes=NOMES_VISIVEIS), config=CONFIG,
                             width="stretch")
@@ -181,11 +182,11 @@ def explorar(c):
 
         st.write("")
         st.subheader("E se… mudares alguns hábitos?")
-        st.caption("Arrasta as bolinhas para experimentar. Em baixo vês quanto pagarias com a oferta mais "
+        ui.nota("Arrasta as bolinhas para experimentar. Em baixo vês quanto pagarias com a oferta mais "
                    "barata para esse caso.")
         if pv is None:
             st.info("Para experimentar as horas baratas preciso de saber a que horas gastas: carrega uma fatura "
-                    "bi ou tri-horária ou os ficheiros do contador (E-REDES), no passo 1, no topo da página.",
+                    "bi ou tri-horária ou os ficheiros do contador (E-REDES), em «Carregar a fatura», no fim da página.",
                     icon=":material/schedule:")
         c1, c2, c3 = st.columns(3)
         with c1:
@@ -217,8 +218,8 @@ def explorar(c):
                 ui.metrica("Por ano", ui.euros(m[0] * ANO), "€"),
                 ui.metrica("Poupas por ano" if dif >= 0 else "Pagas a mais por ano", ui.euros(abs(dif)), "€"),
             ], largura_min=150)
-            st.caption(f"A oferta mais barata para este caso: {m[1]}.")
-        st.caption("São estimativas sem IVA, com as ofertas de preço fixo publicadas pela ERSE e a tarifa "
+            ui.nota(f"A oferta mais barata para este caso: {m[1]}.")
+        ui.nota("São estimativas sem IVA, com as ofertas de preço fixo publicadas pela ERSE e a tarifa "
                    "regulada. Antes de baixar a potência, confirma que o quadro não dispara com os teus aparelhos.")
 
 
@@ -230,7 +231,7 @@ def o_teu_ano(c):
     ano = historico.resumo(per)
     pad = st.session_state.get("eredes_padroes")
     if len(per) < 2 and not pad:
-        st.info(f"Carrega várias faturas de uma vez no passo 1, no topo da página (até {historico.MAX_FATURAS}), "
+        st.info(f"Carrega várias faturas de uma vez em «Carregar a fatura», no fim da página (até {historico.MAX_FATURAS}), "
                 "ou os ficheiros do contador inteligente (E-REDES). Depois aparece aqui o teu ano inteiro: "
                 "quanto gastas no inverno e no verão, os meses fora do normal e o contrato mais barato para o "
                 "ano todo.", icon=":material/calendar_month:")
@@ -246,7 +247,7 @@ def o_teu_ano(c):
         ], largura_min=150)
         st.plotly_chart(grafico_faturas(per), config=CONFIG, width="stretch")
         com_preco = any(q.preco_kwh is not None for q in per)
-        st.caption("As barras mostram quanto gastaste por dia em cada fatura (escala da esquerda)."
+        ui.nota("As barras mostram quanto gastaste por dia em cada fatura (escala da esquerda)."
                    + (" A linha dourada mostra o preço de cada kWh, em cêntimos (escala da direita)."
                       if com_preco else ""))
 
@@ -273,7 +274,7 @@ def o_teu_ano(c):
         if len(ano["empresas"]) > 1:
             notas.append("Faturas de várias empresas: " + ", ".join(ano["empresas"]) + ".")
         if notas:
-            st.markdown("\n".join(f"- {n}" for n in notas))
+            ui.texto("\n".join(f"- {n}" for n in notas))
 
         lista_ano, _ = ofertas_erse()
         kwh_mes_a = ano["kwh_mes"]
@@ -311,17 +312,17 @@ def o_teu_ano(c):
             ui.metrica("Sempre ligado", ui.numero((pad["base_kw"] or 0) * 1000), "W, dia e noite"),
         ], largura_min=150)
         st.plotly_chart(grafico_meses(pad["meses"]), config=CONFIG, width="stretch")
-        st.caption("As barras mostram quanto gastaste em cada mês (escala da esquerda). A linha dourada mostra "
+        ui.nota("As barras mostram quanto gastaste em cada mês (escala da esquerda). A linha dourada mostra "
                    f"que parte foi gasta nas horas baratas, {HORAS_BARATAS} (escala da direita).")
-        st.markdown("**A que horas gastas, mês a mês**")
+        ui.texto("**A que horas gastas, mês a mês**")
         st.plotly_chart(mapa_calor(pad["mapa"]), config=CONFIG, width="stretch")
-        st.caption("Cada quadrado é uma hora de um mês. Quanto mais vermelho, mais gastas a essa hora. É nas "
+        ui.nota("Cada quadrado é uma hora de um mês. Quanto mais vermelho, mais gastas a essa hora. É nas "
                    "horas mais vermelhas que mudar hábitos ou de opção horária faz mais diferença.")
         e, d = st.columns([1, 1])
         with e:
-            st.markdown("**Por dia da semana**")
+            ui.texto("**Por dia da semana**")
             st.plotly_chart(grafico_semana(pad["por_dia_semana"]), config=CONFIG, width="stretch")
-            st.caption("Quanto gastas, em média, em cada dia da semana. Sábado e domingo estão a dourado.")
+            ui.nota("Quanto gastas, em média, em cada dia da semana. Sábado e domingo estão a dourado.")
         with d:
             notas_er = []
             if base_eur:
@@ -344,4 +345,40 @@ def o_teu_ano(c):
                 dif_fds = (pad["kwh_dia_fds"] / pad["kwh_dia_util"] - 1) * 100
                 notas_er.append(f"Ao fim de semana gastas {ui.numero(abs(dif_fds))} % "
                                 + ("mais" if dif_fds >= 0 else "menos") + " por dia do que nos dias úteis.")
-            st.markdown("\n".join(f"- {n}" for n in notas_er))
+            ui.texto("\n".join(f"- {n}" for n in notas_er))
+
+
+# ---------- estimar pelos aparelhos (para quem não tem a fatura à mão)
+def estimar_aparelhos():
+    """Lista de aparelhos para marcar, com potência e horas editáveis → kWh por mês; um botão põe a
+    estimativa no campo «Eletricidade gasta» (30 dias)."""
+    with st.expander("Não sabes quanto gastas? Estima pelos teus aparelhos", icon=":material/electrical_services:"):
+        ui.nota("Marca o que tens e ajusta a potência (vem na etiqueta do aparelho, em W) e as horas de uso "
+                "por dia. Os valores já escritos são típicos de uma casa.", "Como funciona?")
+        tabela = pd.DataFrame([{"Tenho": a.comum, "Aparelho": f"{a.emoji} {a.nome}",
+                                "Watts": a.potencia_w, "Horas/dia": a.horas_dia}
+                               for a in aparelhos.APARELHOS])
+        editada = st.data_editor(
+            tabela, key="f_aparelhos", hide_index=True, width="stretch", disabled=["Aparelho"],
+            column_config={
+                "Tenho": st.column_config.CheckboxColumn("Tenho", width="small",
+                                                         help="Marca os aparelhos que tens e usas."),
+                "Aparelho": st.column_config.TextColumn("Aparelho", width="medium"),
+                "Watts": st.column_config.NumberColumn("Watts", min_value=0, step=50, width="small",
+                                                       help="A potência, na etiqueta do aparelho: por exemplo 2000 W."),
+                "Horas/dia": st.column_config.NumberColumn("Horas/dia", min_value=0.0, max_value=24.0, step=0.1,
+                                                           format="%.1f", width="small",
+                                                           help="Horas de uso por dia, em média. Meia hora = 0,5."),
+            })
+        total, detalhe = aparelhos.estimar(
+            [(r["Aparelho"], bool(r["Tenho"]), float(r["Watts"] or 0), float(r["Horas/dia"] or 0))
+             for _, r in editada.iterrows()])
+        if not detalhe:
+            st.info("Marca pelo menos um aparelho.", icon=":material/check_box:")
+            return
+        ui.grelha([ui.metrica("Estimativa por mês", ui.numero(total), "kWh", destaque=True)])
+        ui.texto("**Os que mais gastam:** " + ", ".join(f"{nome} ({ui.numero(k)} kWh)" for nome, k in detalhe[:3]))
+        if st.button(f"Usar esta estimativa: {ui.numero(total)} kWh em 30 dias", key="f_usar_aparelhos",
+                     icon=":material/check:", type="primary"):
+            pf.aplicar(consumo_kwh=float(round(total)), dias=30)
+            st.rerun()

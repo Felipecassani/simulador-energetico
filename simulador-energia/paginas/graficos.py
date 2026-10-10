@@ -56,16 +56,16 @@ p = pf.perfil()
 tarifa = erse()
 indexado = p.get("modalidade") == "indexado"
 
-st.markdown("Nesta página vês três coisas: **1.** a que horas a eletricidade está mais barata no "
+ui.texto("Nesta página vês três coisas: **1.** a que horas a eletricidade está mais barata no "
             "mercado; **2.** quanto pagarias com cada tipo de horário; **3.** o teu contrato ao lado "
             "de outros preços.")
 exemplo = not p.get("da_fatura") and all(p[k] == pf.PADRAO[k]
                                          for k in ("consumo_kwh", "dias", "kva", "pct_vazio"))
 if exemplo:
-    st.markdown(f"Nesta casa de exemplo, **{ui.numero(p['pct_vazio'])} %** do que se gasta é à noite, "
+    ui.texto(f"Nesta casa de exemplo, **{ui.numero(p['pct_vazio'])} %** do que se gasta é à noite, "
                 f"{NOITE}, e a potência é **{_kva(p['kva'])} kVA**.")
 else:
-    st.markdown(f"As contas usam os teus números: gastas **{ui.numero(p['consumo_kwh'])} kWh em "
+    ui.texto(f"As contas usam os teus números: gastas **{ui.numero(p['consumo_kwh'])} kWh em "
                 f"{p['dias']} dias**, tens **{_kva(p['kva'])} kVA** de potência contratada e "
                 f"**{ui.numero(p['pct_vazio'])} %** do que gastas é à noite, {NOITE}.")
 st.page_link("paginas/bi_horario.py", label="Mudar estes números", icon=":material/edit:",
@@ -90,19 +90,19 @@ except mercado.SemRede:
 else:
     barata = min(hoje, key=lambda x: x[1])
     cara = max(hoje, key=lambda x: x[1])
-    st.markdown(f"Hoje, o preço mais baixo é às **{_hora(barata[0])}** ({ui.numero(barata[1] / 10, 2)} "
+    ui.texto(f"Hoje, o preço mais baixo é às **{_hora(barata[0])}** ({ui.numero(barata[1] / 10, 2)} "
                 f"cêntimos por kWh) e o mais alto às **{_hora(cara[0])}** "
                 f"({ui.numero(cara[1] / 10, 2)} cêntimos por kWh). É o preço antes das redes, da margem e "
                 "dos impostos: pagas sempre mais do que isto.")
     st.plotly_chart(grafico_omie(hoje, amanha), config=CONFIG, width="stretch")
-    st.caption(f"As faixas sombreadas com a palavra «vazio» são as horas {NOITE}, as mais baratas para quem tem bi-horário. No mercado, as "
+    ui.nota(f"As faixas sombreadas com a palavra «vazio» são as horas {NOITE}, as mais baratas para quem tem bi-horário. No mercado, as "
                "horas mais baratas costumam ser a meio do dia, quando há muito sol, e de madrugada. "
                + ("A linha a tracejado é a de amanhã." if amanha
                   else "Os preços de amanhã saem por volta do meio-dia."))
 
     # as horas seguidas mais baratas (para pôr as máquinas a trabalhar)
     st.write("")
-    st.markdown("**Quando ligar as máquinas** · as horas seguidas mais baratas do mercado")
+    ui.texto("**Quando ligar as máquinas** · as horas seguidas mais baratas do mercado")
     st.info("Isto só te poupa dinheiro se o teu contrato cobrar cada hora, ou cada 15 minutos, ao preço "
             "do mercado. Com preço fixo, ou com um indexado que usa a média do mês, a hora a que ligas as "
             f"máquinas não muda o preço. Aí o que conta é o vazio, {NOITE}, se tiveres bi-horário.",
@@ -157,7 +157,7 @@ if avisos:
 melhor = linhas[0]
 referencia = next(l for l in linhas if l["opcao"] == "simples" and l["modalidade"] == "fixo")
 if melhor is referencia:
-    st.markdown(f"Com estes números, o mais barato é o **Simples com preço fixo**, o mais comum: cerca de "
+    ui.texto(f"Com estes números, o mais barato é o **Simples com preço fixo**, o mais comum: cerca de "
                 f"**{ui.euros(melhor['total'])} €** em {p['dias']} dias."
                 + (" Mudar de horário não te compensa." if p.get("da_fatura") and p.get("opcao") == "simples"
                    and p.get("modalidade") == "fixo"
@@ -166,21 +166,21 @@ if melhor is referencia:
                    else " Se já o tens, não precisas de mudar. Se tens outro horário ou um contrato indexado, "
                         "mudar para este pode compensar."))
 else:
-    st.markdown(f"Com estes números, o mais barato é o **{_nome_opcao(melhor)}**: cerca de "
+    ui.texto(f"Com estes números, o mais barato é o **{_nome_opcao(melhor)}**: cerca de "
                 f"**{ui.euros(melhor['total'])} €** em {p['dias']} dias. O Simples com preço fixo, o mais "
                 f"comum, custaria {ui.euros(referencia['total'])} €.")
 
 esquerda, direita = st.columns([1.5, 1], gap="large")
 with esquerda:
-    st.markdown("**O custo de cada opção**, da mais barata para a mais cara")
+    ui.texto("**O custo de cada opção**, da mais barata para a mais cara")
     st.plotly_chart(grafico_opcoes(linhas, dias=p["dias"]), config=CONFIG, width="stretch")
-    st.caption("Cada barra junta a energia que gastas e a parte fixa (potência), que pagas todos os dias "
+    ui.nota("Cada barra junta a energia que gastas e a parte fixa (potência), que pagas todos os dias "
                "e é igual em todas as opções. O número no fim da barra é o total.")
 with direita:
-    st.markdown("**A que horas gastas a tua eletricidade**")
+    ui.texto("**A que horas gastas a tua eletricidade**")
     consumos = tarifas.distribuir_consumo(p["consumo_kwh"], p["pct_vazio"], p["pct_ponta"])["tri"]
     st.plotly_chart(grafico_consumo(consumos, altura=340), config=CONFIG, width="stretch")
-    st.caption(("O que gastas à noite vem da tua fatura; a parte da ponta é uma estimativa. " if ponta_estimada
+    ui.nota(("O que gastas à noite vem da tua fatura; a parte da ponta é uma estimativa. " if ponta_estimada
                 else "Estas percentagens vêm da tua fatura ou do teu contador. " if p.get("perfil_da_fatura")
                 else "Estas percentagens são uma estimativa: muda-as em «Bi-horário compensa?». ")
                + "Quanto mais gastas no vazio, mais te compensa o bi-horário.")
@@ -216,7 +216,7 @@ if len(partes) > 1:
     _texto("O mesmo consumo com preços diferentes: " + ", ".join(partes[:-1]) + " e " + partes[-1]
            + ". Aqui as contas usam um preço igual a qualquer hora, sem horários.")
 if not mostrar_contrato:
-    st.caption("Ainda não puseste os preços do teu contrato: por agora são iguais ao preço oficial. "
+    ui.nota("Ainda não puseste os preços do teu contrato: por agora são iguais ao preço oficial. "
                "Carrega a tua fatura em «A minha fatura» e o teu contrato aparece aqui.")
 
 primeiro = tabela.iloc[0]
@@ -237,11 +237,11 @@ else:
 if primeiro["Tarifário"] == MERCADO and sem_margem:
     frase += (" Atenção: ao preço do mercado ainda faltam as perdas e a margem da empresa, por isso na "
               "prática fica mais caro.")
-st.markdown(frase)
+ui.texto(frase)
 st.plotly_chart(grafico_tarifarios(tabela, dias=p["dias"]), config=CONFIG, width="stretch")
 st.table(ui.tabela_formatada(tabela.rename(columns=COLUNAS)), hide_index=True)
 if not ofertas:
-    st.caption("Recebeste propostas de outras empresas? Põe-nas em «Comparar ofertas» e aparecem aqui.")
+    ui.nota("Recebeste propostas de outras empresas? Põe-nas em «Comparar ofertas» e aparecem aqui.")
     st.page_link("paginas/tarifarios.py", label="Juntar as propostas que recebi", icon=":material/add:")
-st.caption(f"De onde vêm os preços: tarifa oficial da ERSE de {tarifa['ano']}"
+ui.nota(f"De onde vêm os preços: tarifa oficial da ERSE de {tarifa['ano']}"
            + (" e preço médio do mercado na última semana." if medias is not None else "."))

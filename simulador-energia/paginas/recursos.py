@@ -30,7 +30,7 @@ glossario, cal, ligacoes = st.tabs(["O que quer dizer cada palavra", "Datas que 
                                     "Sites oficiais"])
 
 with glossario:
-    st.caption("Viste uma palavra estranha na fatura? Escreve-a aqui, ou escolhe um tema para veres só "
+    ui.nota("Viste uma palavra estranha na fatura? Escreve-a aqui, ou escolhe um tema para veres só "
                "as palavras desse tema.")
     procura = st.text_input("Procurar uma palavra", key="r_procura", placeholder="ex.: vazio, kVA, IVA")
     procurado = _simples((procura or "").strip())
@@ -46,19 +46,19 @@ with glossario:
                       f'<h4>{escape(termo)}</h4><p>{escape(definicao)}</p></div>')
     if blocos:
         if procurado or escolha:
-            st.caption(f"Encontrei {len(blocos)} de {len(GLOSSARIO)} palavras.")
+            ui.nota(f"Encontrei {len(blocos)} de {len(GLOSSARIO)} palavras.")
         ui.grelha(blocos, largura_min=260)
     else:
         st.info("Não encontrei essa palavra. Experimenta escrever só uma parte dela, ou apaga o que "
                 "escreveste e tira os temas escolhidos para veres todas.", icon=":material/search_off:")
     st.write("")
-    st.caption("Já percebes as palavras? Vê-as na tua própria fatura: carregas o PDF ou uma foto e o "
+    ui.nota("Já percebes as palavras? Vê-as na tua própria fatura: carregas o PDF ou uma foto e o "
                "simulador mostra-te para onde vai o dinheiro.")
     with st.container(horizontal=True, key="botoes_glossario"):
         st.page_link(FATURA.pagina, label=f"Abrir «{FATURA.titulo}»", icon=FATURA.icone)
 
 with cal:
-    st.caption("Dias em que o preço da luz ou os horários podem mudar: tarifas novas, mudança da hora e "
+    ui.nota("Dias em que o preço da luz ou os horários podem mudar: tarifas novas, mudança da hora e "
                "decisões do regulador. São bons momentos para voltares a comparar ofertas. As datas com "
                "«previsão» ainda dependem da ERSE, o regulador, e podem mudar.")
     categorias_cal = st.pills("Mostrar só as datas sobre", list(calendario.CATEGORIAS), selection_mode="multi",
@@ -81,7 +81,7 @@ with cal:
         st.page_link(OFERTAS.pagina, label=f"Abrir «{OFERTAS.titulo}»", icon=OFERTAS.icone)
 
 with ligacoes:
-    st.caption("Sites gratuitos das entidades oficiais. Abrem noutra janela: o simulador continua aberto "
+    ui.nota("Sites gratuitos das entidades oficiais. Abrem noutra janela: o simulador continua aberto "
                "aqui, com os teus números.")
     ui.grelha([f'<div class="lc-card"><h4><a href="{escape(url)}" target="_blank" rel="noopener">'
                f'{escape(nome)} <span aria-hidden="true">↗</span></a></h4><p>{escape(texto)}</p></div>'

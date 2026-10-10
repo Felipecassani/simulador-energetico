@@ -16,7 +16,7 @@ ui.cabecalho_ferramenta(passo, roteiro.disponivel(2))
 p = pf.perfil()
 ui.aviso_fatura(p)
 
-st.markdown("**Como usar esta página**\n\n"
+ui.texto("**Como usar esta página**\n\n"
             + ("1. Confirma os números da tua fatura.\n" if p.get("da_fatura")
                else "1. Escreve os números da tua fatura.\n") +
             "2. Marca os aparelhos que tens em casa.\n"
@@ -60,16 +60,16 @@ with esquerda:
                          "são 31 dias. Costuma aparecer perto de «Período de faturação». Serve para "
                          "fazer as contas a um mês.")
     if p.get("da_fatura"):
-        st.caption("Estes números vieram da tua fatura. Só mexe se estiverem errados.")
+        ui.nota("Estes números vieram da tua fatura. Só mexe se estiverem errados.")
     else:
-        st.caption("Os dois números estão na fatura: o consumo em kWh e as datas «de … a …».")
+        ui.nota("Os dois números estão na fatura: o consumo em kWh e as datas «de … a …».")
     pessoas = pf.campo(st.number_input, "Pessoas que vivem na casa", "pessoas", "e_pessoas",
                        min_value=1, max_value=12, step=1,
                        help="Conta contigo. Serve para ver se gastas pouco ou muito para o tamanho "
                             "da família.")
 
     st.subheader("2. O que tens em casa")
-    st.caption("Marca só o que é elétrico e usas. Podes marcar vários ou nenhum. "
+    ui.nota("Marca só o que é elétrico e usas. Podes marcar vários ou nenhum. "
                "As dicas mudam conforme o que marcares.")
     # guardados no perfil: não se perdem ao mudar de página
     extras = {chave: pf.campo(st.checkbox, rotulo, f"eq_{chave}", f"e_{chave}", padrao=False, help=ajuda)
@@ -105,14 +105,14 @@ with direita:
     por_pessoa = consumo_mensal / max(int(pessoas), 1)
     n = int(pessoas)
     inicio = "Com estes números" if p.get("da_fatura") else "Com os números de exemplo"
-    st.markdown(f"{inicio}, gastam-se cerca de **{ui.numero(por_pessoa)} kWh por pessoa, "
+    ui.texto(f"{inicio}, gastam-se cerca de **{ui.numero(por_pessoa)} kWh por pessoa, "
                 f"num mês**. Para {n} {'pessoa' if n == 1 else 'pessoas'}, é um consumo "
                 f"**{NIVEL_TEXTO[nivel]}**.")
     if not p.get("da_fatura"):
-        st.caption("Troca o exemplo pelos números da tua fatura para veres as dicas certas "
+        ui.nota("Troca o exemplo pelos números da tua fatura para veres as dicas certas "
                    "para a tua casa.")
-    st.caption("As dicas que poupam mais aparecem primeiro.")
-    st.markdown("**Começa por estas:**")
+    ui.nota("As dicas que poupam mais aparecem primeiro.")
+    ui.texto("**Começa por estas:**")
     _mostrar(dicas[:3])
     if len(dicas) > 3:
         resto = len(dicas) - 3
@@ -123,9 +123,9 @@ with direita:
 st.write("")
 st.subheader("4. Quanto podes poupar")
 if p.get("da_fatura"):
-    st.caption("As contas usam os preços da tua fatura.")
+    ui.nota("As contas usam os preços da tua fatura.")
 else:
-    st.caption("Ainda sem fatura: as contas usam os preços oficiais de referência, "
+    ui.nota("Ainda sem fatura: as contas usam os preços oficiais de referência, "
                "os da tarifa regulada.")
 coluna_slider, _ = st.columns([1, 1.6], gap="large")
 with coluna_slider:
@@ -144,13 +144,13 @@ ui.grelha([
     ui.metrica("Passas a gastar", ui.numero(r["consumo_depois"] * 30 / dias), "kWh por mês"),
 ], largura_min=180)
 if reducao:
-    st.markdown(f"Se gastares **{reducao} % menos**, pagas cerca de "
+    ui.texto(f"Se gastares **{reducao} % menos**, pagas cerca de "
                 f"**{ui.euros(r['poupanca_mensal'])} € a menos por mês**, ou "
                 f"**{ui.euros(r['poupanca_anual'])} € por ano**.")
 else:
     st.info("Escolhe acima quanto achas que consegues gastar a menos.", icon=":material/touch_app:")
 em_media = p.get("opcao", "simples") != "simples" or p.get("modalidade") == "indexado"
-st.caption(f"Nestas contas, cada kWh custa{', em média,' if em_media else ''} "
+ui.nota(f"Nestas contas, cada kWh custa{', em média,' if em_media else ''} "
            f"{ui.preco(p['preco_energia'])} €. A parte fixa da fatura, "
            "a potência, não muda, por isso não entra na poupança. Todos os valores são para um mês "
            "de 30 dias.")
@@ -180,10 +180,10 @@ with st.expander("Vais comprar alguma coisa? Vê em quanto tempo se paga", icon=
         if payback is not None:
             ui.grelha([ui.metrica("O dinheiro volta em", _tempo(payback), destaque=True)],
                       largura_min=200)
-            st.caption(f"Gastas {ui.euros(custo_medida)} € e poupas {ui.euros(r['poupanca_anual'])} € "
+            ui.nota(f"Gastas {ui.euros(custo_medida)} € e poupas {ui.euros(r['poupanca_anual'])} € "
                        "por ano.")
         elif custo_medida:
-            st.caption("Sem poupança, o dinheiro gasto não volta. Escolhe acima quanto achas que "
+            ui.nota("Sem poupança, o dinheiro gasto não volta. Escolhe acima quanto achas que "
                        "consegues gastar a menos.")
         else:
-            st.caption("Escreve quanto custa e vês aqui em quanto tempo o dinheiro volta.")
+            ui.nota("Escreve quanto custa e vês aqui em quanto tempo o dinheiro volta.")

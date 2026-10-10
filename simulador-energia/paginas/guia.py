@@ -38,7 +38,7 @@ ui.cabecalho("Guia rápido",
              "O essencial para perceberes a tua fatura da luz e pagares menos. Está dividido em 3 passos: "
              "lê um passo e experimenta logo a seguir, na ferramenta indicada.",
              kicker="Ajuda")
-st.caption("As palavras sublinhadas explicam-se ao tocar nelas (no computador, basta passar o rato por cima).")
+ui.nota("As palavras sublinhadas explicam-se ao tocar nelas (no computador, basta passar o rato por cima).")
 with st.container(horizontal=True, key="botoes_guia_glossario"):
     st.page_link("paginas/recursos.py", label="Ver todas as palavras no glossário", icon=":material/menu_book:")
 
@@ -55,7 +55,7 @@ for i, (titulo, resumo, temas, ferramentas) in enumerate(grupos, 1):
         continue
     st.subheader(titulo)
     if resumo:
-        st.caption(resumo)
+        ui.nota(resumo)
     ui.grelha(cartoes, largura_min=320)
     if ferramentas:
         with st.container(horizontal=True, key=f"botoes_guia_{i}"):

@@ -39,7 +39,8 @@ from nucleo.roteiro import passo
 ASSETS = Path(__file__).resolve().parent / "assets"
 
 st.set_page_config(page_title=MARCA, page_icon=str(ASSETS / "icone.png"), layout="wide")
-st.logo(str(ASSETS / "logo.svg"), icon_image=str(ASSETS / "logo_icone.svg"), size="large")
+# no topo aparece o logótipo completo, com o nome «Simulador Energético»
+st.logo(str(ASSETS / "logo.svg"), icon_image=str(ASSETS / "logo.svg"), size="large")
 aplicar_estilo()
 exigir_senha()          # só para quem vem pelo link público (em localhost não pede)
 

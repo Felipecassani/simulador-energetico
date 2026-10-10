@@ -1,8 +1,8 @@
 """Início: o que o simulador faz e por onde começar.
 
-Ordem pensada para quem chega pela primeira vez (e no telemóvel): o botão para começar e as
-ferramentas logo a seguir ao cabeçalho; o preço do mercado, que não é o preço que a pessoa
-paga, vem depois e explicado.
+Pouco texto à vista: ícones e cores guiam; as explicações ficam nas notas «ⓘ Saber mais» e nas
+palavras sublinhadas (balão ao passar o rato ou tocar). O botão para começar e as ferramentas vêm
+logo a seguir ao cabeçalho; o preço do mercado, que não é o que a pessoa paga, vem depois.
 """
 from html import escape
 
@@ -11,23 +11,21 @@ import streamlit as st
 from interface import componentes as ui
 from interface.conteudo import CONTA_EM_1_MINUTO, EM_CONSTRUCAO, ORDEM_FERRAMENTAS
 from interface.dados import omie_hoje_e_amanha
-from interface.estilo import MARCA
 from nucleo import mercado, roteiro
 
 ui.cabecalho(
-    MARCA,
-    "Percebe a tua conta da luz e descobre como pagar menos. Começa pela tua última fatura: "
-    "carregas o PDF ou uma foto, ou escreves os números, e vês quanto pagas e que ofertas te saem "
-    "mais baratas.",
-    kicker="Grátis · sem registo · nada fica guardado",
+    "Descobre como pagar menos",
+    "Carrega a tua fatura ou escreve 4 números e vê quanto pagas e quanto podes poupar.",
+    kicker="Grátis · sem registo",
 )
 
 with st.container(key="cta_inicio"):
-    st.page_link("paginas/fatura.py", label="Começar pela minha fatura", icon=":material/arrow_forward:")
-st.caption("Não tens a fatura à mão? Entra na mesma: há números de exemplo que podes trocar pelos teus.")
+    st.page_link("paginas/fatura.py", label="Começar aqui", icon=":material/arrow_forward:")
+ui.nota("Não tens a fatura à mão? Entra na mesma: há números de exemplo que podes trocar pelos teus.",
+        "Sem fatura à mão?")
 
-st.subheader("Ferramentas")
-st.caption("Escolhe o que queres fazer. Os números que escreves numa ferramenta passam sozinhos para as outras.")
+st.subheader(":material/apps: Ferramentas")
+ui.nota("Escolhe o que queres fazer. Os números que escreves numa ferramenta passam sozinhos para as outras.")
 ferramentas = [roteiro.passo(n) for n in ORDEM_FERRAMENTAS]
 # A primeira (por onde se começa) a toda a largura; as outras 4 numa grelha regular, com a mesma
 # altura: 4 lado a lado no computador, 2 × 2 no tablet, uma por linha no telemóvel (CSS .st-key-grelha_ferramentas)
@@ -36,49 +34,44 @@ with st.container(key="grelha_ferramentas"):
     for passo in ferramentas[1:]:
         ui.cartao_ferramenta(passo, roteiro.disponivel(passo.numero))
 
-st.subheader("A conta da luz em 1 minuto")
-st.caption("Todas as faturas têm estas três partes. Percebê-las é meio caminho para pagar menos.")
+st.subheader(":material/lightbulb: A conta da luz em 1 minuto")
 ui.grelha([f'<div class="lc-card lc-parte lc-aberto"><div class="lc-emoji" aria-hidden="true">{emoji}</div>'
            f'<span class="lc-n">{escape(rotulo.upper())}</span><h4>{escape(titulo)}</h4>'
            f'<p>{ui.com_glossario(texto)}</p></div>'
            for emoji, titulo, rotulo, texto in CONTA_EM_1_MINUTO], largura_min=240)
 
-st.subheader("Aprender o básico")
-st.caption("Nunca olhaste com atenção para uma fatura da luz? Começa por aqui.")
+st.subheader(":material/school: Aprender o básico")
 with st.container(horizontal=True, key="aprender"):
-    st.page_link("paginas/guia.py", label="Guia rápido: o essencial em poucos minutos", icon=":material/school:")
+    st.page_link("paginas/guia.py", label="Guia rápido", icon=":material/school:")
     st.page_link("paginas/faq.py", label="Perguntas frequentes", icon=":material/help:")
     st.page_link("paginas/recursos.py", label="O que quer dizer cada palavra", icon=":material/menu_book:")
 
-st.subheader("O preço da eletricidade agora")
+st.subheader(":material/bolt: O preço da eletricidade agora")
 try:
     hoje, amanha = omie_hoje_e_amanha()
 except mercado.SemRede:
     pass
 else:
     ui.painel_mercado(hoje, amanha)
-    st.caption("É o preço a que as empresas compram a eletricidade no mercado ibérico (OMIE), antes das "
-               "redes, da margem e dos impostos. Não é o que pagas, mas mostra se hoje a eletricidade "
-               "está cara ou barata. Só mexe logo na tua conta se o teu contrato for indexado.")
+    ui.nota("É o preço a que as empresas compram a eletricidade no mercado ibérico (OMIE), antes das redes, "
+            "da margem e dos impostos. Não é o que pagas, mas mostra se hoje a eletricidade está cara ou "
+            "barata. Só mexe logo na tua conta se o teu contrato for indexado.", "O que é este preço?")
 ui.periodo_atual()
-st.caption("Se tens bi-horário ou tri-horário (vem escrito na fatura), isto diz-te em que período "
-           "estás agora. No simples, pagas o mesmo a qualquer hora.")
+ui.nota("Se tens bi-horário ou tri-horário (vem escrito na fatura), isto diz-te em que período estás agora. "
+        "No simples, pagas o mesmo a qualquer hora.", "Para que serve?")
 st.page_link("paginas/graficos.py", label="Ver o preço hora a hora", icon=":material/bar_chart:")
 
-st.subheader("Como funciona")
+st.subheader(":material/checklist: Como funciona")
 ui.grelha([
-    '<div class="lc-card"><span class="lc-n">01</span><h4>Pega na tua fatura</h4>'
-    '<p>Basta a última fatura da luz, em papel, PDF ou foto. Se a carregares, o simulador lê os '
-    'números sozinho.</p></div>',
-    '<div class="lc-card"><span class="lc-n">02</span><h4>Confirma os números</h4>'
-    '<p>Compara com a fatura e corrige o que for preciso. Cada campo tem um ponto de interrogação '
-    'que diz onde encontrar o valor.</p></div>',
-    '<div class="lc-card"><span class="lc-n">03</span><h4>Vê e compara</h4>'
-    '<p>Os resultados aparecem na hora. Muda os números para experimentar outros casos.</p></div>',
+    '<div class="lc-card lc-passo"><div class="lc-emoji" aria-hidden="true">🧾</div><span class="lc-n">01</span>'
+    '<h4>Pega na fatura</h4><p>Em papel, PDF ou foto.</p></div>',
+    '<div class="lc-card lc-passo"><div class="lc-emoji" aria-hidden="true">✍️</div><span class="lc-n">02</span>'
+    '<h4>Confirma os números</h4><p>O (?) de cada campo diz onde os encontrar.</p></div>',
+    '<div class="lc-card lc-passo"><div class="lc-emoji" aria-hidden="true">💶</div><span class="lc-n">03</span>'
+    '<h4>Vê quanto poupas</h4><p>Os resultados aparecem na hora.</p></div>',
 ])
 
-st.subheader("Em breve")
-st.caption("Secções a caminho. Toca numa para ver o que vai ter.")
+st.subheader(":material/construction: Em breve")
 with st.container(horizontal=True, key="em_breve"):
     for secao in EM_CONSTRUCAO:
         st.page_link(f"paginas/breve/{secao.chave}.py", label=secao.titulo, icon=secao.icone)

@@ -47,7 +47,7 @@ agora = datetime.now(periodos.LISBOA)
 estacao = periodos.epoca(agora)
 
 with st.expander("O que são simples, bi-horário e tri-horário?", icon=":material/help:", expanded=True):
-    st.markdown(
+    ui.texto(
         "Na fatura aparece como «Simples», «Bi-horária» ou «Tri-horária», perto da potência contratada.\n\n"
         "- **Simples:** o mesmo preço a qualquer hora.\n"
         f"- **Bi-horário:** mais barato {NOITE} (o «vazio») e mais caro no resto do dia.\n"
@@ -58,7 +58,7 @@ with st.expander("O que são simples, bi-horário e tri-horário?", icon=":mater
 
 # ---------- 1. os números da pessoa
 st.subheader("1. Os teus números")
-st.caption("Copia-os da tua fatura. Se já preencheste «A minha fatura», já estão aqui.")
+ui.nota("Copia-os da tua fatura. Se já preencheste «A minha fatura», já estão aqui.")
 col_a, col_b = st.columns(2, gap="large")
 with col_a:
     consumo = pf.campo(st.number_input, "Quanto gastaste (kWh)", "consumo_kwh", "b_consumo",
@@ -167,11 +167,11 @@ ui.grelha(metricas, largura_min=170)
 if p.get("com_impostos"):
     ci = impostos.com_impostos(melhor["energia"], melhor["potencia"], consumo, dias, kva,
                                p.get("familia_numerosa", False))
-    st.caption(f"Com IVA e taxas, a opção mais barata fica em cerca de {ui.euros(ci['total'])} €.")
+    ui.nota(f"Com IVA e taxas, a opção mais barata fica em cerca de {ui.euros(ci['total'])} €.")
 
-st.markdown("**O custo de cada opção**, da mais barata para a mais cara")
+ui.texto("**O custo de cada opção**, da mais barata para a mais cara")
 st.plotly_chart(grafico_opcoes(linhas, altura=320, dias=dias), config=CONFIG, width="stretch")
-st.caption("Cada barra junta a energia que gastas e a parte fixa (potência), que é igual em todas as opções. "
+ui.nota("Cada barra junta a energia que gastas e a parte fixa (potência), que é igual em todas as opções. "
            "O número no fim da barra é o total.")
 with st.expander("Ver as contas de todas as opções", icon=":material/table:"):
     tabela = pd.DataFrame([{
@@ -182,19 +182,19 @@ with st.expander("Ver as contas de todas as opções", icon=":material/table:"):
     } for l in linhas])
     st.table(ui.tabela_formatada(tabela), hide_index=True)
 if medias is not None:
-    st.caption(f"Como fizemos as contas: «preço fixo» usa os preços oficiais da ERSE de {tarifa['ano']} para "
+    ui.nota(f"Como fizemos as contas: «preço fixo» usa os preços oficiais da ERSE de {tarifa['ano']} para "
                f"{_kva(kva)} kVA, não os da tua empresa; «indexado» usa o preço médio do mercado nos últimos "
                f"{info['dias']} dias, mais as perdas e a margem que puseste. A parte fixa (potência) é igual em "
                "todas.")
 else:
-    st.caption(f"Como fizemos as contas: «preço fixo» usa os preços oficiais da ERSE de {tarifa['ano']} para "
+    ui.nota(f"Como fizemos as contas: «preço fixo» usa os preços oficiais da ERSE de {tarifa['ano']} para "
                f"{_kva(kva)} kVA, não os da tua empresa. Agora não consigo ir buscar os preços do mercado: só "
                "aparecem as opções de preço fixo.")
 
 # ---------- 3. as horas de cada período
 st.write("")
 st.subheader("3. A que horas é mais barato")
-st.markdown("**Agora mesmo**, para quem tem bi-horário ou tri-horário:")
+ui.texto("**Agora mesmo**, para quem tem bi-horário ou tri-horário:")
 ui.periodo_atual()
 
 blocos = [
@@ -211,6 +211,6 @@ for nome_epoca, rotulo in (("inverno", "INVERNO · FIM DE OUTUBRO A FIM DE MARÇ
         f'<h4>Cheias · preço intermédio</h4><p>{periodos.texto_intervalos("tri", "cheias", nome_epoca)}</p>'
         f'<h4>Vazio · mais barato</h4><p>{periodos.texto_intervalos("tri", "vazio", nome_epoca)}</p></div>')
 ui.grelha(blocos, largura_min=220)
-st.caption("Estes horários são iguais todos os dias, também ao fim de semana: é o «ciclo diário», o mais comum "
+ui.nota("Estes horários são iguais todos os dias, também ao fim de semana: é o «ciclo diário», o mais comum "
            "nas casas. O inverno e o verão mudam quando se muda a hora. Se a tua fatura diz «ciclo semanal», "
            "as horas são outras.")

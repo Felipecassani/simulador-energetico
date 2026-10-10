@@ -120,82 +120,58 @@ def _resumo(lido):
     return "\n".join(f"- {linha}" for linha in linhas)
 
 
-# ---------- 1) carregar a fatura (uma ou até 12: a mais recente define o perfil)
-with st.container(border=True):
-    com_fotos = leitura_fatura.ocr_disponivel()
-    st.markdown("**1. Carrega a tua fatura** (" + ("PDF ou foto" if com_fotos else "PDF") + "). "
-                "Não a tens no computador ou no telemóvel? Salta este passo e escreve os números "
-                "mais abaixo, no passo 2.")
-    ficheiros = st.file_uploader(
-        "Escolhe o ficheiro da tua fatura",
-        type=["pdf", "png", "jpg", "jpeg"] if com_fotos else ["pdf"],
-        accept_multiple_files=True, key="f_faturas",
-        help=("Carrega no botão «Escolher ficheiro» e escolhe o PDF da fatura. No telemóvel também podes "
-              "tirar uma foto à fatura em papel: em cima de uma mesa, com boa luz e com a página inteira."
-              if com_fotos else
-              "Carrega no botão «Escolher ficheiro» e escolhe o PDF da fatura, que recebes por email ou "
-              "na área de cliente da tua empresa de eletricidade."))
-    st.caption(f"A fatura é lida só neste momento e não fica guardada. Podes escolher várias de uma vez, até "
-               f"{historico.MAX_FATURAS}, para veres o teu ano na parte «O teu ano». Depois confirma os "
-               "números com a tua fatura em papel: cada empresa escreve as faturas à sua maneira.")
-    cache = st.session_state.setdefault("faturas_cache", {})
-    limite = 2 * historico.MAX_FATURAS                  # protege o servidor: lê no máximo 24 ficheiros
-    para_ler = ficheiros[:limite]
-    novos = [f for f in para_ler if (f.file_id, leitura_fatura.VERSAO) not in cache]
-    if novos:
-        fotos = any(not f.name.lower().endswith(".pdf") for f in novos)
-        with st.spinner(f"A ler {len(novos)} fatura{'s' if len(novos) > 1 else ''}…"
-                        + (" As fotos podem demorar até meio minuto." if fotos else "")):
-            for f in novos:
-                try:
-                    lido = leitura_fatura.ler_ficheiro(f.name, f.getvalue())
-                    cache[(f.file_id, leitura_fatura.VERSAO)] = {k: v for k, v in lido.items() if k != "evidencias"}
-                except Exception:  # ficheiro ilegível, digitalização sem texto, OCR indisponível, …
-                    cache[(f.file_id, leitura_fatura.VERSAO)] = None
-    pares = [(f, cache.get((f.file_id, leitura_fatura.VERSAO))) for f in para_ler]
-    falhadas = [f.name for f, l in pares if l is None]
-    vazias = [f.name for f, l in pares if l is not None and not l]       # lida, mas sem valores
-    com_valores = [(f, l) for f, l in pares if l]
-    st.session_state["faturas_lidas"] = [l for _, l in com_valores]
-    # a fatura principal (a mais recente) só é reaplicada quando ela muda: juntar outro ficheiro
-    # não apaga as correções feitas à mão; uma versão nova do leitor (VERSAO) volta a aplicá-la
-    if com_valores:
-        f_principal, principal = max(com_valores, key=lambda par: (par[1].get("fim") is not None,
-                                                                    par[1].get("fim") or date.min))
-        chave_principal = (f_principal.file_id, leitura_fatura.VERSAO)
-    else:
-        principal, chave_principal = None, None
-    if chave_principal != st.session_state.get("fatura_principal"):
-        st.session_state["fatura_principal"] = chave_principal
-        st.session_state.pop("fatura_resumo", None)
-        if principal is not None:
-            valores = _valores_da_fatura(principal)
-            if valores:
-                pf.carregar_fatura(valores)       # passa para todas as ferramentas
-            st.session_state["fatura_resumo"] = _resumo(principal) if valores else ""
-    for nome in falhadas:
-        st.warning(f"Não consegui ler {ui.nome_ficheiro(nome)}. Experimenta o PDF original ou uma foto nítida, "
-                   "ou escreve os números à mão no passo 2, mais abaixo.", icon=":material/error:")
-    for nome in vazias:
-        st.warning(f"Não encontrei números em {ui.nome_ficheiro(nome)}. Escreve-os à mão no passo 2, "
-                   "mais abaixo.", icon=":material/help:")
-    unicas = len(historico.juntar(st.session_state["faturas_lidas"]))
-    if len(ficheiros) > limite or len(com_valores) > unicas:
-        repetidas = len(com_valores) - unicas
-        st.info(f"Carregaste {len(ficheiros)} ficheiros: "
-                + (f"{repetidas} eram repetidos ou de há mais de um ano; " if repetidas > 0 else "")
-                + f"conto {unicas} faturas diferentes.", icon=":material/info:")
-    if st.session_state.get("fatura_resumo"):
-        prefixo = (f"Li {unicas} faturas. Estes números são da mais recente: confirma-os" if unicas > 1
-                   else "Li estes números da tua fatura: confirma-os")
-        st.success(prefixo + " no papel e, se algum estiver errado, corrige-o no passo 2, mais abaixo.\n\n"
-                   + st.session_state["fatura_resumo"], icon=":material/task_alt:")
-
-carregar_eredes.secao("f")
+# ---------- a fatura carregada: o botão para a carregar fica no fim da página (é opcional e não deve
+# assustar quem só quer escrever os números), mas os ficheiros escolhidos leem-se já aqui — o Streamlit
+# guarda-os em session_state — para os números aparecerem preenchidos lá em cima
+com_fotos = leitura_fatura.ocr_disponivel()
+ficheiros = st.session_state.get("f_faturas") or []
+cache = st.session_state.setdefault("faturas_cache", {})
+limite = 2 * historico.MAX_FATURAS                  # protege o servidor: lê no máximo 24 ficheiros
+para_ler = ficheiros[:limite]
+novos = [f for f in para_ler if (f.file_id, leitura_fatura.VERSAO) not in cache]
+if novos:
+    fotos = any(not f.name.lower().endswith(".pdf") for f in novos)
+    with st.spinner(f"A ler {len(novos)} fatura{'s' if len(novos) > 1 else ''}…"
+                    + (" As fotos podem demorar até meio minuto." if fotos else "")):
+        for f in novos:
+            try:
+                lido = leitura_fatura.ler_ficheiro(f.name, f.getvalue())
+                cache[(f.file_id, leitura_fatura.VERSAO)] = {k: v for k, v in lido.items() if k != "evidencias"}
+            except Exception:  # ficheiro ilegível, digitalização sem texto, OCR indisponível, …
+                cache[(f.file_id, leitura_fatura.VERSAO)] = None
+pares = [(f, cache.get((f.file_id, leitura_fatura.VERSAO))) for f in para_ler]
+falhadas = [f.name for f, l in pares if l is None]
+vazias = [f.name for f, l in pares if l is not None and not l]       # lida, mas sem valores
+com_valores = [(f, l) for f, l in pares if l]
+st.session_state["faturas_lidas"] = [l for _, l in com_valores]
+# a fatura principal (a mais recente) só é reaplicada quando ela muda: juntar outro ficheiro
+# não apaga as correções feitas à mão; uma versão nova do leitor (VERSAO) volta a aplicá-la
+if com_valores:
+    f_principal, principal = max(com_valores, key=lambda par: (par[1].get("fim") is not None,
+                                                                par[1].get("fim") or date.min))
+    chave_principal = (f_principal.file_id, leitura_fatura.VERSAO)
+else:
+    principal, chave_principal = None, None
+if chave_principal != st.session_state.get("fatura_principal"):
+    st.session_state["fatura_principal"] = chave_principal
+    st.session_state.pop("fatura_resumo", None)
+    if principal is not None:
+        valores = _valores_da_fatura(principal)
+        if valores:
+            pf.carregar_fatura(valores)       # passa para todas as ferramentas
+        st.session_state["fatura_resumo"] = _resumo(principal) if valores else ""
+unicas = len(historico.juntar(st.session_state["faturas_lidas"]))
+if st.session_state.get("fatura_resumo"):
+    prefixo = (f"Li {unicas} faturas. Estes números são da mais recente: confirma-os" if unicas > 1
+               else "Li estes números da tua fatura: confirma-os")
+    st.success(prefixo + " no papel e, se algum estiver errado, corrige-o em baixo.\n\n"
+               + st.session_state["fatura_resumo"], icon=":material/task_alt:")
+else:
+    ui.texto("📄 **Tens a fatura em PDF" + (" ou foto" if com_fotos else "") + "?** Carrega-a no fim desta "
+             "página e os números preenchem-se sozinhos. Ou escreve-os já em baixo.")
 
 st.write("")
-st.markdown("**Agora escolhe o que queres ver.** Há 3 separadores: toca no nome de cada um para o abrir. "
-            "Começa por «A tua fatura».")
+ui.texto("**3 partes:** toca no nome de cada uma para a abrir.")
 aba_fatura, aba_explorar, aba_ano = st.tabs([":material/receipt_long: A tua fatura",
                                              ":material/savings: Como pagar menos",
                                              ":material/calendar_month: O teu ano (várias faturas)"])
@@ -206,9 +182,9 @@ with aba_fatura:
 
     # ---------- 2) os números (à mão ou vindos da fatura), pela ordem em que aparecem no papel
     with entradas:
-        st.subheader("2. Confirma os números da tua fatura")
+        st.subheader(":material/edit_note: 1. Os números da tua fatura")
         with st.expander("Onde encontro estes números na fatura?", icon=":material/help:"):
-            st.markdown(ONDE_ENCONTRAR)
+            ui.texto(ONDE_ENCONTRAR)
         p_inicial = pf.perfil()
         if not p_inicial.get("da_fatura"):
             st.info(f"Os números já preenchidos são um exemplo: uma casa que gasta "
@@ -255,7 +231,7 @@ with aba_fatura:
                       "Na linha «Potência» da fatura, é o número ao lado de «€/dia», por exemplo 0,3659. "
                       "Se houver duas linhas de potência (uma delas «acesso às redes»), soma as duas.")
         if indexado:
-            st.caption("Só para tarifários indexados. Se não encontrares estes valores, deixa 0: a conta "
+            ui.nota("Só para tarifários indexados. Se não encontrares estes valores, deixa 0: a conta "
                        "fica um pouco abaixo do real.")
             i1, i2 = st.columns(2)
             with i1:
@@ -269,6 +245,8 @@ with aba_fatura:
                          help="O que a empresa soma ao preço do mercado em cada kWh. Pode chamar-se "
                               "«margem», «fee» ou «spread», por exemplo 0,0100.")
 
+        fatura_extra.estimar_aparelhos()
+
     # ---------- 3) quanto pagas
     p = pf.perfil()
     tarifa = erse()
@@ -280,7 +258,7 @@ with aba_fatura:
     sem_tri = com_perfil and not p.get("ponta_na_fatura", True)
 
     with resultado:
-        st.subheader("3. Quanto pagas")
+        st.subheader(":material/payments: 2. Quanto pagas")
         pf.campo(st.toggle, "Incluir IVA e taxas", "com_impostos",
                  "f_impostos", padrao=False, help=AJUDA_IVA)
         if p.get("com_impostos"):
@@ -300,7 +278,7 @@ with aba_fatura:
                                                  p["preco_diario"], p["dias"])
             except ValueError:
                 ui.grelha(vazio, largura_min=140)
-                st.error("Os números não podem ser negativos. Corrige-os no passo 2.", icon=":material/error:")
+                st.error("Os números não podem ser negativos. Corrige-os no passo 1.", icon=":material/error:")
         if f is not None:
             ci = impostos.com_impostos(f["energia"], f["potencia"], p["consumo_kwh"], p["dias"],
                                        p["kva"], p.get("familia_numerosa", False))
@@ -309,9 +287,9 @@ with aba_fatura:
                        ui.metrica("Total sem IVA", ui.euros(f["total"]), "€", destaque=not p.get("com_impostos"))],
                       largura_min=140)
             if not p.get("com_impostos"):
-                st.markdown(f"Com IVA e taxas, isto dá cerca de **{ui.euros(ci['total'])} €** — é este o valor "
+                ui.texto(f"Com IVA e taxas, isto dá cerca de **{ui.euros(ci['total'])} €** — é este o valor "
                             "a comparar com o total da tua fatura.")
-            st.caption(f"Em {p['dias']} dias: {ui.euros(f['energia'])} € pela eletricidade que gastaste e "
+            ui.nota(f"Em {p['dias']} dias: {ui.euros(f['energia'])} € pela eletricidade que gastaste e "
                        f"{ui.euros(f['potencia'])} € pela potência (a parte fixa, que pagas mesmo sem gastar). "
                        f"De onde vêm os preços: {p['fonte']}.")
             ui.para_onde_vai(f["energia"], f["potencia"], ci["taxas"] + ci["iva"])
@@ -320,14 +298,14 @@ with aba_fatura:
                            ui.metrica("IVA", ui.euros(ci["iva"]), "€"),
                            ui.metrica("Total com IVA", ui.euros(ci["total"]), "€", destaque=True)],
                           largura_min=140)
-                st.caption("O total com IVA junta a eletricidade, o IVA e as pequenas taxas que vêm em todas as "
+                ui.nota("O total com IVA junta a eletricidade, o IVA e as pequenas taxas que vêm em todas as "
                            "faturas, como a da rádio e televisão públicas (2,85 € por mês). Deve ficar perto "
                            "do total da tua fatura.")
 
             # indexado: o mesmo consumo com o mercado de agora (perdas e margem do contrato)
             if indexado:
                 st.write("")
-                st.markdown("**Com o mercado de agora**: quanto pagarias pelo mesmo consumo com os preços "
+                ui.texto("**Com o mercado de agora**: quanto pagarias pelo mesmo consumo com os preços "
                             "desta semana e as condições do teu contrato.")
                 if medias is None:
                     st.info("Não consegui ver os preços do mercado agora. Tenta outra vez daqui a uns minutos.",
@@ -351,15 +329,15 @@ with aba_fatura:
                     else:
                         rotulo, frase = "Diferença", "Com os preços desta semana, pagarias o mesmo que nesta fatura."
                     if p.get("com_impostos"):
-                        st.caption("Atenção: estas comparações são sem IVA. Compara-as com o «Total sem IVA» "
+                        ui.nota("Atenção: estas comparações são sem IVA. Compara-as com o «Total sem IVA» "
                                    "lá em cima, não com o total com IVA.")
                     ui.grelha([
                         ui.metrica("Com o mercado de agora" + (", sem IVA" if p.get("com_impostos") else ""),
                                    ui.euros(agora_total), "€"),
                         ui.metrica(rotulo, ui.euros(abs(variacao)), "€", destaque=variacao < -0.005),
                     ], largura_min=140)
-                    st.markdown(frase)
-                    st.caption("É uma estimativa com os preços do mercado dos últimos 7 dias e as condições do "
+                    ui.texto(frase)
+                    ui.nota("É uma estimativa com os preços do mercado dos últimos 7 dias e as condições do "
                                "teu contrato, sem IVA. O mercado muda todos os dias, por isso a próxima fatura "
                                "pode ser diferente.")
 
@@ -372,7 +350,7 @@ with aba_fatura:
             st.write("")
             opcao_reg = ("o mesmo preço a qualquer hora" if regulada["opcao"] == "simples"
                          else periodos.NOMES[regulada["opcao"]].lower())
-            st.markdown(f"**Na tarifa regulada da ERSE**, o preço oficial de referência, para "
+            ui.texto(f"**Na tarifa regulada da ERSE**, o preço oficial de referência, para "
                         f"{_kva(p['kva'])} kVA e {opcao_reg}:")
             if diferenca > 0.005:
                 rotulo = "Poupança se mudares"
@@ -385,15 +363,15 @@ with aba_fatura:
             else:
                 rotulo, frase = "Diferença", "Pagas praticamente o mesmo que na tarifa regulada."
             if p.get("com_impostos"):
-                st.caption("Atenção: estas comparações são sem IVA. Compara-as com o «Total sem IVA» "
+                ui.nota("Atenção: estas comparações são sem IVA. Compara-as com o «Total sem IVA» "
                            "lá em cima, não com o total com IVA.")
             ui.grelha([
                 ui.metrica("Na tarifa regulada pagarias" + (", sem IVA" if p.get("com_impostos") else ""),
                            ui.euros(regulada["total"]), "€"),
                 ui.metrica(rotulo, ui.euros(abs(diferenca)), "€", destaque=diferenca > 0.005),
             ], largura_min=140)
-            st.markdown(frase)
-            st.caption(f"A tarifa regulada é um preço fixo que a ERSE, a entidade que regula a eletricidade, "
+            ui.texto(frase)
+            ui.nota(f"A tarifa regulada é um preço fixo que a ERSE, a entidade que regula a eletricidade, "
                        f"define para cada ano (aqui, {tarifa['ano']}). Serve de termo de comparação e podes "
                        "aderir a ela. Valores sem IVA.")
 
@@ -403,7 +381,7 @@ with aba_fatura:
         if p.get("da_fatura"):
             ui.cartao_meu_tarifario(p, f["total"] * 30 / p["dias"], na_fatura=True)
         st.subheader("Recomendações para ti")
-        st.caption("Ideias para pagares menos, da que poupa mais para a que poupa menos. Valores por mês, sem IVA.")
+        ui.nota("Ideias para pagares menos, da que poupa mais para a que poupa menos. Valores por mês, sem IVA.")
         dados_fatura = {
             "consumo_kwh": p["consumo_kwh"], "preco_energia": p["preco_energia"],
             "preco_diario": p["preco_diario"], "dias": p["dias"], "kva": p["kva"],
@@ -461,7 +439,7 @@ with aba_fatura:
                 else:
                     ui.podio_ofertas(linhas, atual_mes, "por mês", p.get("comercializador"),
                                      com_fatura=bool(p.get("da_fatura")))
-                st.caption(
+                ui.nota(
                     f"Para cada empresa, a oferta mais barata para o teu consumo e potência. São ofertas de "
                     f"preço fixo, só de eletricidade, publicadas pela ERSE a {data_ofertas:%d/%m/%Y}. "
                     + ("Com IVA e taxas. " if p.get("com_impostos") else "Sem IVA nem taxas. ")
@@ -485,7 +463,7 @@ with aba_fatura:
             data_ofertas)
         st.download_button("Guardar este resumo em PDF", resumo_pdf, file_name="simulacao-eletricidade.pdf",
                            mime="application/pdf", icon=":material/download:", key="f_pdf")
-        st.caption("Para imprimir ou mostrar a alguém. O PDF tem só os números e as recomendações: nada de "
+        ui.nota("Para imprimir ou mostrar a alguém. O PDF tem só os números e as recomendações: nada de "
                    "nomes, moradas ou o ficheiro da fatura.")
 
 
@@ -496,3 +474,34 @@ with aba_explorar:
     fatura_extra.explorar(contexto)
 with aba_ano:
     fatura_extra.o_teu_ano(contexto)
+
+# ---------- carregar a fatura e os consumos da E-REDES: opcional, por isso no fim
+st.write("")
+st.subheader(":material/upload_file: Carregar a fatura (opcional)")
+with st.container(border=True):
+    ui.texto("**Tens a fatura em PDF" + (" ou foto" if com_fotos else "") + "?** Carrega-a aqui e os números "
+             "lá de cima preenchem-se sozinhos.")
+    st.file_uploader(
+        "Escolhe o ficheiro da tua fatura",
+        type=["pdf", "png", "jpg", "jpeg"] if com_fotos else ["pdf"],
+        accept_multiple_files=True, key="f_faturas",
+        help=("Carrega no botão «Escolher ficheiro» e escolhe o PDF da fatura. No telemóvel também podes "
+              "tirar uma foto à fatura em papel: em cima de uma mesa, com boa luz e com a página inteira."
+              if com_fotos else
+              "Carrega no botão «Escolher ficheiro» e escolhe o PDF da fatura, que recebes por email ou "
+              "na área de cliente da tua empresa de eletricidade."))
+    ui.nota(f"Podes escolher várias de uma vez, até {historico.MAX_FATURAS}, para veres o teu ano na parte "
+            "«O teu ano». Depois confirma os números com a tua fatura em papel: cada empresa escreve as "
+            "faturas à sua maneira.")
+    for nome in falhadas:
+        st.warning(f"Não consegui ler {ui.nome_ficheiro(nome)}. Experimenta o PDF original ou uma foto nítida, "
+                   "ou escreve os números à mão no passo 1, lá em cima.", icon=":material/error:")
+    for nome in vazias:
+        st.warning(f"Não encontrei números em {ui.nome_ficheiro(nome)}. Escreve-os à mão no passo 1, "
+                   "lá em cima.", icon=":material/help:")
+    if len(ficheiros) > limite or len(com_valores) > unicas:
+        repetidas = len(com_valores) - unicas
+        st.info(f"Carregaste {len(ficheiros)} ficheiros: "
+                + (f"{repetidas} eram repetidos ou de há mais de um ano; " if repetidas > 0 else "")
+                + f"conto {unicas} faturas diferentes.", icon=":material/info:")
+carregar_eredes.secao("f")
