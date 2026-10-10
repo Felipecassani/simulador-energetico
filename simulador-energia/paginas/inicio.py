@@ -45,10 +45,10 @@ if mercado_casa:
             f"{ui.euros(mercado_casa['diferenca_ano'])} € por ano a mais do que a mais barata, sem IVA. "
             f"Contas feitas com as ofertas publicadas pela ERSE a {data_ofertas:%d/%m/%Y}.", "De onde vêm estes números?")
 st.html('<div class="lc-selos">'
-        '<span class="lc-selo"><b>✓</b> Dados oficiais da ERSE</span>'
-        '<span class="lc-selo"><b>✓</b> Preços do mercado OMIE</span>'
-        '<span class="lc-selo"><b>✓</b> Sem publicidade</span>'
-        '<span class="lc-selo"><b>✓</b> Código aberto</span></div>')
+        f'<span class="lc-selo">{ui.icone("verified")} Dados oficiais da ERSE</span>'
+        f'<span class="lc-selo">{ui.icone("show_chart")} Preços do mercado OMIE</span>'
+        f'<span class="lc-selo">{ui.icone("block")} Sem publicidade</span>'
+        f'<span class="lc-selo">{ui.icone("code")} Código aberto</span></div>')
 
 st.subheader(":material/apps: Ferramentas")
 ui.nota("Escolhe o que queres fazer. Os números que escreves numa ferramenta passam sozinhos para as outras.")
@@ -61,7 +61,7 @@ with st.container(key="grelha_ferramentas"):
         ui.cartao_ferramenta(passo, roteiro.disponivel(passo.numero))
 
 st.subheader(":material/lightbulb: A conta da luz em 1 minuto")
-ui.grelha([f'<div class="lc-card lc-parte lc-aberto"><div class="lc-emoji" aria-hidden="true">{emoji}</div>'
+ui.grelha([f'<div class="lc-card lc-parte lc-aberto"><div class="lc-emoji">{ui.icone(emoji)}</div>'
            f'<span class="lc-n">{escape(rotulo.upper())}</span><h4>{escape(titulo)}</h4>'
            f'<p>{ui.com_glossario(texto)}</p></div>'
            for emoji, titulo, rotulo, texto in CONTA_EM_1_MINUTO], largura_min=240)
@@ -89,11 +89,11 @@ st.page_link("paginas/graficos.py", label="Ver o preço hora a hora", icon=":mat
 
 st.subheader(":material/checklist: Como funciona")
 ui.grelha([
-    '<div class="lc-card lc-passo"><div class="lc-emoji" aria-hidden="true">🧾</div><span class="lc-n">01</span>'
+    f'<div class="lc-card lc-passo"><div class="lc-emoji">{ui.icone("receipt_long")}</div><span class="lc-n">01</span>'
     '<h4>Pega na fatura</h4><p>Em papel, PDF ou foto.</p></div>',
-    '<div class="lc-card lc-passo"><div class="lc-emoji" aria-hidden="true">✍️</div><span class="lc-n">02</span>'
+    f'<div class="lc-card lc-passo"><div class="lc-emoji">{ui.icone("edit_note")}</div><span class="lc-n">02</span>'
     '<h4>Confirma os números</h4><p>O (?) de cada campo diz onde os encontrar.</p></div>',
-    '<div class="lc-card lc-passo"><div class="lc-emoji" aria-hidden="true">💶</div><span class="lc-n">03</span>'
+    f'<div class="lc-card lc-passo"><div class="lc-emoji">{ui.icone("savings")}</div><span class="lc-n">03</span>'
     '<h4>Vê quanto poupas</h4><p>Os resultados aparecem na hora.</p></div>',
 ])
 
@@ -101,6 +101,17 @@ st.subheader(":material/construction: Em breve")
 with st.container(horizontal=True, key="em_breve"):
     for secao in EM_CONSTRUCAO:
         st.page_link(f"paginas/breve/{secao.chave}.py", label=secao.titulo, icon=secao.icone)
+
+# ---------- uma nota de quem fez o site (a cara humana do projeto)
+st.html(f'''<div class="lc-nota-autor">
+  <img src="{ui.imagem_svg("logo_icone.svg")}" alt="">
+  <div>
+    <p>Olá! Fiz este simulador para que qualquer pessoa consiga perceber a sua fatura da luz e pagar
+    menos, sem precisar de saber de energia. Usei só dados oficiais e deixei tudo grátis.
+    Se tiveres uma ideia para o melhorar, diz-me.</p>
+    <span class="lc-assinatura">Luiz</span>
+  </div>
+</div>''')
 
 # ---------- chamada final, para quem leu até ao fim
 ui.cta_final()

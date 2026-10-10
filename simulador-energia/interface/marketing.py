@@ -71,28 +71,42 @@ def relampago(lista_ofertas, tarifa):
     """Um campo (quanto pagaste) → «podes poupar cerca de X € por ano»."""
     from nucleo import relampago as calc
     with st.container(key="relampago"):
-        st.html('<div class="lc-relampago-titulo">⚡ Quanto pagaste na última fatura da luz?</div>')
+        from interface.componentes import icone
+        st.html(f'<div class="lc-relampago-titulo">{icone("bolt")} Quanto pagaste na última fatura da luz?</div>')
         total = st.number_input("Total da última fatura, com IVA (€)", min_value=0.0, max_value=2000.0,
                                 value=None, step=1.0, placeholder="por exemplo 65", key="relampago_total",
                                 label_visibility="collapsed",
                                 help="O total a pagar, com IVA, de uma fatura de cerca de um mês.")
+        with st.expander("Afinar a conta (opcional): quantos kWh gastaste?", icon=":material/tune:"):
+            kwh = st.number_input("Eletricidade gasta nessa fatura (kWh)", min_value=0.0, max_value=10000.0,
+                                  value=None, step=10.0, placeholder="por exemplo 258", key="relampago_kwh",
+                                  help="Está junto às leituras do contador, por exemplo «Consumo: 258 kWh». "
+                                       "Com este número a conta fica muito mais certa.")
         if not total:
             return
-        r = calc.poupanca(total, lista_ofertas, tarifa)
+        r = calc.poupanca(total, lista_ofertas, tarifa, kwh_real=kwh)
         if r is None:
             st.info("Não consegui fazer a conta agora. Experimenta «A minha fatura».", icon=":material/info:")
             return
+        tipo = ("com o teu consumo" if r["exata"] else "estimativa por baixo")
         if r["poupanca_ano"] >= 1:
             st.html(f'<div class="lc-relampago-res">Podes poupar cerca de <b>{numero(r["poupanca_ano"])} €</b> '
-                    f'por ano</div>')
+                    f'por ano <span class="lc-relampago-tipo">{tipo}</span></div>')
         else:
             st.html('<div class="lc-relampago-res">Boa notícia: já pagas perto do mais barato.</div>')
         from interface.componentes import nota
-        nota(f"Estimativa: com os preços da tarifa regulada, {euros(total)} € dão cerca de "
-             f"{numero(r['kwh_mes'])} kWh por mês (6,9 kVA, tarifa simples). Com esse consumo, a oferta "
-             f"de preço fixo mais barata ({r['oferta'].comercializador}) custaria cerca de "
-             f"{euros(r['melhor_mes'])} € por mês, com IVA. Para a tua conta exata, usa «A minha fatura».",
-             "Como fiz esta conta?")
+        if r["exata"]:
+            nota(f"Com {numero(r['kwh_mes'])} kWh num mês (6,9 kVA, tarifa simples), a oferta de preço fixo mais "
+                 f"barata ({r['oferta'].comercializador}) custaria cerca de {euros(r['melhor_mes'])} € por mês, "
+                 f"com IVA e taxas, contra os {euros(total)} € que pagaste. Para a conta completa, com a tua "
+                 "potência e o teu horário, usa «A minha fatura».", "Como fiz esta conta?")
+        else:
+            nota(f"Não sei quanto gastaste, por isso calculei o consumo com os preços da tarifa regulada: "
+                 f"{euros(total)} € dão cerca de {numero(r['kwh_mes'])} kWh por mês (6,9 kVA, tarifa simples). "
+                 f"Com esse consumo, a oferta de preço fixo mais barata ({r['oferta'].comercializador}) custaria "
+                 f"cerca de {euros(r['melhor_mes'])} € por mês, com IVA. Se pagas mais caro do que a regulada, "
+                 "a poupança real é maior do que esta: escreve os kWh em «Afinar a conta» para a saberes.",
+                 "Como fiz esta conta?")
         st.page_link("paginas/fatura.py", label="Ver a conta exata com a minha fatura",
                      icon=":material/arrow_forward:")
         partilhar(r["poupanca_ano"], "inicio")
@@ -109,7 +123,8 @@ def aviso_sazonal(hoje=None):
         return
     e = perto[0]
     quando = ("hoje" if e.dia == hoje else f"a {e.dia:%d/%m}")
-    st.html(f'<div class="lc-sazonal"><span class="lc-sazonal-data">📅 {escape(quando)}</span>'
+    from interface.componentes import icone
+    st.html(f'<div class="lc-sazonal"><span class="lc-sazonal-data">{icone("event")} {escape(quando)}</span>'
             f'<b>{escape(e.titulo)}</b><span>{escape(e.texto)}</span></div>')
 
 
@@ -122,17 +137,31 @@ def ajudou(pagina):
         st.html('<p class="lc-micro">Obrigado! A tua resposta ajuda a melhorar o simulador.</p>')
 
 
-# ---------- visita guiada (primeira visita à Fatura nesta sessão)
+# ---------- visita guiada (até a pessoa carregar em «Percebi»; o browser lembra-se)
+_LEMBRAR = """<script>
+(function () {{
+  const chave = "lc-visita-vista";
+  try {{
+    {gravar}
+    if (localStorage.getItem(chave)) document.querySelectorAll(".st-key-visita").forEach(e => e.style.display = "none");
+  }} catch (e) {{}}
+}})();
+</script>"""
+
+
 def visita_guiada():
-    """Três passos curtos, uma vez por sessão; «Percebi» fecha."""
-    if st.session_state.get("visita_vista"):
-        return
-    with st.container(key="visita"):
-        st.html('<div class="lc-visita">'
-                '<div><span>1</span><b>Escreve os números</b><small>da tua fatura, ou usa os de exemplo</small></div>'
-                '<div><span>2</span><b>Vê quanto pagas</b><small>e para onde vai o dinheiro</small></div>'
-                '<div><span>3</span><b>Descobre a mais barata</b><small>entre as ofertas oficiais</small></div>'
-                '</div>')
-        if st.button("Percebi", key="visita_ok", icon=":material/check:"):
-            st.session_state["visita_vista"] = True
-            st.rerun()
+    """Três passos curtos. «Percebi» fecha-a nesta sessão e o browser guarda a marca «já vi»
+    (localStorage, sem dados pessoais), para não voltar a aparecer nas visitas seguintes."""
+    vista = st.session_state.get("visita_vista")
+    if not vista:
+        with st.container(key="visita"):
+            st.html('<div class="lc-visita">'
+                    '<div><span>1</span><b>Escreve os números</b><small>da tua fatura, ou usa os de exemplo</small></div>'
+                    '<div><span>2</span><b>Vê quanto pagas</b><small>e para onde vai o dinheiro</small></div>'
+                    '<div><span>3</span><b>Descobre a mais barata</b><small>entre as ofertas oficiais</small></div>'
+                    '</div>')
+            if st.button("Percebi", key="visita_ok", icon=":material/check:"):
+                st.session_state["visita_vista"] = True
+                st.rerun()
+    gravar = 'localStorage.setItem(chave, "1");' if vista else ""
+    st.html(_LEMBRAR.format(gravar=gravar), unsafe_allow_javascript=True)

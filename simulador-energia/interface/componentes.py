@@ -51,6 +51,12 @@ def tabela_formatada(df, casas=None):
 
 # ---------- blocos ----------
 
+def icone(nome):
+    """Ícone de traço da família Material Symbols (a do menu). nome: "receipt_long" ou ":material/receipt_long:"."""
+    nome = nome.replace(":material/", "").strip(":")
+    return f'<span class="lc-ic" aria-hidden="true">{escape(nome)}</span>'
+
+
 def imagem_svg(nome):
     """Imagem SVG de assets/ como data URI (o st.html retira os <svg>; como <img> passam)."""
     import base64
@@ -85,7 +91,7 @@ def cabecalho_ferramenta(passo, disponivel=True):
     selo = "" if disponivel else badge(False)
     st.html(f"""
     <div class="lc-step-head lc-cor-{passo.numero}">
-      <div class="lc-step-num" aria-hidden="true">{passo.emoji}</div>
+      <div class="lc-step-num" aria-hidden="true">{icone(passo.icone)}</div>
       <div class="lc-step-text">
         <div class="lc-step-title"><h2>{escape(passo.titulo)}</h2>{selo}</div>
         <p>{com_glossario(passo.descricao)}</p>
@@ -156,7 +162,7 @@ def cartao_ferramenta(passo, disponivel, destaque=False):
         if destaque:          # ícone, título e selo na mesma linha; a descrição por baixo
             st.html(f"""
             <div class="lc-card-flat">
-              <div class="lc-topo"><span class="lc-emoji" aria-hidden="true">{passo.emoji}</span>
+              <div class="lc-topo"><span class="lc-emoji">{icone(passo.icone)}</span>
                 <h4>{escape(passo.titulo)}</h4>{selo}</div>
               <p>{escape(passo.descricao)}</p>
             </div>""")
@@ -164,7 +170,7 @@ def cartao_ferramenta(passo, disponivel, destaque=False):
             st.html(f"""
             <div class="lc-card-flat">
               <div class="lc-topo">
-                <span class="lc-emoji" aria-hidden="true">{passo.emoji}</span>{selo}
+                <span class="lc-emoji">{icone(passo.icone)}</span>{selo}
               </div>
               <h4>{escape(passo.titulo)}</h4>
               <p>{escape(passo.descricao)}</p>
@@ -194,7 +200,7 @@ def cartao_em_construcao(secao):
         st.html(f"""
         <div class="lc-card-flat lc-construcao">
           <div class="lc-topo">
-            <span class="lc-emoji" aria-hidden="true">{secao.emoji}</span><span class="lc-badge lc-todo">Em construção</span>
+            <span class="lc-emoji">{icone(secao.icone)}</span><span class="lc-badge lc-todo">Em construção</span>
           </div>
           <h4>{escape(secao.titulo)}</h4>
           <p>{escape(secao.descricao)}</p>

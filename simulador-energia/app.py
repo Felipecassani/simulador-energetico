@@ -30,6 +30,7 @@ if getattr(sys, "_simulador_assinatura", _assinatura) != _assinatura:
 sys._simulador_assinatura = _assinatura
 
 from interface.acesso import exigir_senha  # noqa: E402  (depois da verificação acima)
+from interface import animacoes
 from interface.componentes import proximo_passo, rodape
 from interface.conteudo import EM_CONSTRUCAO, ORDEM_FERRAMENTAS
 from interface.estilo import MARCA, aplicar_estilo
@@ -66,3 +67,4 @@ seletor_tema([f"/{p.url_path}" for grupo in paginas.values() for p in grupo])
 pagina.run()
 proximo_passo(pagina.url_path)
 rodape()
+animacoes.ativar()          # números que contam e cartões que entram ao descer a página

@@ -448,3 +448,25 @@ def test_aviso_sazonal_so_perto_das_datas(monkeypatch):
     vistos.clear()
     marketing.aviso_sazonal(date(2026, 8, 10))              # nada perto
     assert not vistos
+
+
+def test_visita_guiada_lembra_se_e_o_script_passa_o_filtro():
+    import re as _re
+    from interface import marketing
+    for gravar in ("", 'localStorage.setItem(chave, "1");'):
+        script = marketing._LEMBRAR.format(gravar=gravar).split("<script>", 1)[1].rsplit("</script>", 1)[0]
+        assert not _re.search(r"<[/\w!]", script)          # o DOMPurify não o apaga
+
+
+def test_calculadora_relampago_com_os_kwh(monkeypatch):
+    app = _abrir("paginas/inicio.py", monkeypatch)
+    app.number_input(key="relampago_total").set_value(80.0).run()
+    app.number_input(key="relampago_kwh").set_value(250.0).run()
+    assert not app.exception and "com o teu consumo" in _texto_visivel(app)
+
+
+def test_script_das_animacoes_passa_o_filtro():
+    import re as _re
+    from interface import animacoes
+    script = animacoes._SCRIPT.split("<script>", 1)[1].rsplit("</script>", 1)[0]
+    assert not _re.search(r"<[/\w!]", script)          # o DOMPurify apagava o script inteiro

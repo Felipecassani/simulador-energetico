@@ -47,6 +47,7 @@ def paleta():
 
 
 _CSS = """
+@import url("https://fonts.googleapis.com/css2?family=Caveat:wght@600&display=swap");   /* assinatura manuscrita */
 :root {{ {tokens} }}
 
 /* Fundo com brilho carmim suave no canto — dá profundidade sem distrair */
@@ -121,7 +122,10 @@ _CSS = """
 
 /* ---------- Separadores (ex.: as 3 partes da Fatura): parecem botões, não texto solto ---------- */
 [data-testid="stTabs"] [role="tablist"] {{ flex-wrap: wrap; gap: .45rem; border-bottom: none; }}
-[data-testid="stTabs"] [data-baseweb="tab-highlight"], [data-testid="stTabs"] [data-baseweb="tab-border"] {{ display: none; }}
+[data-testid="stTabs"] [data-baseweb="tab-highlight"], [data-testid="stTabs"] [data-baseweb="tab-border"],
+[data-testid="stTabs"] .react-aria-SelectionIndicator {{ display: none !important; }}
+[data-testid="stTabs"] [role="tablist"], [data-testid="stTabs"] [role="tablist"] > * {{ box-shadow: none !important; border-bottom: none !important; }}
+[data-testid="stTabs"] [role="tablist"]::after, [data-testid="stTabs"] [role="tablist"]::before {{ display: none !important; }}
 [data-testid="stTab"] {{
   min-height: 48px; padding: .35rem 1.1rem !important; border: 1px solid var(--lc-border) !important;
   border-radius: 999px; background: var(--lc-surface);
@@ -458,6 +462,54 @@ _CSS = """
   .st-key-cta_inicio [data-testid="stPageLink-NavLink"], .st-key-cta_final [data-testid="stPageLink-NavLink"] {{ animation: none; }}
 }}
 
+/* ================= animações: convidam a continuar (só com movimento permitido) ================= */
+.st-key-animacoes {{ display: none !important; }}
+@media (prefers-reduced-motion: no-preference) {{
+  /* entrada suave dos cartões ao descer a página (a classe só é posta pelo script: sem ele, tudo visível) */
+  .lc-anim {{ opacity: 0; transform: translateY(18px) scale(.98); }}
+  .lc-anim.lc-visto {{ opacity: 1; transform: none; transition: opacity .55s ease, transform .55s cubic-bezier(.2,.8,.2,1); }}
+  /* barra «para onde vai o teu dinheiro» cresce da esquerda */
+  .lc-barra span {{ transform-origin: left; animation: lc-cresce 1s cubic-bezier(.2,.8,.2,1) both; }}
+  .lc-barra span:nth-child(2) {{ animation-delay: .15s; }}
+  .lc-barra span:nth-child(3) {{ animation-delay: .3s; }}
+  @keyframes lc-cresce {{ from {{ transform: scaleX(0); }} to {{ transform: scaleX(1); }} }}
+  /* resultado da calculadora aparece com um pequeno salto */
+  .lc-relampago-res {{ animation: lc-salto .6s cubic-bezier(.34,1.56,.64,1) both; }}
+  @keyframes lc-salto {{ from {{ opacity: 0; transform: translateY(10px) scale(.95); }} to {{ opacity: 1; transform: none; }} }}
+  /* ícones das ferramentas abanam ao passar o rato */
+  @keyframes lc-abana {{ 0%, 100% {{ transform: rotate(0); }} 25% {{ transform: rotate(-10deg) scale(1.08); }} 75% {{ transform: rotate(8deg) scale(1.08); }} }}
+  [class*="st-key-cartao_"]:hover .lc-emoji, .lc-parte:hover .lc-emoji, .lc-passo:hover .lc-emoji {{ animation: lc-abana .6s ease; }}
+  /* botões afundam ao clicar */
+  [data-testid="stPageLink-NavLink"], [data-testid^="stBaseButton"], .lc-tema {{ transition: transform .12s ease, filter .2s ease; }}
+  [data-testid="stPageLink-NavLink"]:active, [data-testid^="stBaseButton"]:active {{ transform: scale(.96); }}
+  [data-testid="stPageLink-NavLink"]:hover {{ filter: brightness(1.06); }}
+  /* separadores: sobem um pouco ao passar o rato */
+  [data-testid="stTab"] {{ transition: transform .15s ease; }}
+  [data-testid="stTab"]:hover {{ transform: translateY(-2px); }}
+  /* pódio: a medalha de ouro brilha */
+  .lc-podio-1 .lc-podio-medalha span[aria-hidden] {{ display: inline-block; animation: lc-brilho 2.4s ease-in-out infinite; }}
+  @keyframes lc-brilho {{ 0%, 100% {{ transform: rotate(0) scale(1); }} 50% {{ transform: rotate(-8deg) scale(1.15); }} }}
+}}
+
+/* ================= cara humana: ícones de traço (não emojis) e a nota do autor ================= */
+.lc-ic {{
+  font-family: "Material Symbols Rounded"; font-weight: normal; font-style: normal; font-size: 1.35em;
+  line-height: 1; letter-spacing: normal; text-transform: none; display: inline-block; white-space: nowrap;
+  font-feature-settings: "liga"; -webkit-font-smoothing: antialiased; vertical-align: -.22em;
+}}
+.lc-emoji .lc-ic, .lc-step-num .lc-ic {{ font-size: 1.7rem; vertical-align: 0; color: var(--lc-cor, var(--lc-gold-texto)); }}
+.lc-step-num .lc-ic {{ color: inherit; }}
+.lc-selo .lc-ic {{ font-size: 1.15rem; color: var(--lc-ok-texto); }}
+.lc-relampago-titulo .lc-ic, .lc-sazonal-data .lc-ic {{ color: var(--lc-gold-texto); }}
+.lc-nota-autor {{
+  display: flex; gap: 1.1rem; align-items: flex-start; max-width: 760px; margin: 1.6rem auto .4rem;
+  padding: 1.2rem 1.4rem; border-radius: 22px; background: var(--lc-surface); border: 1px solid var(--lc-border);
+}}
+.lc-nota-autor img {{ width: 56px; height: 56px; border-radius: 16px; flex: none; }}
+.lc-nota-autor p {{ margin: 0; font-size: 1.02rem; line-height: 1.6; color: var(--lc-text); }}
+.lc-assinatura {{ display: block; margin-top: .3rem; font-family: Caveat, "Segoe Script", "Bradley Hand", cursive;
+  font-size: 1.9rem; font-weight: 600; color: var(--lc-primary); line-height: 1; }}
+
 /* calculadora relâmpago */
 .st-key-relampago {{
   margin: .8rem 0 .4rem; padding: 1.1rem 1.2rem !important; border-radius: 22px;
@@ -467,6 +519,8 @@ _CSS = """
 .st-key-relampago [data-testid="stNumberInput"] input {{ font-size: 1.4rem !important; font-weight: 700; min-height: 52px; }}
 .lc-relampago-res {{ font-size: 1.15rem; margin: .4rem 0 .2rem; }}
 .lc-relampago-res b {{ font-family: Sora, sans-serif; font-size: 2rem; color: var(--lc-ok-texto); }}
+.lc-relampago-tipo {{ display: inline-block; margin-left: .4rem; padding: .1rem .55rem; border-radius: 999px; font-size: .8rem;
+  font-weight: 700; color: var(--lc-gold-texto); background: color-mix(in srgb, var(--lc-gold) 14%, transparent); vertical-align: middle; }}
 /* aviso sazonal */
 .lc-sazonal {{ display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem .7rem; margin: .7rem 0 .2rem;
   padding: .7rem 1rem; border-radius: 16px; background: color-mix(in srgb, var(--lc-gold) 12%, var(--lc-surface));

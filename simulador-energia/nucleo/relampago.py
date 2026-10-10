@@ -36,16 +36,21 @@ def kwh_da_fatura(total_com_iva, tarifa, kva=6.9):
     return (baixo + alto) / 2
 
 
-def poupanca(total_com_iva, lista_ofertas, tarifa, kva=6.9):
-    """{"kwh_mes", "oferta", "melhor_mes", "poupanca_ano"} ou None (sem ofertas ou total inválido)."""
+def poupanca(total_com_iva, lista_ofertas, tarifa, kva=6.9, kwh_real=None):
+    """{"kwh_mes", "oferta", "melhor_mes", "poupanca_ano", "exata"} ou None (sem ofertas ou total inválido).
+
+    kwh_real: o consumo da fatura, se a pessoa o souber. Com ele a conta deixa de depender da
+    estimativa pela tarifa regulada ("exata" = True); sem ele, a estimativa é conservadora.
+    """
     if not total_com_iva or total_com_iva <= 0:
         return None
-    kwh = kwh_da_fatura(total_com_iva, tarifa, kva)
+    exata = bool(kwh_real and kwh_real > 0)
+    kwh = float(kwh_real) if exata else kwh_da_fatura(total_com_iva, tarifa, kva)
     melhor = ofertas.mais_baratas(lista_ofertas, kwh, DIAS, kva, n=1)
     if not melhor:
         return None
     oferta, custo = melhor[0]
     potencia = oferta.potencia_dia * DIAS
     melhor_mes = impostos.com_impostos(custo - potencia, potencia, kwh, DIAS, kva)["total"]
-    return {"kwh_mes": kwh, "oferta": oferta, "melhor_mes": melhor_mes,
+    return {"kwh_mes": kwh, "oferta": oferta, "melhor_mes": melhor_mes, "exata": exata,
             "poupanca_ano": max(0.0, (total_com_iva - melhor_mes) * ANO)}

@@ -25,3 +25,12 @@ def test_poupanca_com_uma_oferta_mais_barata():
     assert r["kwh_mes"] == aprox(300, abs=0.01) and r["melhor_mes"] == aprox(esperado, abs=0.01)
     assert r["poupanca_ano"] == aprox((total - esperado) * 365 / 30, abs=0.1)
     assert relampago.poupanca(0, [barata], ERSE) is None and relampago.poupanca(total, [], ERSE) is None
+
+
+def test_com_o_consumo_real_a_conta_usa_esse_consumo():
+    barata = of.Oferta("Alfa", "A1", "Alfa Casa", 6.9, "simples", 0.20, {"simples": 0.10})
+    r = relampago.poupanca(80.0, [barata], ERSE, kwh_real=250)
+    esperado = impostos.com_impostos(250 * 0.10, 0.20 * 30, 250, 30, 6.9)["total"]
+    assert r["exata"] and r["kwh_mes"] == 250 and r["melhor_mes"] == aprox(esperado)
+    assert r["poupanca_ano"] == aprox((80.0 - esperado) * 365 / 30)
+    assert not relampago.poupanca(80.0, [barata], ERSE)["exata"]
