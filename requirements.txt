@@ -9,3 +9,4 @@ pypdf>=6.19
 # OCR de fotos de faturas (só macOS, usa o Apple Vision localmente)
 ocrmac>=1.0; sys_platform == "darwin"
 openpyxl>=3.1.5          # consumos da E-REDES em Excel
+segno>=1.6               # código QR do cartão de partilha
