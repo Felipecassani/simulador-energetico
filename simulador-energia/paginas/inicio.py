@@ -106,12 +106,15 @@ with st.container(horizontal=True, key="em_breve"):
 st.html(f'''<div class="lc-nota-autor">
   <img src="{ui.imagem_svg("logo_icone.svg")}" alt="">
   <div>
-    <p>Olá! Fiz este simulador para que qualquer pessoa consiga perceber a sua fatura da luz e pagar
-    menos, sem precisar de saber de energia. Usei só dados oficiais e deixei tudo grátis.
-    Se tiveres uma ideia para o melhorar, diz-me.</p>
+    <p>Olá! Construí este simulador para que qualquer pessoa consiga perceber a sua fatura de energia
+    e descobrir como pagar menos, de forma simples. Usei apenas dados oficiais e deixei tudo gratuito.
+    Se tiveres uma ideia para o melhorar, fala comigo pelo LinkedIn ou por e-mail — encontras os
+    contactos em Ajuda › Sobre o projeto.</p>
     <span class="lc-assinatura">Luiz</span>
   </div>
 </div>''')
+with st.container(key="contactos_autor"):
+    st.page_link("paginas/sobre.py", label="Ver os contactos", icon=":material/mail:")
 
 # ---------- chamada final, para quem leu até ao fim
 ui.cta_final()

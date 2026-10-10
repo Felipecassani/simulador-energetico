@@ -13,6 +13,7 @@ AUTOR = {
     "ligacoes": [
         ("GitHub", "https://github.com/Felipecassani", "codigo"),
         ("LinkedIn", "https://www.linkedin.com/in/luizfelipecassani/", "linkedin"),
+        ("E-mail", "mailto:cassaniluizfelipe@gmail.com", "email"),
     ],
 }
 

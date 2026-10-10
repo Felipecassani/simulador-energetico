@@ -17,6 +17,9 @@ ICONE = _imagem((Path(__file__).resolve().parents[1] / "assets" / "logo_icone.sv
 SIMBOLOS = {
     "codigo": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#D9B45B" stroke-width="2" '
               'stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg>',
+    "email": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#D9B45B" stroke-width="2" '
+             'stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/>'
+             '<path d="M4 7l8 6 8-6"/></svg>',
     "linkedin": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#D9B45B" '
                 'stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="4"/>'
                 '<path d="M8 10.5V16M12 16v-3.2a2.2 2.2 0 0 1 4.4 0V16M12 10.5V16"/>'

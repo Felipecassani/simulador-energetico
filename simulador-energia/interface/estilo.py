@@ -523,6 +523,7 @@ _CSS = """
   padding: 1.2rem 1.4rem; border-radius: 22px; background: var(--lc-surface); border: 1px solid var(--lc-border);
 }}
 .lc-nota-autor img {{ width: 56px; height: 56px; border-radius: 16px; flex: none; }}
+.st-key-contactos_autor {{ max-width: 760px; margin: 0 auto; align-items: flex-end; }}
 .lc-nota-autor p {{ margin: 0; font-size: 1.02rem; line-height: 1.6; color: var(--lc-text); }}
 .lc-assinatura {{ display: block; margin-top: .3rem; font-family: Caveat, "Segoe Script", "Bradley Hand", cursive;
   font-size: 1.9rem; font-weight: 600; color: var(--lc-primary); line-height: 1; }}
