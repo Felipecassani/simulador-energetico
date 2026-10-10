@@ -101,7 +101,7 @@ def _destaques_html(numero):
     if not itens:
         return ""
     return ('<div class="lc-destaques">' + "".join(
-        f'<span class="lc-destaque"><b>{escape(v)}</b> {escape(r)}</span>' for v, r in itens) + "</div>")
+        f'<span class="lc-realce"><b>{escape(v)}</b> {escape(r)}</span>' for v, r in itens) + "</div>")
 
 
 def para_onde_vai(energia, potencia, impostos_e_taxas):
@@ -430,6 +430,10 @@ def proximo_passo(url_path):
     ordem = list(conteudo.ORDEM_FERRAMENTAS)
     i = ordem.index(numero_atual)
     st.write("")
+    from interface import marketing
+    with st.container(horizontal=True, key="ajudou"):
+        st.html('<span class="lc-ajudou">Esta ferramenta ajudou-te?</span>')
+        marketing.ajudou(url_path)
     with st.container(key="cta_final"):
         st.html(f'<span class="lc-cta-kicker">O QUE FICASTE A SABER</span>'
                 f'<p class="lc-cta-txt">{escape(conteudo.APRENDESTE[numero_atual])}</p>')

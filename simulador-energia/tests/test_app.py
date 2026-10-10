@@ -421,3 +421,30 @@ def test_estimar_pelos_aparelhos_preenche_o_consumo(monkeypatch):
     consumo = next(n for n in app.number_input if n.key.startswith("f_consumo"))
     dias = next(n for n in app.number_input if n.key.startswith("f_dias"))
     assert consumo.value == esperado and dias.value == 30
+
+
+def test_calculadora_relampago_na_inicio(monkeypatch):
+    app = _abrir("paginas/inicio.py", monkeypatch)
+    app.number_input(key="relampago_total").set_value(73.08).run()
+    assert not app.exception
+    texto = _texto_visivel(app)
+    assert "Podes poupar cerca de" in texto and "Como fiz esta conta?" in texto
+
+
+def test_cartao_para_partilhar_e_um_png():
+    from interface import marketing
+    png = marketing.cartao_png(86.0)
+    assert png[:8] == b"\x89PNG\r\n\x1a\n" and len(png) > 10_000
+    assert "86 €" in marketing.texto_partilha(86.0) and marketing.URL_SITE in marketing.texto_partilha(0)
+
+
+def test_aviso_sazonal_so_perto_das_datas(monkeypatch):
+    from datetime import date
+    from interface import marketing
+    vistos = []
+    monkeypatch.setattr(marketing.st, "html", lambda h: vistos.append(h))
+    marketing.aviso_sazonal(date(2026, 12, 20))             # 1 de janeiro: novas tarifas
+    assert vistos and "Novas tarifas" in vistos[0]
+    vistos.clear()
+    marketing.aviso_sazonal(date(2026, 8, 10))              # nada perto
+    assert not vistos

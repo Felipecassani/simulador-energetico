@@ -15,7 +15,7 @@ from datetime import date
 import streamlit as st
 
 from interface import componentes as ui
-from interface import carregar_eredes, fatura_extra
+from interface import carregar_eredes, fatura_extra, marketing
 from interface import perfil as pf
 from interface.dados import erse, medias_omie, ofertas_erse
 from nucleo import (calculos, historico, impostos, leitura_fatura, ofertas, periodos, recomendacoes,
@@ -168,6 +168,7 @@ if st.session_state.get("fatura_resumo"):
                + st.session_state["fatura_resumo"], icon=":material/task_alt:")
 
 st.write("")
+marketing.visita_guiada()
 aba_fatura, aba_explorar, aba_ano = st.tabs([":material/receipt_long: A tua fatura",
                                              ":material/savings: Como pagar menos",
                                              ":material/calendar_month: O teu ano (várias faturas)"])
@@ -434,6 +435,8 @@ with aba_fatura:
                 else:
                     ui.podio_ofertas(linhas, atual_mes, "por mês", p.get("comercializador"),
                                      com_fatura=bool(p.get("da_fatura")))
+                if linhas:
+                    marketing.partilhar((atual_mes - linhas[0][1]) * 365 / 30, "fatura")
                 ui.nota(
                     f"Para cada empresa, a oferta mais barata para o teu consumo e potência. São ofertas de "
                     f"preço fixo, só de eletricidade, publicadas pela ERSE a {data_ofertas:%d/%m/%Y}. "

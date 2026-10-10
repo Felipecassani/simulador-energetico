@@ -433,15 +433,73 @@ _CSS = """
 }}
 .st-key-cta_final [data-testid="stElementContainer"] {{ width: auto !important; }}
 .lc-micro {{ font-size: .9rem; color: var(--lc-muted); margin: .2rem 0 0 .3rem; }}
+
+/* ================= composição «fotográfica»: guiar o olhar para o caminho certo ================= */
+/* 1) ponto focal: o botão principal é o elemento mais luminoso, com um brilho que pulsa devagar */
+@keyframes lc-foco {{ 0%, 100% {{ box-shadow: 0 12px 28px -14px var(--lc-primary), 0 0 0 0 color-mix(in srgb, var(--lc-gold) 55%, transparent); }}
+                      50% {{ box-shadow: 0 12px 28px -14px var(--lc-primary), 0 0 0 10px color-mix(in srgb, var(--lc-gold) 0%, transparent); }} }}
+.st-key-cta_inicio [data-testid="stPageLink-NavLink"], .st-key-cta_final [data-testid="stPageLink-NavLink"] {{
+  animation: lc-foco 2.6s ease-in-out infinite;
+}}
+/* 3) linhas entre passos: 01 → 02 → 03 (Como funciona) e na visita guiada */
+.lc-grid:has(.lc-passo) {{ position: relative; }}
+.lc-card.lc-passo {{ position: relative; overflow: visible; }}
+.lc-passo:not(:last-child)::after {{
+  content: "→"; position: absolute; right: -0.95rem; top: 50%; transform: translateY(-50%); z-index: 2;
+  width: 1.6rem; height: 1.6rem; border-radius: 50%; display: grid; place-items: center; font-weight: 800;
+  background: var(--lc-gold); color: #1E1216; font-size: .9rem;
+}}
+/* 4) profundidade de campo: o secundário fica um pouco atenuado e ganha nitidez ao passar o rato */
+@media (hover: hover) and (pointer: fine) {{
+  :is(.st-key-em_breve, .st-key-aprender, .st-key-rodape_ajuda, .lc-selos) {{ opacity: .72; transition: opacity .25s ease; }}
+  :is(.st-key-em_breve, .st-key-aprender, .st-key-rodape_ajuda, .lc-selos):hover {{ opacity: 1; }}
+}}
+@media (prefers-reduced-motion: reduce) {{
+  .st-key-cta_inicio [data-testid="stPageLink-NavLink"], .st-key-cta_final [data-testid="stPageLink-NavLink"] {{ animation: none; }}
+}}
+
+/* calculadora relâmpago */
+.st-key-relampago {{
+  margin: .8rem 0 .4rem; padding: 1.1rem 1.2rem !important; border-radius: 22px;
+  background: var(--lc-surface); border: 2px solid color-mix(in srgb, var(--lc-gold) 55%, var(--lc-border));
+}}
+.lc-relampago-titulo {{ font-family: Sora, sans-serif; font-weight: 800; font-size: 1.25rem; margin-bottom: .2rem; }}
+.st-key-relampago [data-testid="stNumberInput"] input {{ font-size: 1.4rem !important; font-weight: 700; min-height: 52px; }}
+.lc-relampago-res {{ font-size: 1.15rem; margin: .4rem 0 .2rem; }}
+.lc-relampago-res b {{ font-family: Sora, sans-serif; font-size: 2rem; color: var(--lc-ok-texto); }}
+/* aviso sazonal */
+.lc-sazonal {{ display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem .7rem; margin: .7rem 0 .2rem;
+  padding: .7rem 1rem; border-radius: 16px; background: color-mix(in srgb, var(--lc-gold) 12%, var(--lc-surface));
+  border: 1px solid color-mix(in srgb, var(--lc-gold) 45%, transparent); font-size: .95rem; }}
+.lc-sazonal-data {{ font-weight: 800; color: var(--lc-gold-texto); }}
+.lc-sazonal span:last-child {{ color: var(--lc-muted); }}
+/* visita guiada: 3 passos ligados por setas */
+.st-key-visita {{ padding: 1rem !important; border-radius: 20px; border: 2px dashed color-mix(in srgb, var(--lc-gold) 55%, transparent); }}
+.lc-visita {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.4rem; }}
+.lc-visita > div {{ position: relative; display: flex; flex-direction: column; gap: .15rem; }}
+.lc-visita > div:not(:last-child)::after {{ content: "→"; position: absolute; right: -1.1rem; top: .3rem;
+  font-weight: 800; color: var(--lc-gold-texto); }}
+.lc-visita span {{ display: inline-grid; place-items: center; width: 2rem; height: 2rem; border-radius: 50%;
+  background: var(--lc-primary); color: #FFF7F2; font-weight: 800; }}
+.lc-visita small {{ color: var(--lc-muted); }}
+@media (max-width: 640px) {{
+  .lc-visita {{ grid-template-columns: 1fr; gap: .7rem; }}
+  .lc-visita > div:not(:last-child)::after {{ content: "↓"; right: auto; left: .6rem; top: auto; bottom: -.75rem; }}
+  .lc-passo:not(:last-child)::after {{ content: "↓"; right: auto; left: 50%; top: auto; bottom: -1.1rem; transform: translateX(-50%); }}
+}}
+/* «Ajudou-te?» e partilhar */
+.st-key-ajudou {{ align-items: center; gap: .6rem; margin-top: 1rem; }}
+.lc-ajudou {{ font-weight: 700; }}
+[class*="st-key-partilhar_"] {{ gap: .6rem; margin: .6rem 0; flex-wrap: wrap; }}
 /* destaques no cabeçalho das ferramentas: números reais em pílulas da cor da ferramenta */
 .lc-destaques {{ display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .7rem; }}
-.lc-destaque {{
+.lc-realce {{
   display: inline-flex; align-items: baseline; gap: .35rem; padding: .35rem .8rem; border-radius: 999px;
   font-size: .9rem; color: var(--lc-text);
   background: color-mix(in srgb, var(--lc-cor, var(--lc-gold)) 14%, var(--lc-surface));
   border: 1px solid color-mix(in srgb, var(--lc-cor, var(--lc-gold)) 40%, transparent);
 }}
-.lc-destaque b {{ font-family: Sora, sans-serif; font-weight: 800; font-size: 1rem; color: var(--lc-cor, var(--lc-gold-texto)); }}
+.lc-realce b {{ font-family: Sora, sans-serif; font-weight: 800; font-size: 1rem; color: var(--lc-cor, var(--lc-gold-texto)); }}
 /* faixa final: o que se aprendeu + próximo passo */
 .lc-cta-kicker {{ font-family: Sora, sans-serif; font-weight: 800; font-size: .8rem; letter-spacing: .12em; color: #FFE9B8; }}
 .st-key-cta_final .lc-cta-txt {{ color: #FFF7F2 !important; font-size: 1.05rem; line-height: 1.55;

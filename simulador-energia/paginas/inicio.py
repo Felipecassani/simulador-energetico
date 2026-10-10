@@ -9,8 +9,9 @@ from html import escape
 import streamlit as st
 
 from interface import componentes as ui
+from interface import marketing
 from interface.conteudo import CONTA_EM_1_MINUTO, EM_CONSTRUCAO, ORDEM_FERRAMENTAS
-from interface.dados import omie_hoje_e_amanha, ofertas_erse
+from interface.dados import erse, omie_hoje_e_amanha, ofertas_erse
 from nucleo import mercado, ofertas, roteiro
 
 ui.cabecalho(
@@ -24,8 +25,12 @@ with st.container(key="cta_inicio"):
     st.page_link("paginas/fatura.py", label="Começar aqui", icon=":material/arrow_forward:")
 st.html('<p class="lc-micro">Sem fatura à mão? Entra na mesma: há números de exemplo.</p>')
 
+marketing.aviso_sazonal()
+
 # ---------- prova: números reais, calculados com as ofertas oficiais (nunca escritos à mão)
 lista_ofertas, data_ofertas = ofertas_erse()
+if lista_ofertas:
+    marketing.relampago(lista_ofertas, erse())
 mercado_casa = ofertas.resumo_mercado(lista_ofertas) if lista_ofertas else None
 if mercado_casa:
     with st.container(key="prova"):
