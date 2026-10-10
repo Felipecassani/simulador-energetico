@@ -51,14 +51,27 @@ def tabela_formatada(df, casas=None):
 
 # ---------- blocos ----------
 
-def cabecalho(titulo, subtitulo, kicker="", chips=()):
+def imagem_svg(nome):
+    """Imagem SVG de assets/ como data URI (o st.html retira os <svg>; como <img> passam)."""
+    import base64
+    from pathlib import Path
+    svg = (Path(__file__).resolve().parents[1] / "assets" / nome).read_text(encoding="utf-8")
+    return "data:image/svg+xml;base64," + base64.b64encode(svg.encode()).decode()
+
+
+def cabecalho(titulo, subtitulo, kicker="", chips=(), imagem=None):
+    """Cabeçalho grande (hero). imagem: data URI de uma ilustração, à direita (some no telemóvel)."""
     chips_html = "".join(f'<span class="lc-chip">{escape(c)}</span>' for c in chips)
+    figura = f'<img class="lc-hero-img" src="{imagem}" alt="" aria-hidden="true">' if imagem else ""
     st.html(f"""
-    <section class="lc-hero">
-      <div class="lc-kicker">{escape(kicker)}</div>
-      <h1>{escape(titulo)}</h1>
-      {f"<p>{escape(subtitulo)}</p>" if subtitulo else ""}
-      <div class="lc-chips">{chips_html}</div>
+    <section class="lc-hero{' lc-hero-com-img' if imagem else ''}">
+      <div class="lc-hero-txt">
+        <div class="lc-kicker">{escape(kicker)}</div>
+        <h1>{escape(titulo)}</h1>
+        {f"<p>{escape(subtitulo)}</p>" if subtitulo else ""}
+        <div class="lc-chips">{chips_html}</div>
+      </div>
+      {figura}
     </section>""")
 
 

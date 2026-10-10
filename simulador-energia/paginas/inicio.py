@@ -10,19 +10,40 @@ import streamlit as st
 
 from interface import componentes as ui
 from interface.conteudo import CONTA_EM_1_MINUTO, EM_CONSTRUCAO, ORDEM_FERRAMENTAS
-from interface.dados import omie_hoje_e_amanha
-from nucleo import mercado, roteiro
+from interface.dados import omie_hoje_e_amanha, ofertas_erse
+from nucleo import mercado, ofertas, roteiro
 
 ui.cabecalho(
     "Descobre como pagar menos",
     "",
     kicker="Grátis · sem registo",
+    imagem=ui.imagem_svg("ilustracao.svg"),
 )
 
 with st.container(key="cta_inicio"):
     st.page_link("paginas/fatura.py", label="Começar aqui", icon=":material/arrow_forward:")
-ui.nota("Não tens a fatura à mão? Entra na mesma: há números de exemplo que podes trocar pelos teus.",
-        "Sem fatura à mão?")
+st.html('<p class="lc-micro">Sem fatura à mão? Entra na mesma: há números de exemplo.</p>')
+
+# ---------- prova: números reais, calculados com as ofertas oficiais (nunca escritos à mão)
+lista_ofertas, data_ofertas = ofertas_erse()
+mercado_casa = ofertas.resumo_mercado(lista_ofertas) if lista_ofertas else None
+if mercado_casa:
+    with st.container(key="prova"):
+        st.html('<div class="lc-prova">' + "".join([
+            '<div class="lc-grid" style="--lc-min:95px;--lc-cols:3">',
+            ui.metrica("Ofertas comparadas", str(mercado_casa["ofertas"]), "preço fixo"),
+            ui.metrica("Empresas", str(mercado_casa["empresas"]), "de eletricidade"),
+            ui.metrica("Diferença até", ui.numero(mercado_casa["diferenca_ano"]), "€ por ano", destaque=True),
+            "</div></div>"]))
+    ui.nota(f"Para uma casa típica ({ui.numero(mercado_casa['kwh_mes'])} kWh por mês, "
+            f"{ui.numero(mercado_casa['kva'], 2)} kVA), a oferta de preço fixo mais cara custa até "
+            f"{ui.euros(mercado_casa['diferenca_ano'])} € por ano a mais do que a mais barata, sem IVA. "
+            f"Contas feitas com as ofertas publicadas pela ERSE a {data_ofertas:%d/%m/%Y}.", "De onde vêm estes números?")
+st.html('<div class="lc-selos">'
+        '<span class="lc-selo"><b>✓</b> Dados oficiais da ERSE</span>'
+        '<span class="lc-selo"><b>✓</b> Preços do mercado OMIE</span>'
+        '<span class="lc-selo"><b>✓</b> Sem publicidade</span>'
+        '<span class="lc-selo"><b>✓</b> Código aberto</span></div>')
 
 st.subheader(":material/apps: Ferramentas")
 ui.nota("Escolhe o que queres fazer. Os números que escreves numa ferramenta passam sozinhos para as outras.")
@@ -75,3 +96,9 @@ st.subheader(":material/construction: Em breve")
 with st.container(horizontal=True, key="em_breve"):
     for secao in EM_CONSTRUCAO:
         st.page_link(f"paginas/breve/{secao.chave}.py", label=secao.titulo, icon=secao.icone)
+
+# ---------- chamada final, para quem leu até ao fim
+st.write("")
+with st.container(key="cta_final"):
+    st.html("<h2>Pronto para pagar menos?</h2><p>Leva poucos minutos. Grátis e sem registo.</p>")
+    st.page_link("paginas/fatura.py", label="Começar aqui", icon=":material/arrow_forward:")

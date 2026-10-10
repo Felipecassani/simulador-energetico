@@ -116,3 +116,14 @@ def test_ficheiro_real_da_um_top_3_valido():
     assert len(top) == 3
     assert [v for _, v in top] == sorted(v for _, v in top)
     assert all(of.elegivel(o, HOJE) and o.kva == 6.9 for o, _ in top)
+
+
+def test_resumo_mercado_conta_e_mede_a_diferenca():
+    lista = [of.Oferta("Alfa", "A1", "Alfa Casa", 6.9, "simples", 0.30, {"simples": 0.12}),
+             of.Oferta("Alfa", "A2", "Alfa Mais", 6.9, "simples", 0.30, {"simples": 0.16}),
+             of.Oferta("Beta", "B1", "Beta Luz", 6.9, "simples", 0.40, {"simples": 0.20})]
+    r = of.resumo_mercado(lista, kwh_mes=300, kva=6.9)
+    assert r["ofertas"] == 3 and r["empresas"] == 2
+    # mais barata 0,30×30 + 300×0,12 = 45 €; mais cara 0,40×30 + 300×0,20 = 72 € → 27 €/mês
+    assert r["diferenca_ano"] == pytest.approx(27 * 365 / 30)
+    assert of.resumo_mercado(lista[:1]) is None

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" role="img" aria-label="Casa com um raio e uma seta de preço a descer">
+  <defs>
+    <linearGradient id="il-g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFE9B8"/><stop offset="1" stop-color="#D9B45B"/>
+    </linearGradient>
+    <linearGradient id="il-casa" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFF7F2" stop-opacity=".95"/><stop offset="1" stop-color="#FFF7F2" stop-opacity=".75"/>
+    </linearGradient>
+  </defs>
+  <!-- brilho de fundo -->
+  <circle cx="170" cy="120" r="104" fill="#FFF7F2" fill-opacity=".08"/>
+  <circle cx="170" cy="120" r="72" fill="#FFF7F2" fill-opacity=".07"/>
+  <!-- casa -->
+  <path d="M96 128 L170 66 L244 128 V196 a10 10 0 0 1 -10 10 H106 a10 10 0 0 1 -10 -10 Z" fill="url(#il-casa)"/>
+  <path d="M84 132 L170 58 L256 132" fill="none" stroke="#FFF7F2" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- raio -->
+  <path d="M182 92 L148 146 H172 L160 186 L200 126 H176 L190 92 Z" fill="url(#il-g)" stroke="#8C1424" stroke-width="3" stroke-linejoin="round"/>
+  <!-- etiqueta com seta a descer (pagar menos) -->
+  <g transform="translate(236 40)">
+    <rect width="72" height="72" rx="22" fill="#FFF7F2"/>
+    <text x="36" y="40" text-anchor="middle" font-family="Sora, Arial, sans-serif" font-size="30" font-weight="800" fill="#A8192E">€</text>
+    <path d="M36 50 V62 M28 55 L36 63 L44 55" fill="none" stroke="#2F8A5E" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <!-- tomada -->
+  <g transform="translate(22 150)">
+    <rect width="56" height="56" rx="16" fill="#FFF7F2" fill-opacity=".9"/>
+    <circle cx="20" cy="28" r="5" fill="#A8192E"/><circle cx="36" cy="28" r="5" fill="#A8192E"/>
+  </g>
+</svg>

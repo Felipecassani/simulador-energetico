@@ -403,6 +403,44 @@ _CSS = """
   font-size: clamp(2rem, 4.5vw, 3.2rem); line-height: 1.05; margin: .35rem 0 .6rem; padding: 0;
 }}
 .lc-hero p {{ font-size: 1.05rem; max-width: 60ch; opacity: .9; margin: 0; }}
+/* hero com ilustração: texto à esquerda, desenho à direita (no telemóvel só o texto) */
+.lc-hero-com-img {{ display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; }}
+.lc-hero-img {{ width: clamp(150px, 22vw, 260px); height: auto; flex: none; filter: drop-shadow(0 18px 30px rgba(0,0,0,.25)); }}
+@media (max-width: 640px) {{ .lc-hero-img {{ display: none; }} }}
+
+/* prova: números reais calculados com os dados oficiais */
+.lc-prova .lc-metric {{ text-align: center; }}
+.lc-passo .lc-n, .lc-parte .lc-n {{ display: block; }}
+@media (max-width: 640px) {{             /* telemóvel: os 3 números lado a lado, compactos */
+  .lc-prova .lc-grid {{ gap: .5rem; }}
+  .lc-prova .lc-metric {{ padding: .7rem .4rem; border-radius: 16px; }}
+  .lc-prova .lc-label {{ font-size: .78rem; }}
+  .lc-prova .lc-value {{ font-size: 1.45rem; }}
+  .lc-prova .lc-unit-linha {{ font-size: .75rem; }}
+}}
+.lc-prova .lc-value {{ color: var(--lc-gold-texto); }}
+/* selos de confiança */
+.lc-selos {{ display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center; margin: .2rem 0 .4rem; }}
+.lc-selo {{ display: inline-flex; align-items: center; gap: .35rem; padding: .4rem .85rem; border-radius: 999px;
+  font-size: .9rem; font-weight: 600; color: var(--lc-text); background: var(--lc-surface);
+  border: 1px solid var(--lc-border); }}
+.lc-selo b {{ color: var(--lc-ok-texto); }}
+/* chamada final */
+.st-key-cta_final {{
+  text-align: center; padding: 2rem 1.2rem !important; border-radius: 26px; align-items: center;
+  background: radial-gradient(500px 200px at 50% 0%, color-mix(in srgb, var(--lc-gold) 22%, transparent), transparent 70%),
+              linear-gradient(135deg, var(--lc-primary), var(--lc-primary-deep));
+}}
+.st-key-cta_final h2 {{ color: #FFF7F2 !important; font-family: Sora, sans-serif; margin: 0 0 .3rem !important; }}
+.st-key-cta_final p {{ color: #FFE9B8 !important; margin: 0 !important; }}
+.st-key-cta_final [data-testid="stPageLink-NavLink"] {{
+  min-height: 52px; padding: 0 1.8rem !important; border-radius: 999px; background: #FFF7F2;
+}}
+.st-key-cta_final [data-testid="stPageLink-NavLink"] :is(span, p, [data-testid="stIconMaterial"]) {{
+  color: var(--lc-primary-deep) !important; font-weight: 800; font-size: 1.1rem;
+}}
+.st-key-cta_final [data-testid="stElementContainer"] {{ width: auto !important; }}
+.lc-micro {{ font-size: .9rem; color: var(--lc-muted); margin: .2rem 0 0 .3rem; }}
 .lc-chips {{ display: flex; flex-wrap: wrap; gap: .45rem; margin-top: 1.2rem; }}
 .lc-chips:empty {{ display: none; }}
 .lc-chip {{

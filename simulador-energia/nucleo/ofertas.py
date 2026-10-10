@@ -219,3 +219,14 @@ def potencia_indexadas(ofertas, kva, procurar):
                 saida[(comercializador, texto)] = o.potencia_dia
                 break
     return saida
+
+
+def resumo_mercado(ofertas, kwh_mes=300, kva=6.9):
+    """Números para a Início (sempre calculados, nunca escritos à mão): quantas ofertas de preço
+    fixo e de quantas empresas uma casa típica pode contratar hoje, e quanto a mais custa por ano
+    a mais cara face à mais barata (sem IVA, tarifa simples). None se não houver ofertas."""
+    todas = mais_baratas(ofertas, kwh_mes, 30, kva, n=None, por_empresa=False)
+    if len(todas) < 2:
+        return None
+    return {"ofertas": len(todas), "empresas": len({o.comercializador for o, _ in todas}),
+            "diferenca_ano": (todas[-1][1] - todas[0][1]) * 365 / 30, "kwh_mes": kwh_mes, "kva": kva}
