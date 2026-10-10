@@ -17,17 +17,21 @@ PALETAS = {
         "gold": "#D9B45B", "bronze": "#B9805E",
         "ok": "#5BBF8E", "warn": "#D9B45B", "err": "#E0485A",
         "gold-texto": "#D9B45B", "ok-texto": "#5BBF8E",
+        "sombra": "0 12px 28px -18px rgba(0,0,0,.65)",
         # uma cor por ferramenta: fatura, poupar, comparar, preço hora a hora, bi-horário
         "c1": "#E0485A", "c2": "#5BBF8E", "c3": "#D9B45B", "c4": "#4FB3C4", "c5": "#8C8CF0",
     },
     "light": {
-        "bg": "#FBF6F2", "surface": "#FFFFFF", "surface-2": "#F3E8E1",
-        "border": "#E4D2C7", "text": "#1E1216", "muted": "#6E5A55",
+        # bege amarelado (papel quente): fundo mais escuro, cartões creme claro por cima
+        "bg": "#EFE3C8", "surface": "#FFF9EA", "surface-2": "#E8D9B6",
+        "border": "#D3BD8E", "text": "#24170F", "muted": "#64533D",
         "primary": "#A8192E", "primary-deep": "#5C0B18",
         "gold": "#A8842E", "bronze": "#8F5B3E",
         "ok": "#2F8A5E", "warn": "#A8842E", "err": "#A8192E",
         # texto pequeno no tema claro: o dourado e o verde normais ficam abaixo de 4,5:1
         "gold-texto": "#7A5C1A", "ok-texto": "#23704B",
+        # no claro, a sombra (avermelhada, suave) é o que separa os cartões do fundo
+        "sombra": "0 10px 26px -14px rgba(96,62,16,.30), 0 2px 6px -3px rgba(96,62,16,.14)",
         "c1": "#A8192E", "c2": "#23704B", "c3": "#8C6A1F", "c4": "#1C6F7C", "c5": "#4B4BB8",
     },
 }
@@ -460,6 +464,19 @@ _CSS = """
 }}
 @media (prefers-reduced-motion: reduce) {{
   .st-key-cta_inicio [data-testid="stPageLink-NavLink"], .st-key-cta_final [data-testid="stPageLink-NavLink"] {{ animation: none; }}
+}}
+
+/* ================= cartões que se destacam do fundo (sobretudo no tema claro) ================= */
+.lc-card, .lc-metric, .lc-nota-autor, .st-key-relampago, [class*="st-key-cartao_"], .lc-selo, .lc-realce,
+[data-testid="stExpander"] details {{ box-shadow: var(--lc-sombra); }}
+/* cada cartão de ferramenta leva um véu da sua cor (dá vida ao tema claro) */
+[class*="st-key-cartao_"]:not([class*="st-key-cartao_breve"]) {{
+  background: linear-gradient(180deg, color-mix(in srgb, var(--lc-cor) 9%, var(--lc-surface)), var(--lc-surface) 70%) !important;
+}}
+.lc-parte, .lc-passo {{ background: linear-gradient(180deg, color-mix(in srgb, var(--lc-gold) 8%, var(--lc-surface)), var(--lc-surface) 70%); }}
+/* campos de escrever: fundo um pouco mais escuro do que o cartão, para se verem */
+[data-testid="stNumberInputContainer"], [data-baseweb="select"] > div, [data-testid="stTextInputRootElement"] {{
+  border: 1px solid var(--lc-border) !important;
 }}
 
 /* ================= animações: convidam a continuar (só com movimento permitido) ================= */

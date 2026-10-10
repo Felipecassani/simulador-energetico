@@ -55,10 +55,10 @@ backgroundColor = "#0C0709"
 
 [theme.light]
 primaryColor = "#A8192E"
-backgroundColor = "#FBF6F2"
-secondaryBackgroundColor = "#F3E8E1"
-textColor = "#1E1216"
-borderColor = "#E4D2C7"
+backgroundColor = "#EFE3C8"
+secondaryBackgroundColor = "#E8D9B6"
+textColor = "#24170F"
+borderColor = "#D3BD8E"
 linkColor = "#8C6A1F"
 redColor = "#A8192E"
 orangeColor = "#B8612A"
@@ -68,4 +68,4 @@ greenColor = "#2F8A5E"
 chartCategoricalColors = ["#A8192E", "#C2982F", "#8F5B3E", "#D35D70", "#5E6B7C"]
 
 [theme.light.sidebar]
-backgroundColor = "#F6EDE7"
+backgroundColor = "#EADCBC"

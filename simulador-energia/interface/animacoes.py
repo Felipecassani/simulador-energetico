@@ -43,6 +43,23 @@ _SCRIPT = """<script>
     });
   }, { threshold: 0.15 });
 
+  // rede de segurança: o Streamlit faz scroll dentro de um contentor e o IntersectionObserver às vezes
+  // não dispara a tempo; aqui mostra-se tudo o que já está no ecrã (a cada scroll e logo ao carregar)
+  function mostrarVisiveis() {
+    const altura = window.innerHeight;
+    document.querySelectorAll(".lc-anim:not(.lc-visto)").forEach((el) => {
+      const r = el.getBoundingClientRect();
+      if (r.top !== 0 || r.bottom !== 0) {
+        if (r.top - altura * 0.95 >= 0 || r.bottom - 0 <= 0) return;
+      }
+      el.classList.add("lc-visto");
+      el.querySelectorAll(".lc-value, .lc-relampago-res b").forEach(contar);
+    });
+  }
+  let quadro = null;
+  document.addEventListener("scroll", () => { cancelAnimationFrame(quadro); quadro = requestAnimationFrame(mostrarVisiveis); }, true);
+  window.addEventListener("resize", mostrarVisiveis);
+
   window.lcAnimar = function () {
     document.querySelectorAll(ALVOS).forEach((el) => {
       if (el.dataset.lcAnim) return;
@@ -53,6 +70,7 @@ _SCRIPT = """<script>
       vigia.observe(el);
     });
     document.querySelectorAll(".lc-relampago-res b").forEach(contar);
+    setTimeout(mostrarVisiveis, 400);
   };
   let espera = null;
   new MutationObserver(() => { clearTimeout(espera); espera = setTimeout(window.lcAnimar, 80); })
