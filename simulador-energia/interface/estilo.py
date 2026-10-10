@@ -100,10 +100,6 @@ _CSS = """
   /* menu aberto: o seletor de tema não tapa o botão de fechar */
   .stApp:has([data-testid="stSidebar"][aria-expanded="true"]) .st-key-tema_mosaico {{ visibility: hidden; }}
   .block-container {{ padding-top: 4.6rem !important; }}
-  .lc-tema {{ grid-template-columns: repeat(3, 40px); }}
-  .lc-tema button, .lc-tema-ind {{ width: 40px; height: 40px; }}
-  .lc-tema[data-estado="System"] .lc-tema-ind {{ transform: translateX(42px); }}
-  .lc-tema[data-estado="Dark"] .lc-tema-ind {{ transform: translateX(84px); }}
 }}
 
 /* ---------- Botões-ligação (Começar, próximo passo, ajuda, em breve) ---------- */
@@ -167,10 +163,9 @@ _CSS = """
 
 /* logótipo no topo, com o nome «Simulador Energético» legível */
 [data-testid="stHeaderLogo"] {{ height: 2.6rem !important; max-width: none !important; width: auto !important; }}
-/* telemóvel: não cabem logótipo com nome + Menu + seletor de tema → só o símbolo (o nome está no menu) */
+/* telemóvel: logótipo com o nome um pouco mais pequeno, para caber com o Menu e o botão de tema */
 @media (max-width: 767.98px) {{
-  [data-testid="stHeaderLogo"] {{ height: 2.4rem !important; width: 2.4rem !important;
-    object-fit: cover; object-position: left center; }}
+  [data-testid="stHeaderLogo"] {{ height: 2.2rem !important; }}
 }}
 
 /* ---------- Botão claro/escuro: mosaico fixo no canto ---------- */
@@ -178,30 +173,17 @@ _CSS = """
   position: fixed !important; top: .6rem; right: clamp(.8rem, 2vw, 1.6rem); z-index: 1000001;
   width: auto !important;
 }}
-/* seletor de tema: pílula com 3 estados e indicador que desliza */
+/* botão de tema: um só, alterna entre claro e escuro a cada clique */
 .lc-tema {{
-  position: relative; display: inline-grid; grid-template-columns: repeat(3, 34px); gap: 2px; padding: 3px;
-  background: var(--lc-surface); border: 1px solid var(--lc-border); border-radius: 999px;
-  box-shadow: 0 10px 24px -16px rgba(0,0,0,.6);
+  all: unset; box-sizing: border-box; width: 44px; height: 44px; display: grid; place-items: center; cursor: pointer;
+  border-radius: 999px; color: var(--lc-gold-texto); background: var(--lc-surface);
+  border: 1px solid var(--lc-border); box-shadow: 0 10px 24px -16px rgba(0,0,0,.6);
+  transition: transform .25s ease, border-color .2s ease;
 }}
-.lc-tema button {{
-  all: unset; box-sizing: border-box; width: 34px; height: 30px; display: grid; place-items: center;
-  border-radius: 999px; cursor: pointer; color: var(--lc-muted); position: relative; z-index: 1;
-  transition: color .25s ease;
-}}
-.lc-tema button:hover {{ color: var(--lc-text); }}
-.lc-tema button:focus-visible {{ outline: 2px solid var(--lc-gold); outline-offset: 1px; }}
-.lc-tema button[aria-checked="true"] {{ color: #fff; }}
-.lc-tema button svg {{ width: 17px; height: 17px; transition: transform .5s cubic-bezier(.34,1.56,.64,1); }}
-.lc-tema button[aria-checked="true"] svg {{ transform: rotate(360deg) scale(1.08); }}
-.lc-tema-ind {{
-  position: absolute; top: 3px; left: 3px; width: 34px; height: 30px; border-radius: 999px;
-  background: linear-gradient(135deg, var(--lc-primary), var(--lc-gold));
-  box-shadow: 0 4px 14px -6px var(--lc-primary); transition: transform .38s cubic-bezier(.65,0,.35,1);
-}}
-.lc-tema[data-estado="System"] .lc-tema-ind {{ transform: translateX(36px); }}
-.lc-tema[data-estado="Dark"] .lc-tema-ind {{ transform: translateX(72px); }}
-@media (prefers-reduced-motion: reduce) {{ .lc-tema *, .lc-tema-ind {{ transition: none !important; }} }}
+.lc-tema:hover {{ border-color: var(--lc-gold); transform: rotate(-12deg); }}
+.lc-tema:focus-visible {{ outline: 2px solid var(--lc-gold); outline-offset: 2px; }}
+.lc-tema svg {{ width: 20px; height: 20px; }}
+@media (prefers-reduced-motion: reduce) {{ .lc-tema {{ transition: none !important; }} }}
 
 /* ---------- Cartões das ferramentas: o cartão inteiro é a ligação ---------- */
 [class*="st-key-cartao_"] {{ position: relative; transition: transform .18s ease, box-shadow .18s ease;
