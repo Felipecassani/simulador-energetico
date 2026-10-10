@@ -4,6 +4,15 @@ Um site gratuito que ajuda qualquer pessoa em Portugal a perceber a conta da luz
 
 **Experimentar:** https://simulador-energetico-8ufymt75zojdygw4tfgxjm.streamlit.app
 
+<p>
+  <img src="imagens/inicio-claro.png" alt="Página inicial no tema claro" width="49%">
+  <img src="imagens/inicio-escuro.png" alt="Página inicial no tema escuro" width="49%">
+</p>
+<p>
+  <img src="imagens/fatura-escuro.png" alt="Ferramenta A minha fatura" width="74%">
+  <img src="imagens/telemovel-claro.png" alt="O site no telemóvel" width="24%">
+</p>
+
 ## Porque o fiz
 
 A fatura da luz tem muitos termos (potência, kVA, vazio, indexado, TAR…) e a maioria das pessoas não sabe se está a pagar demais. Quis fazer uma ferramenta simples: escreves quatro números da tua fatura e vês quanto pagas, para onde vai o dinheiro e que ofertas te saem mais baratas. Sem registo e sem publicidade.
@@ -64,9 +73,17 @@ Para correr os testes, dentro da pasta `simulador-energia`:
 
 ## Como o fiz
 
-A parte mais grossa do código foi escrita com a ajuda de um assistente de IA. O meu trabalho foi decidir o que o site devia fazer, verificar as contas com faturas reais e rever e corrigir partes do código e do site.
+A parte mais grossa do código foi escrita com a ajuda do Claude Code. O meu trabalho foi decidir o que o site devia fazer, verificar as contas com faturas reais e rever e corrigir partes do código e do site.
 
 O projeto ainda não está completo: há secções por fazer e linhas de código que quero reescrever à minha maneira.
+
+## Próximos passos
+
+- Reescrever à minha maneira os ficheiros mais pequenos de `nucleo/`, a começar por `relampago.py` (a calculadora rápida) e `aparelhos.py` (o consumo dos aparelhos). Os dois têm testes próprios, por isso consigo mudar o código e confirmar com `pytest` que as contas continuam certas.
+- Depois, passar ao resto de `nucleo/` e às páginas, um ficheiro de cada vez.
+- Acabar as secções que ainda estão escondidas do menu (gás, painéis solares, produção, Europa…).
+
+O histórico de commits mostra esta evolução.
 
 ## Autor
 
