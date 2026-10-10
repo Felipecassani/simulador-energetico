@@ -34,11 +34,12 @@ agrupados = {t for _, _, temas, _ in GRUPOS for t in temas}
 soltos = tuple(t for t, _ in GUIA if t not in agrupados)
 grupos = GRUPOS + ([("Mais temas", "", soltos, ())] if soltos else [])
 
-ui.cabecalho("Guia rápido",
-             "O essencial para perceberes a tua fatura da luz e pagares menos. Está dividido em 3 passos: "
-             "lê um passo e experimenta logo a seguir, na ferramenta indicada.",
-             kicker="Ajuda")
-ui.nota("As palavras sublinhadas explicam-se ao tocar nelas (no computador, basta passar o rato por cima).")
+_minutos = max(1, round(sum(len(texto.split()) for _, texto in GUIA) / 200))     # ~200 palavras por minuto
+ui.cabecalho("Guia rápido", "O essencial da fatura da luz, em 3 passos.", kicker="Ajuda",
+             chips=(f"{len(GUIA)} temas", "3 passos", f"{_minutos} min de leitura"),
+             imagem=ui.imagem_svg("ilustracao.svg"))
+ui.nota("As palavras sublinhadas explicam-se ao tocar nelas (no computador, basta passar o rato por cima).",
+        "Palavras sublinhadas")
 with st.container(horizontal=True, key="botoes_guia_glossario"):
     st.page_link("paginas/recursos.py", label="Ver todas as palavras no glossário", icon=":material/menu_book:")
 

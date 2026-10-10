@@ -23,9 +23,9 @@ SIMBOLOS = {
                 '<circle cx="8" cy="7.6" r="1" fill="#D9B45B" stroke="none"/></svg>',
 }
 
-ui.cabecalho("Sobre o projeto",
-             "Ferramentas gratuitas e simples para perceberes a tua fatura de eletricidade e pagares menos.",
-             kicker="Sobre")
+ui.cabecalho("Sobre o projeto", "Ferramentas gratuitas para pagares menos de luz.", kicker="Sobre",
+             chips=("Grátis", "Sem publicidade", "Dados oficiais", "Código aberto"),
+             imagem=ui.imagem_svg("ilustracao.svg"))
 
 def _icone(simbolo):
     """Sem símbolo conhecido, a ligação aparece só com o nome (não rebenta a página)."""

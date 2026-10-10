@@ -89,8 +89,19 @@ def cabecalho_ferramenta(passo, disponivel=True):
       <div class="lc-step-text">
         <div class="lc-step-title"><h2>{escape(passo.titulo)}</h2>{selo}</div>
         <p>{com_glossario(passo.descricao)}</p>
+        {_destaques_html(passo.numero)}
       </div>
     </div>""")
+
+
+def _destaques_html(numero):
+    """Números reais que mostram o valor da ferramenta (interface/destaques.py)."""
+    from interface import destaques
+    itens = destaques.da_ferramenta(numero)
+    if not itens:
+        return ""
+    return ('<div class="lc-destaques">' + "".join(
+        f'<span class="lc-destaque"><b>{escape(v)}</b> {escape(r)}</span>' for v, r in itens) + "</div>")
 
 
 def para_onde_vai(energia, potencia, impostos_e_taxas):
@@ -411,20 +422,31 @@ def proximo_passo(url_path):
     from pathlib import Path
     numeros = {Path(p.pagina).stem: p.numero for p in roteiro.PASSOS}
     numero_atual = numeros.get(url_path)
+    if url_path in ("guia", "faq", "recursos", "sobre"):
+        cta_final()
+        return
     if numero_atual is None or numero_atual not in conteudo.ORDEM_FERRAMENTAS:
         return
     ordem = list(conteudo.ORDEM_FERRAMENTAS)
     i = ordem.index(numero_atual)
     st.write("")
-    with st.container(border=True, key="proximo_passo"):
-        st.html(f'<div class="lc-card-flat"><span class="lc-n">O QUE FICASTE A SABER</span>'
-                f'<p>{com_glossario(conteudo.APRENDESTE[numero_atual])}</p></div>')
+    with st.container(key="cta_final"):
+        st.html(f'<span class="lc-cta-kicker">O QUE FICASTE A SABER</span>'
+                f'<p class="lc-cta-txt">{escape(conteudo.APRENDESTE[numero_atual])}</p>')
         with st.container(horizontal=True, key="proximo_ligacoes"):
             if i + 1 < len(ordem):
                 seguinte = roteiro.passo(ordem[i + 1])
                 st.page_link(seguinte.pagina, label=f"Próximo passo: {seguinte.titulo}",
                              icon=":material/arrow_forward:")
             st.page_link("paginas/inicio.py", label="Ver todas as ferramentas", icon=":material/apps:")
+
+
+def cta_final(titulo="Pronto para pagar menos?", texto="Leva poucos minutos. Grátis e sem registo."):
+    """Faixa carmim no fim da página com o botão para começar (Início e páginas de ajuda)."""
+    st.write("")
+    with st.container(key="cta_final"):
+        st.html(f"<h2>{escape(titulo)}</h2><p>{escape(texto)}</p>")
+        st.page_link("paginas/fatura.py", label="Começar aqui", icon=":material/arrow_forward:")
 
 
 def rodape():

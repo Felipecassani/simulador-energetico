@@ -112,19 +112,11 @@ _CSS = """
 .st-key-cta_inicio [data-testid="stPageLink-NavLink"] :is(span, p, [data-testid="stIconMaterial"]) {{
   color: #FFF7F2 !important; font-weight: 700; font-size: 1.1rem;
 }}
-:is(.st-key-aprender, .st-key-em_breve, .st-key-rodape_ajuda, .st-key-proximo_ligacoes) [data-testid="stPageLink-NavLink"] {{
+:is(.st-key-aprender, .st-key-em_breve, .st-key-rodape_ajuda) [data-testid="stPageLink-NavLink"] {{
   min-height: 44px; padding: 0 1rem !important; border: 1px solid var(--lc-border); border-radius: 999px;
   background: var(--lc-surface);
 }}
 .st-key-em_breve [data-testid="stPageLink-NavLink"] {{ border-style: dashed; }}
-.st-key-proximo_ligacoes [data-testid="stPageLink-NavLink"]:first-child {{
-  background: linear-gradient(135deg, var(--lc-primary), var(--lc-primary-deep)); border-color: transparent;
-}}
-.st-key-proximo_ligacoes [data-testid="stPageLink"]:first-child [data-testid="stPageLink-NavLink"] :is(span, p, [data-testid="stIconMaterial"]) {{
-  color: #FFF7F2 !important; font-weight: 700;
-}}
-.st-key-proximo_passo {{ border-color: color-mix(in srgb, var(--lc-gold) 45%, var(--lc-border)) !important; }}
-.st-key-proximo_passo .lc-card-flat p {{ color: var(--lc-text); font-size: 1rem; line-height: 1.55; margin-top: .3rem; }}
 .st-key-rodape_ajuda {{ margin-top: 2.2rem; }}
 
 /* ---------- Separadores (ex.: as 3 partes da Fatura): parecem botões, não texto solto ---------- */
@@ -441,6 +433,27 @@ _CSS = """
 }}
 .st-key-cta_final [data-testid="stElementContainer"] {{ width: auto !important; }}
 .lc-micro {{ font-size: .9rem; color: var(--lc-muted); margin: .2rem 0 0 .3rem; }}
+/* destaques no cabeçalho das ferramentas: números reais em pílulas da cor da ferramenta */
+.lc-destaques {{ display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .7rem; }}
+.lc-destaque {{
+  display: inline-flex; align-items: baseline; gap: .35rem; padding: .35rem .8rem; border-radius: 999px;
+  font-size: .9rem; color: var(--lc-text);
+  background: color-mix(in srgb, var(--lc-cor, var(--lc-gold)) 14%, var(--lc-surface));
+  border: 1px solid color-mix(in srgb, var(--lc-cor, var(--lc-gold)) 40%, transparent);
+}}
+.lc-destaque b {{ font-family: Sora, sans-serif; font-weight: 800; font-size: 1rem; color: var(--lc-cor, var(--lc-gold-texto)); }}
+/* faixa final: o que se aprendeu + próximo passo */
+.lc-cta-kicker {{ font-family: Sora, sans-serif; font-weight: 800; font-size: .8rem; letter-spacing: .12em; color: #FFE9B8; }}
+.st-key-cta_final .lc-cta-txt {{ color: #FFF7F2 !important; font-size: 1.05rem; line-height: 1.55;
+  max-width: 70ch; margin: .4rem auto 0 !important; }}
+.st-key-cta_final .st-key-proximo_ligacoes {{ justify-content: center; gap: .6rem; }}
+.st-key-proximo_ligacoes [data-testid="stPageLink-NavLink"] {{ background: #FFF7F2 !important; border: none !important; }}
+.st-key-proximo_ligacoes [data-testid="stPageLink"]:not(:first-child) [data-testid="stPageLink-NavLink"] {{
+  background: transparent !important; border: 1px solid rgba(255,247,242,.6) !important;
+}}
+.st-key-proximo_ligacoes [data-testid="stPageLink"]:not(:first-child) :is(span, p, [data-testid="stIconMaterial"]) {{
+  color: #FFF7F2 !important;
+}}
 .lc-chips {{ display: flex; flex-wrap: wrap; gap: .45rem; margin-top: 1.2rem; }}
 .lc-chips:empty {{ display: none; }}
 .lc-chip {{

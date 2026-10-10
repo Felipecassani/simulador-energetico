@@ -98,7 +98,4 @@ with st.container(horizontal=True, key="em_breve"):
         st.page_link(f"paginas/breve/{secao.chave}.py", label=secao.titulo, icon=secao.icone)
 
 # ---------- chamada final, para quem leu até ao fim
-st.write("")
-with st.container(key="cta_final"):
-    st.html("<h2>Pronto para pagar menos?</h2><p>Leva poucos minutos. Grátis e sem registo.</p>")
-    st.page_link("paginas/fatura.py", label="Começar aqui", icon=":material/arrow_forward:")
+ui.cta_final()

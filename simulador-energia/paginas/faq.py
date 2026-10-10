@@ -40,10 +40,10 @@ agrupadas = {q for _, perguntas in GRUPOS for q in perguntas}
 soltas = tuple(q for q, _ in FAQ if q not in agrupadas)
 grupos = GRUPOS + ([("Outras perguntas", soltas)] if soltas else [])
 
-ui.cabecalho("Perguntas frequentes",
-             "Respostas curtas às dúvidas mais comuns. Toca numa pergunta para veres a resposta.",
-             kicker="Ajuda")
-ui.nota("As palavras sublinhadas explicam-se ao tocar nelas (no computador, basta passar o rato por cima).")
+ui.cabecalho("Perguntas frequentes", "Respostas curtas às dúvidas mais comuns.", kicker="Ajuda",
+             chips=(f"{len(FAQ)} perguntas", "respostas curtas"), imagem=ui.imagem_svg("ilustracao.svg"))
+ui.nota("As palavras sublinhadas explicam-se ao tocar nelas (no computador, basta passar o rato por cima).",
+        "Palavras sublinhadas")
 
 indice = 0
 for assunto, perguntas in grupos:

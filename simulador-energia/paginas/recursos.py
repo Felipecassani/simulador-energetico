@@ -22,10 +22,9 @@ def _simples(texto):
     return "".join(c for c in unicodedata.normalize("NFD", texto.lower()) if unicodedata.category(c) != "Mn")
 
 
-ui.cabecalho("Glossário e ligações",
-             "O que quer dizer cada palavra da fatura da luz, as datas em que o preço pode mudar e os "
-             "sites oficiais onde podes confirmar tudo.",
-             kicker="Ajuda")
+ui.cabecalho("Glossário e ligações", "Cada palavra da fatura, explicada.", kicker="Ajuda",
+             chips=(f"{len(GLOSSARIO)} palavras explicadas", f"{len(LIGACOES)} sites oficiais"),
+             imagem=ui.imagem_svg("ilustracao.svg"))
 glossario, cal, ligacoes = st.tabs(["O que quer dizer cada palavra", "Datas que mexem no preço",
                                     "Sites oficiais"])
 
