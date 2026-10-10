@@ -257,7 +257,7 @@ _CSS = """
 .st-key-cartao_3, .lc-cor-3 {{ --lc-cor: var(--lc-c3); }}
 .st-key-cartao_4, .lc-cor-4 {{ --lc-cor: var(--lc-c4); }}
 .st-key-cartao_5, .lc-cor-5 {{ --lc-cor: var(--lc-c5); }}
-[class*="st-key-cartao_"]:not([class*="st-key-cartao_breve"]) {{
+[class*="st-key-cartao_"] {{
   border-top: 5px solid var(--lc-cor) !important;
 }}
 [class*="st-key-cartao_"] .lc-emoji {{
@@ -342,8 +342,6 @@ _CSS = """
 .lc-podio .lc-chips {{ display: flex; flex-wrap: wrap; gap: .3rem; }}
 
 /* secções em construção, página Sobre */
-.lc-construcao {{ opacity: .9; }}
-[class*="st-key-cartao_breve_"]:hover .lc-construcao {{ opacity: 1; }}
 .lc-lista {{ display: inline-block; text-align: left; margin: .2rem auto 0; color: var(--lc-muted); }}
 .lc-autor {{ display: flex; gap: 1.2rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }}
 .lc-autor-logo img {{ width: 88px; height: 88px; display: block; filter: drop-shadow(0 10px 18px rgba(200,40,60,.25)); }}
@@ -470,7 +468,7 @@ _CSS = """
 .lc-card, .lc-metric, .lc-nota-autor, .st-key-relampago, [class*="st-key-cartao_"], .lc-selo, .lc-realce,
 [data-testid="stExpander"] details {{ box-shadow: var(--lc-sombra); }}
 /* cada cartão de ferramenta leva um véu da sua cor (dá vida ao tema claro) */
-[class*="st-key-cartao_"]:not([class*="st-key-cartao_breve"]) {{
+[class*="st-key-cartao_"] {{
   background: linear-gradient(180deg, color-mix(in srgb, var(--lc-cor) 9%, var(--lc-surface)), var(--lc-surface) 70%) !important;
 }}
 .lc-parte, .lc-passo {{ background: linear-gradient(180deg, color-mix(in srgb, var(--lc-gold) 8%, var(--lc-surface)), var(--lc-surface) 70%); }}

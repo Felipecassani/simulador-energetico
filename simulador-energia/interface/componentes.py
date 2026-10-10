@@ -179,35 +179,6 @@ def cartao_ferramenta(passo, disponivel, destaque=False):
                      icon=":material/arrow_forward:")
 
 
-def pagina_em_breve(numero):
-    """Página de uma ferramenta que ainda está a ser preparada."""
-    passo = roteiro.passo(numero)
-    cabecalho_ferramenta(passo, disponivel=False)
-    outras = any(roteiro.disponivel(p.numero) for p in roteiro.PASSOS if p.numero != numero)
-    extra = ("<p>As ferramentas já disponíveis estão na página inicial.</p>" if outras else "")
-    st.html(f"""
-    <div class="lc-card lc-breve">
-      <div class="lc-emoji">🚧</div>
-      <h4>Esta ferramenta ainda não está disponível</h4>
-      {extra}
-    </div>""")
-    st.page_link("paginas/inicio.py", label="Voltar ao início", icon=":material/arrow_back:")
-
-
-def cartao_em_construcao(secao):
-    """Cartão (clicável, mais apagado) de uma secção ainda em construção."""
-    with st.container(border=True, key=f"cartao_breve_{secao.chave.replace('-', '_')}"):
-        st.html(f"""
-        <div class="lc-card-flat lc-construcao">
-          <div class="lc-topo">
-            <span class="lc-emoji">{icone(secao.icone)}</span><span class="lc-badge lc-todo">Em construção</span>
-          </div>
-          <h4>{escape(secao.titulo)}</h4>
-          <p>{escape(secao.descricao)}</p>
-        </div>""")
-        st.page_link(f"paginas/breve/{secao.chave}.py", label="Ver", icon=":material/arrow_forward:")
-
-
 def pagina_em_construcao(chave):
     """Página de uma secção em construção: o que vai ter e o caminho de volta."""
     secao = conteudo.em_construcao(chave)
