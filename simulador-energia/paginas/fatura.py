@@ -436,7 +436,7 @@ with aba_fatura:
                     ui.podio_ofertas(linhas, atual_mes, "por mês", p.get("comercializador"),
                                      com_fatura=bool(p.get("da_fatura")))
                 if linhas:
-                    marketing.partilhar((atual_mes - linhas[0][1]) * 365 / 30, "fatura")
+                    marketing.partilhar((atual_mes - linhas[0][1]) * 365 / 30, "fatura", atual_mes, linhas[0][1])
                 ui.nota(
                     f"Para cada empresa, a oferta mais barata para o teu consumo e potência. São ofertas de "
                     f"preço fixo, só de eletricidade, publicadas pela ERSE a {data_ofertas:%d/%m/%Y}. "

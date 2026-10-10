@@ -23,8 +23,13 @@ def texto_partilha(poupanca_ano):
     return f"Fiz as contas à minha conta da luz. Experimenta, é grátis e sem registo: {URL_SITE}"
 
 
-def cartao_png(poupanca_ano):
-    """Imagem 1080×1080 com a poupança, para guardar ou publicar (cores do site)."""
+def cartao_png(poupanca_ano, atual_mes=None, melhor_mes=None):
+    """Imagem 1080×1080 para partilhar: logótipo, a poupança, «de X € para Y € por mês» e um código
+    QR que abre o site (quem vê a imagem consegue chegar lá). Sem empresa nem kWh: é público."""
+    from pathlib import Path
+
+    import reportlab
+    import segno
     from PIL import Image, ImageDraw, ImageFont
     lado = 1080
     img = Image.new("RGB", (lado, lado), "#6E0E1C")
@@ -32,13 +37,9 @@ def cartao_png(poupanca_ano):
     for y in range(lado):                                   # degradê carmim → vinho
         t = y / lado
         d.line([(0, y), (lado, y)], fill=(int(200 - 90 * t), int(40 - 26 * t), int(60 - 32 * t)))
-    d.rounded_rectangle([60, 60, lado - 60, lado - 60], radius=60, outline="#D9B45B", width=6)
+    d.rounded_rectangle([50, 50, lado - 50, lado - 50], radius=56, outline="#D9B45B", width=6)
 
-    # a letra que o Pillow traz de origem não tem «É», «á» nem «€» (saíam quadrados); a Vera vem com o
-    # reportlab (já usado no PDF), tem os acentos portugueses e o euro, e existe também no Streamlit Cloud
-    from pathlib import Path
-
-    import reportlab
+    # a letra de origem do Pillow não tem «É», «á» nem «€»; a Vera vem com o reportlab (já usado no PDF)
     pasta = Path(reportlab.__file__).parent / "fonts"
 
     def fonte(tam, negrito=False):
@@ -47,31 +48,60 @@ def cartao_png(poupanca_ano):
         except OSError:
             return ImageFont.load_default(size=tam)
 
-    def centrado(texto, y, tam, cor, negrito=False):
+    def centrado(texto, y, tam, cor, negrito=False, x0=0, x1=lado):
         f = fonte(tam, negrito)
-        largura = d.textlength(texto, font=f)
-        d.text(((lado - largura) / 2, y), texto, font=f, fill=cor)
+        d.text((x0 + (x1 - x0 - d.textlength(texto, font=f)) / 2, y), texto, font=f, fill=cor)
 
-    centrado("SIMULADOR ENERGÉTICO", 150, 42, "#FFE9B8", negrito=True)
+    # topo: logótipo + nome
+    logo = Image.open(Path(__file__).resolve().parents[1] / "assets" / "icone.png").convert("RGBA").resize((96, 96))
+    mascara = Image.new("L", (96, 96), 0)                    # cantos redondos (o PNG tem cantos claros)
+    ImageDraw.Draw(mascara).rounded_rectangle([0, 0, 95, 95], radius=24, fill=255)
+    logo.putalpha(mascara)
+    nome = fonte(40, True)
+    largura = 96 + 22 + d.textlength("Simulador Energético", font=nome)
+    x = (lado - largura) / 2
+    img.paste(logo, (int(x), 110), logo)
+    d.text((x + 118, 136), "Simulador Energético", font=nome, fill="#FFE9B8")
+
     if poupanca_ano >= 1:
-        centrado("Posso poupar cerca de", 330, 60, "#FFF7F2")
-        centrado(f"{numero(poupanca_ano)} €", 445, 180, "#FFE9B8", negrito=True)
-        centrado("por ano na conta da luz", 700, 60, "#FFF7F2")
+        centrado("Posso poupar cerca de", 270, 56, "#FFF7F2")
+        centrado(f"{numero(poupanca_ano)} €", 345, 170, "#FFE9B8", negrito=True)
+        centrado("por ano na conta da luz", 545, 56, "#FFF7F2")
+        if atual_mes and melhor_mes:
+            texto = f"de {numero(atual_mes)} € para {numero(melhor_mes)} € por mês"
+            f = fonte(40, True)
+            w = d.textlength(texto, font=f)
+            d.rounded_rectangle([(lado - w) / 2 - 30, 630, (lado + w) / 2 + 30, 700], radius=35, fill="#FFF7F2")
+            d.text(((lado - w) / 2, 643), texto, font=f, fill="#8C1424")
     else:
-        centrado("Fiz as contas à", 380, 72, "#FFF7F2")
-        centrado("minha conta da luz", 480, 72, "#FFF7F2")
-    centrado("Faz a tua conta: grátis e sem registo", 880, 38, "#FFE9B8")
+        centrado("Fiz as contas à", 320, 66, "#FFF7F2")
+        centrado("minha conta da luz", 410, 66, "#FFF7F2")
+
+    # fundo: código QR que abre o site + o convite
+    qr = segno.make(URL_SITE, error="m")
+    tamanho = 250
+    buffer = io.BytesIO()
+    qr.save(buffer, kind="png", scale=10, border=2, dark="#2A0A10", light="#FFFFFF")
+    codigo = Image.open(io.BytesIO(buffer.getvalue())).convert("RGB").resize((tamanho, tamanho), Image.NEAREST)
+    x_qr, y_qr = 140, 738
+    d.rounded_rectangle([x_qr - 14, y_qr - 14, x_qr + tamanho + 14, y_qr + tamanho + 14], radius=24, fill="#FFFFFF")
+    img.paste(codigo, (x_qr, y_qr))
+    x_txt = x_qr + tamanho + 60
+    d.text((x_txt, y_qr + 40), "Faz a tua conta", font=fonte(50, True), fill="#FFE9B8")
+    d.text((x_txt, y_qr + 112), "Aponta a câmara", font=fonte(36), fill="#FFF7F2")
+    d.text((x_txt, y_qr + 160), "para o código", font=fonte(36), fill="#FFF7F2")
+    d.text((x_txt, y_qr + 218), "Grátis e sem registo", font=fonte(30), fill="#FFE9B8")
     saida = io.BytesIO()
     img.save(saida, format="PNG")
     return saida.getvalue()
 
 
-def partilhar(poupanca_ano, chave):
+def partilhar(poupanca_ano, chave, atual_mes=None, melhor_mes=None):
     """Botões para partilhar no WhatsApp e guardar o cartão em imagem."""
     with st.container(horizontal=True, key=f"partilhar_{chave}"):
         st.link_button("Partilhar no WhatsApp", f"https://wa.me/?text={quote(texto_partilha(poupanca_ano))}",
                        icon=":material/share:")
-        st.download_button("Guardar imagem para partilhar", cartao_png(poupanca_ano),
+        st.download_button("Guardar imagem para partilhar", cartao_png(poupanca_ano, atual_mes, melhor_mes),
                            file_name="poupanca-luz.png", mime="image/png", icon=":material/image:",
                            key=f"cartao_{chave}")
 
@@ -119,7 +149,7 @@ def relampago(lista_ofertas, tarifa):
                  "Como fiz esta conta?")
         st.page_link("paginas/fatura.py", label="Ver a conta exata com a minha fatura",
                      icon=":material/arrow_forward:")
-        partilhar(r["poupanca_ano"], "inicio")
+        partilhar(r["poupanca_ano"], "inicio", total, r["melhor_mes"])
 
 
 # ---------- avisos sazonais (do calendário de datas que mexem no preço)

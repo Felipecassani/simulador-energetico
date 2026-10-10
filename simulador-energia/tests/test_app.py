@@ -433,8 +433,9 @@ def test_calculadora_relampago_na_inicio(monkeypatch):
 
 def test_cartao_para_partilhar_e_um_png():
     from interface import marketing
-    png = marketing.cartao_png(86.0)
+    png = marketing.cartao_png(86.0, 73.08, 65.95)          # com a linha «de X € para Y € por mês» e o QR
     assert png[:8] == b"\x89PNG\r\n\x1a\n" and len(png) > 10_000
+    assert marketing.cartao_png(0)[:8] == png[:8]           # sem poupança também gera
     assert "86 €" in marketing.texto_partilha(86.0) and marketing.URL_SITE in marketing.texto_partilha(0)
 
 

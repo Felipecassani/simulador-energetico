@@ -7,5 +7,6 @@ pypdf>=6.19
 reportlab>=5.0
 openpyxl>=3.1.5          # consumos da E-REDES em Excel
 tzdata                 # fusos horários (hora de Lisboa) em servidores Linux
+segno>=1.6               # código QR do cartão de partilha
 # OCR de fotos de faturas: só macOS (Apple Vision); no servidor a Fatura aceita só PDF
 ocrmac>=1.0; sys_platform == "darwin"
